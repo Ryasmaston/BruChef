@@ -34,7 +34,7 @@ export default function Home() {
         <img
           src="/Bru-chef.PNG"
           alt="BruChef Logo"
-          className="mx-auto mb-6 w-64 h-auto"
+          className="mx-auto mb-6 w-75 h-auto"
         />
       </div>
       <div className="text-center space-y-6">
@@ -68,7 +68,7 @@ export default function Home() {
             <div className="text-slate-400">Cocktail Recipes</div>
           </div>
           <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-700">
-            <div className="text-4xl mb-2">🧪</div>
+            <div className="text-4xl mb-2">🍎</div>
             <div className="text-3xl font-bold text-white">
               {stats.ingredients}
             </div>
