@@ -105,7 +105,7 @@ def get_alcoholic_ingredients():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-ingredient_bp.route("/non-alcoholic", methods=["GET"])
+@ingredient_bp.route("/non-alcoholic", methods=["GET"])
 def get_non_alcoholic_ingredients():
     try:
         ingredients = IngredientService.get_non_alcoholic_ingredients()

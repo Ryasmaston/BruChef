@@ -8,7 +8,7 @@ cocktail_bp = Blueprint("cocktails", __name__, url_prefix="/api/cocktails")
 def get_cocktails():
     try:
         cocktails = CocktailService.get_all_cocktails()
-        return jsonify([cocktail.to.dict() for cocktail in cocktails]), 200
+        return jsonify([cocktail.to_dict() for cocktail in cocktails]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -18,9 +18,9 @@ def get_cocktail(cocktail_id):
         cocktail = CocktailService.get_cocktail_by_id(cocktail_id)
         if not cocktail:
             return jsonify({"error": "Cocktail not found"}), 404
-        return jsonify(cocktail.to.dict()), 200
+        return jsonify(cocktail.to_dict()), 200
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 @cocktail_bp.route("/", methods=["POST"])
 def create_cocktail():
@@ -31,9 +31,9 @@ def create_cocktail():
         new_cocktail = CocktailService.create_cocktail(data)
         return jsonify(new_cocktail.to_dict()), 201
     except ValueError as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 
 @cocktail_bp.route("/<int:cocktail_id>", methods=["PUT"])

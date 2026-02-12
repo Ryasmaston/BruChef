@@ -11,7 +11,7 @@ class IngredientService:
             raise Exception(f"Error fetching ingredients: {str(e)}")
 
     @staticmethod
-    def get_ingredient_by_id(ingredient_id: int) -> Optional[Ingredient]
+    def get_ingredient_by_id(ingredient_id: int) -> Optional[Ingredient]:
         try:
             return Ingredient.query.get(ingredient_id)
         except SQLAlchemyError as e:
