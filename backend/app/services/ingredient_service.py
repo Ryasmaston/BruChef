@@ -18,7 +18,7 @@ class IngredientService:
             raise Exception(f"Error fetching ingredient: {str(e)}")
 
     @staticmethod
-    def get_ingredient_by_name(name: str) -> Optional[Ingredient]
+    def get_ingredient_by_name(name: str) -> Optional[Ingredient]:
         try:
             return Ingredient.query.filter(Ingredient.name.ilike(name)).first()
         except SQLAlchemyError as e:
