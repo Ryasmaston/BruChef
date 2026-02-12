@@ -20,7 +20,7 @@ class IngredientService:
     @staticmethod
     def get_ingredient_by_name(name: str) -> Optional[Ingredient]
         try:
-            return
+            return Ingredient.query.filter(Ingredient.name.ilike(name)).first()
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching ingredient: {str(e)}")
 
@@ -84,3 +84,51 @@ class IngredientService:
         except SQLAlchemyError as e:
             db.session.rollback()
             raise Exception(f"Error deleting ingredient: {str(e)}")
+
+    @staticmethod
+    def get_ingredients_by_category(category: str) -> List[Ingredient]:
+        try:
+            return Ingredient.query.filter_by(category = category).all()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching ingredients by category: {str(e)}")
+
+    @staticmethod
+    def get_all_categories() -> List[str]:
+        try:
+            categories = db.session.query(Ingredient.category).distinct().all()
+            return [category[0] for category in categories if category[0]]
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching categories: {str(e)}")
+
+    @staticmethod
+    def search_ingredients(query: str) -> List[Ingredient]:
+        try:
+            return Ingredient.query.filter(
+                Ingredient.name.ilike(f"%{query}%")
+            ).all()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error searching ingredients: {str(e)}")
+
+    @staticmethod
+    def get_cocktails_using_ingredient(ingredient_id: int) -> List[Cocktail]:
+        try:
+            ingredient = Ingredient.query.get(ingredient_id)
+            if not ingredient:
+                return []
+            return ingredient.cocktails.all()
+        except SQLAlchemyError as e:
+            raise Exception (f"Error fetching cocktails for ingredient: {str(e)}")
+
+    @staticmethod
+    def get_alcoholic_ingredients() -> List[Ingredient]:
+        try:
+            return Ingredient.query.filter(Ingredient.abv > 0).all()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching alcoholic ingredients: {str(e)}")
+
+    @staticmethod
+    def get_non_alcoholic_ingredients() -> List[Ingredient]:
+        try:
+            return Ingredient.query.filter(Ingredient.abv == 0).all()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching non-alcoholic ingredients: {str(e)}")
