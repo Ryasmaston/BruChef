@@ -10,7 +10,8 @@ export default function Layout({ children }: LayoutProps) {
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/cocktails', label: 'Cocktails' },
-    { path: '/ingredients', label: 'Ingredients' }
+    { path: '/ingredients', label: 'Ingredients' },
+    { path: '/about', label: 'About' }
   ]
 
   return (
