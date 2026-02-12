@@ -8,7 +8,9 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const isActive = (path: string) => location.pathname === path
   const navLinks = [
-    { path: '/', label: 'Home' }
+    { path: '/', label: 'Home' },
+    { path: '/cocktails', label: 'Cocktails' },
+    { path: '/ingredients', label: 'Ingredients' }
   ]
 
   return (
