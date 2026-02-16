@@ -30,13 +30,6 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
-      <div className="text-center">
-        <img
-          src="/Bru-chef.PNG"
-          alt="BruChef Logo"
-          className="mx-auto mb-6 w-75 h-auto"
-        />
-      </div>
       <div className="text-center space-y-6">
         <h1 className="text-5xl font-bold text-white">
           Welcome to <span className="text-emerald-400">BruChef</span>
@@ -95,7 +88,7 @@ export default function Home() {
       {!loading && !error && (
         <div className="text-center">
           <div className="inline-block p-3 bg-green-900/50 border border-green-700 rounded">
-            <p className="text-green-400 text-sm">✓ Backend connected!</p>
+            <p className="text-green-400 text-sm">Backend connected</p>
           </div>
         </div>
       )}

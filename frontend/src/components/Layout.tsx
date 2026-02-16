@@ -20,8 +20,13 @@ export default function Layout({ children }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center space-x-2">
-              <span className="text-2xl">🍸</span>
-              <span className="text-xl font-bold text-white">BruChef</span>
+              <div className="text-center">
+                <img
+                  src="/Bru-chef.PNG"
+                  alt="BruChef Logo"
+                  className="mx-auto w-50 h-auto mt-5"
+                />
+              </div>
             </Link>
             <div className="flex space-x-4">
               {navLinks.map((link) => (
