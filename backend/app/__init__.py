@@ -4,31 +4,23 @@ from flask_migrate import Migrate
 from .models import db
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
+from .routes import register_routes
 
 load_dotenv()
-
 migrate = Migrate()
-
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, supports_credentials=True, origins=['http://localhost:5173'])
     database_url = os.getenv('DATABASE_URL')
-
-    if not database_url:
-        basedir = os.path.abspath(os.path.dirname(__file__))
-        database_url = f'sqlite:///{os.path.join(basedir, "..", "..", "db", "bruchef.db")}'
-        print("⚠️  Using SQLite - Set DATABASE_URL in .env for PostgreSQL")
-    else:
-        print("Using PostgreSQL database")
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
     db.init_app(app)
     migrate.init_app(app, db)
-    from .routes import register_routes
     register_routes(app)
-    with app.app_context():
-        db.create_all()
-
     return app
