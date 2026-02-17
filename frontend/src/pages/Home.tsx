@@ -33,13 +33,6 @@ export default function Home({ isAuthenticated }: HomeProps) {
 
   return (
     <div className="space-y-12">
-      <div className="text-center">
-        <img
-          src="/Bru-chef.PNG"
-          alt="BruChef Logo"
-          className="mx-auto mb-6 w-64 h-auto"
-        />
-      </div>
       <div className="text-center space-y-6">
         <h1 className="text-5xl font-bold text-white">
           Welcome to <span className="text-emerald-400">BruChef</span>
@@ -70,7 +63,6 @@ export default function Home({ isAuthenticated }: HomeProps) {
             </div>
             <div className="text-slate-400">Cocktail Recipes</div>
           </div>
-
           <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-700">
             <div className="text-4xl mb-2">🧪</div>
             <div className="text-3xl font-bold text-white">
@@ -121,9 +113,6 @@ export default function Home({ isAuthenticated }: HomeProps) {
                     Sign In
                   </Link>
                 </div>
-              </div>
-              <div className="hidden sm:block text-6xl ml-6">
-                🎯
               </div>
             </div>
           </div>
