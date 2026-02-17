@@ -1,15 +1,18 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 
-export default function Home() {
+interface HomeProps {
+  isAuthenticated: boolean
+}
+export default function Home({ isAuthenticated }: HomeProps) {
   const [stats, setStats] = useState({ cocktails: 0, ingredients: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     Promise.all([
-      fetch('http://127.0.0.1:5000/api/cocktails/'),
-      fetch('http://127.0.0.1:5000/api/ingredients/')
+      fetch('http://localhost:5001/api/cocktails/'),
+      fetch('http://localhost:5001/api/ingredients/')
     ])
       .then(([cocktailsRes, ingredientsRes]) =>
         Promise.all([cocktailsRes.json(), ingredientsRes.json()])
@@ -85,10 +88,40 @@ export default function Home() {
           </Link>
         </div>
       )}
+      {!isAuthenticated && !loading && !error && (
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-gradient-to-r from-emerald-900/50 to-slate-800 rounded-lg border border-emerald-700/50 p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  Create an account for more features! ✨
+                </h3>
+                <p className="text-slate-300 text-sm mb-4">
+                  Save your favorite cocktails, create custom recipes, and build your personal bar inventory.
+                </p>
+                <div className="flex gap-3">
+                  <Link
+                    to="/register"
+                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md font-medium transition-colors text-sm"
+                  >
+                    Sign Up Free
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md font-medium transition-colors text-sm"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {!loading && !error && (
         <div className="text-center">
           <div className="inline-block p-3 bg-green-900/50 border border-green-700 rounded">
-            <p className="text-green-400 text-sm">Backend connected</p>
+            <p className="text-green-400 text-sm">✓ Backend connected!</p>
           </div>
         </div>
       )}

@@ -25,7 +25,7 @@ export default function CocktailDetail() {
 
   const fetchCocktail = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/cocktails/${id}`)
+      const response = await fetch(`http://localhost:5001/api/cocktails/${id}`)
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Cocktail not found')

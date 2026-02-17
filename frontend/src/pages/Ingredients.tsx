@@ -22,7 +22,7 @@ export default function Ingredients() {
 
   const fetchIngredients = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/ingredients/')
+      const response = await fetch('http://localhost:5001/api/ingredients/')
       if (!response.ok) throw new Error('Failed to fetch ingredients')
       const data = await response.json()
       setIngredients(data)
