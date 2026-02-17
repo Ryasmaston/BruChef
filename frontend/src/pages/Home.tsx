@@ -64,7 +64,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
             <div className="text-slate-400">Cocktail Recipes</div>
           </div>
           <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-700">
-            <div className="text-4xl mb-2">🧪</div>
+            <div className="text-4xl mb-2">🍎</div>
             <div className="text-3xl font-bold text-white">
               {stats.ingredients}
             </div>
