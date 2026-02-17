@@ -24,7 +24,7 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
     }
     setLoading(true)
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
+      const response = await fetch('http://localhost:5001/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,9 +37,11 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
         })
       })
       const data = await response.json()
+      console.log('Register response:', data)
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed')
       }
+      console.log('Registration successful')
       onRegisterSuccess()
       navigate('/')
     } catch (err: any) {

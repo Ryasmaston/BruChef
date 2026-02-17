@@ -11,8 +11,8 @@ export default function Home({ isAuthenticated }: HomeProps) {
 
   useEffect(() => {
     Promise.all([
-      fetch('http://127.0.0.1:5000/api/cocktails/'),
-      fetch('http://127.0.0.1:5000/api/ingredients/')
+      fetch('http://localhost:5001/api/cocktails/'),
+      fetch('http://localhost:5001/api/ingredients/')
     ])
       .then(([cocktailsRes, ingredientsRes]) =>
         Promise.all([cocktailsRes.json(), ingredientsRes.json()])

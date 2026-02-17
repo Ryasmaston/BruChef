@@ -20,7 +20,7 @@ export default function Layout({ children, isAuthenticated, username, onLogout }
 
   const handleLogout = async () => {
     try {
-      await fetch('http://127.0.0.1:5000/api/auth/logout', {
+      await fetch('http://localhost:5001/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
       })

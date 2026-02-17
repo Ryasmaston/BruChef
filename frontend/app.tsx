@@ -18,28 +18,40 @@ export default function App() {
     checkAuth()
   }, [])
   const checkAuth = async () => {
+    console.log('Checking authentication')
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/auth/check', {
+      const response = await fetch('http://localhost:5001/api/auth/check', {
         credentials: 'include'
       })
       const data = await response.json()
+      console.log('Auth check response:', data)
       if (data.authenticated && data.user) {
+        console.log('User is authenticated')
         setIsAuthenticated(true)
         setUsername(data.user.username)
+      } else {
+        console.log('User is not authenticated')
+        setIsAuthenticated(false)
+        setUsername(null)
       }
     } catch (error) {
+      setIsAuthenticated(false)
+      setUsername(null)
       console.log('Not authenticated')
     } finally {
       setLoading(false)
     }
   }
   const handleLoginSuccess = () => {
+    console.log('handleLoginSuccess called')
     checkAuth()
   }
   const handleRegisterSuccess = () => {
+    console.log('handleRegisterSuccess called')
     checkAuth()
   }
   const handleLogout = () => {
+    console.log('handleLogout called')
     setIsAuthenticated(false)
     setUsername(null)
   }

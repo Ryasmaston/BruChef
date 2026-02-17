@@ -17,7 +17,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     setError('')
     setLoading(true)
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+      const response = await fetch('http://localhost:5001/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,9 +26,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         body: JSON.stringify(formData)
       })
       const data = await response.json()
+      console.log('Login response:', data)
       if (!response.ok) {
         throw new Error(data.error || 'Login failed')
       }
+      console.log('Login successfull')
       onLoginSuccess()
       navigate('/')
     } catch (err: any) {

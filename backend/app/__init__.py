@@ -11,7 +11,7 @@ load_dotenv()
 migrate = Migrate()
 def create_app():
     app = Flask(__name__)
-    CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'http://127.0.0.1:5000'])
+    CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'http://127.0.0.1:5001'])
     database_url = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
