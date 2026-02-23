@@ -84,7 +84,7 @@ export default function Ingredients() {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <div className="text-4xl mb-4">🧪</div>
+          <div className="text-4xl mb-4">🍎</div>
           <p className="text-slate-400">Loading ingredients...</p>
         </div>
       </div>
