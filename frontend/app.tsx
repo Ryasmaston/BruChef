@@ -18,19 +18,19 @@ export default function App() {
     checkAuth()
   }, [])
   const checkAuth = async () => {
-    console.log('Checking authentication')
+    // console.log('Checking authentication')
     try {
       const response = await fetch('http://localhost:5001/api/auth/check', {
         credentials: 'include'
       })
       const data = await response.json()
-      console.log('Auth check response:', data)
+      // console.log('Auth check response:', data)
       if (data.authenticated && data.user) {
-        console.log('User is authenticated')
+        // console.log('User is authenticated')
         setIsAuthenticated(true)
         setUsername(data.user.username)
       } else {
-        console.log('User is not authenticated')
+        // console.log('User is not authenticated')
         setIsAuthenticated(false)
         setUsername(null)
       }

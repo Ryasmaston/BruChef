@@ -4,8 +4,6 @@ from .db import db
 cocktail_ingredients = db.Table('cocktail_ingredients',
     db.Column('cocktail_id', db.Integer, db.ForeignKey('cocktail.id'), primary_key=True),
     db.Column('ingredient_id', db.Integer, db.ForeignKey('ingredient.id'), primary_key=True),
-    db.Column('amount', db.String(50)),
-    db.Column('unit', db.String(20))
 )
 
 class Cocktail(db.Model):
@@ -19,8 +17,8 @@ class Cocktail(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     ingredients = db.relationship('Ingredient', secondary=cocktail_ingredients,
                                  backref=db.backref('cocktails', lazy='dynamic'))
-    def to_dict(self):
-        return {
+    def to_dict(self, include_ingredients=False):
+        data = {
             'id': self.id,
             'name': self.name,
             'description': self.description,
@@ -30,3 +28,14 @@ class Cocktail(db.Model):
             'difficulty': self.difficulty,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+        if include_ingredients:
+            data['ingredients'] = [
+                {
+                    "id": ingredient.id,
+                    "name": ingredient.name,
+                    "category": ingredient.category,
+                    "abv": ingredient.abv
+                }
+                for ingredient in self.ingredients
+            ]
+        return data

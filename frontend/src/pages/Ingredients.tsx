@@ -36,7 +36,7 @@ export default function Ingredients() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/ingredients/categories')
+      const response = await fetch('http://localhost:5001/api/ingredients/categories')
       if (!response.ok) throw new Error('Failed to fetch categories')
       const data = await response.json()
       setCategories(data)

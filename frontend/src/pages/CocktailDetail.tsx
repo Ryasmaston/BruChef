@@ -10,6 +10,14 @@ interface Cocktail {
   glass_type: string
   garnish: string
   created_at: string
+  ingredients: Ingredient[]
+}
+
+interface Ingredient {
+  id: number
+  name: string
+  category: string
+  abv: number
 }
 
 export default function CocktailDetail() {
@@ -54,6 +62,22 @@ export default function CocktailDetail() {
         return 'bg-slate-500/20 text-slate-400 border-slate-500/50'
     }
   }
+
+  const getCategoryIcon = (category: string) => {
+      switch (category) {
+        case 'Spirit':
+          return '🥃'
+        case 'Liqueur':
+          return '🍾'
+        case 'Mixer':
+          return '🧃'
+        case 'Garnish':
+          return '🍋'
+        default:
+          return '🧪'
+      }
+    }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -121,6 +145,33 @@ export default function CocktailDetail() {
           </div>
         </div>
         <div className="p-8 space-y-8">
+          {cocktail.ingredients && cocktail.ingredients.length > 0 && (
+            <div>
+              <h2 className="text-xl font-semibold text-white mb-3 flex items-center">
+                <span className="mr-2">🍎</span>
+                What You'll Need
+              </h2>
+              <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {cocktail.ingredients.map((ingredient) => (
+                    <div
+                      key={ingredient.id}
+                      className="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors"
+                    >
+                      <span className="text-2xl">{getCategoryIcon(ingredient.category)}</span>
+                      <div className="flex-1">
+                        <div className="text-white font-medium">{ingredient.name}</div>
+                        <div className="text-xs text-slate-500">{ingredient.category}</div>
+                      </div>
+                      {ingredient.abv > 0 && (
+                        <span className="text-xs text-slate-400">{ingredient.abv}% ABV</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           {cocktail.garnish && (
             <div>
               <h2 className="text-xl font-semibold text-white mb-3 flex items-center">
