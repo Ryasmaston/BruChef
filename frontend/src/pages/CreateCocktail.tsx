@@ -146,7 +146,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
-              Cocktail Name *
+              Cocktail Name
             </label>
             <input
               type="text"
@@ -175,7 +175,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
           </div>
           <div>
             <label htmlFor="instructions" className="block text-sm font-medium text-slate-300 mb-2">
-              Instructions *
+              Instructions
             </label>
             <textarea
               id="instructions"
@@ -234,7 +234,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
               value={formData.garnish}
               onChange={handleChange}
               className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              placeholder="e.g., Mint sprig, lime wheel"
+              placeholder="Enter a cocktail name"
             />
           </div>
           <div>
