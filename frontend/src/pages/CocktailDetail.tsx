@@ -148,7 +148,7 @@ export default function CocktailDetail() {
           {cocktail.ingredients && cocktail.ingredients.length > 0 && (
             <div>
               <h2 className="text-xl font-semibold text-white mb-3 flex items-center">
-                <span className="mr-2">🧪</span>
+                <span className="mr-2">🍎</span>
                 What You'll Need
               </h2>
               <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">

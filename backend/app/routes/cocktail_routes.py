@@ -8,7 +8,7 @@ cocktail_bp = Blueprint("cocktails", __name__, url_prefix="/api/cocktails")
 def get_cocktails():
     try:
         cocktails = CocktailService.get_all_cocktails()
-        return jsonify([cocktail.to_dict() for cocktail in cocktails]), 200
+        return jsonify(cocktails), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -18,7 +18,7 @@ def get_cocktail(cocktail_id):
         cocktail = CocktailService.get_cocktail_by_id(cocktail_id)
         if not cocktail:
             return jsonify({"error": "Cocktail not found"}), 404
-        return jsonify(cocktail.to_dict()), 200
+        return jsonify(cocktail), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -68,7 +68,7 @@ def search_cocktails():
         if not query:
             return jsonify({"error": "Search query is required"}), 400
         cocktails = CocktailService.search_cocktails(query)
-        return jsonify([cocktail.to_dict() for cocktail in cocktails]), 200
+        return jsonify(cocktails), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -76,7 +76,7 @@ def search_cocktails():
 def get_cocktails_by_ingredient(ingredient_id):
     try:
         cocktails = CocktailService.get_cocktails_by_ingredient(ingredient_id)
-        return jsonify([cocktail.to_dict() for cocktail in cocktails]), 200
+        return jsonify(cocktails), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -89,6 +89,6 @@ def get_cocktails_by_difficulty(difficulty):
                 "error": f"Invalid difficulty. Must be one of: {', '.join(valid_difficulties)}"
             }), 400
         cocktails = CocktailService.get_cocktails_by_difficulty(difficulty)
-        return jsonify([cocktail.to_dict() for cocktail in cocktails]), 200
+        return jsonify(cocktails), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
