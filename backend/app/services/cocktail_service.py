@@ -6,14 +6,17 @@ class CocktailService:
     @staticmethod
     def get_all_cocktails() -> List[Cocktail]:
         try:
-            return Cocktail.query.all()
+            cocktails = Cocktail.query.all()
+            return [cocktail.to_dict() for cocktail in cocktails]
         except SQLAlchemyError as e:
             raise Exception(f'Error fetching cocktails: {str(e)}')
 
     @staticmethod
     def get_cocktail_by_id(cocktail_id: int) -> Optional[Cocktail]:
         try:
-            return Cocktail.query.get(cocktail_id)
+            cocktail = Cocktail.query.get(cocktail_id)
+            if cocktail:
+                return cocktail.to_dict(include_ingredients=True)
         except SQLAlchemyError as e:
             raise Exception(f'Error fetching cocktail: {str(e)}')
 
