@@ -78,7 +78,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home isAuthenticated={isAuthenticated} />} />
           <Route path="/cocktails" element={<Cocktails />} />
-          <Route path="/cocktails/new" element={<CreateCocktail isAuthenticated={isAuthenticated} />}
+          <Route path="/cocktails/new" element={<CreateCocktail isAuthenticated={isAuthenticated} />} />
           <Route path="/cocktails/:id" element={<CocktailDetail />} />
           <Route path="/ingredients" element={<Ingredients />} />
           <Route path="/about" element={<About />} />

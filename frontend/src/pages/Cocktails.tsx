@@ -10,7 +10,11 @@ interface Cocktail {
   garnish: string
 }
 
-export default function Cocktails() {
+interface CocktailProps {
+  isAuthenticated?: boolean
+}
+
+export default function Cocktails({isAuthenticated = false}: CocktailProps) {
   const [cocktails, setCocktails] = useState<Cocktail[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -90,6 +94,22 @@ export default function Cocktails() {
             {filteredCocktails.length} {filteredCocktails.length === 1 ? 'cocktail' : 'cocktails'}
           </p>
         </div>
+        {isAuthenticated ? (
+          <Link
+            to="/cocktails/new"
+            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2"
+          >
+            <span>+</span>
+            <span>New Cocktail</span>
+          </Link>
+        ) : (
+          <div className="text-sm text-slate-500">
+            <Link to="/login" className="text-emerald-400 hover:text-emerald-300">
+              Sign in
+            </Link>
+            {' '}to create cocktails
+          </div>
+        )}
       </div>
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
