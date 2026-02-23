@@ -17,6 +17,7 @@ class CocktailService:
             cocktail = Cocktail.query.get(cocktail_id)
             if cocktail:
                 return cocktail.to_dict(include_ingredients=True)
+            return None
         except SQLAlchemyError as e:
             raise Exception(f'Error fetching cocktail: {str(e)}')
 
