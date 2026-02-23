@@ -26,6 +26,15 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [customIngredient, setCustomIngredient] = useState({
+    name: '',
+    category: 'Mixer',
+    description: '',
+    abv: 0
+  })
+  const [modalLoading, setModalLoading] = useState(false)
+  const [modalError, setModalError] = useState('')
 
   useEffect(() => {
     fetchIngredients()
@@ -82,6 +91,50 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     }))
   }
 
+  const handleCustomIngredientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const value = e.target.name === 'abv' ? parseFloat(e.target.value) || 0 : e.target.value
+    setCustomIngredient({
+      ...customIngredient,
+      [e.target.name]: value
+    })
+  }
+
+  const handleCreateCustomIngredient = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setModalError('')
+    setModalLoading(true)
+    try {
+      const response = await fetch('http://localhost:5001/api/ingredients/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(customIngredient)
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create ingredient')
+      }
+      setIngredients(prev => [...prev, data])
+      setFormData(prev => ({
+        ...prev,
+        ingredient_ids: [...prev.ingredient_ids, data.id]
+      }))
+      setCustomIngredient({
+        name: '',
+        category: 'Mixer',
+        description: '',
+        abv: 0
+      })
+      setShowModal(false)
+      setModalLoading(false)
+    } catch (err: any) {
+      setModalError(err.message || 'Failed to create ingredient')
+      setModalLoading(false)
+    }
+  }
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'Spirit':
@@ -124,167 +177,284 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
       </div>
     )
   }
-
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <Link
-          to="/cocktails"
-          className="text-slate-400 hover:text-white flex items-center space-x-2"
-        >
-          <span>←</span>
-          <span>Back to Cocktails</span>
-        </Link>
-      </div>
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-8">
-        <h1 className="text-3xl font-bold text-white mb-6">Create New Cocktail</h1>
-        {error && (
-          <div className="mb-6 p-4 bg-red-900/50 border border-red-700 rounded text-red-400">
-            {error}
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
-              Cocktail Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              placeholder="e.g., Mojito"
-            />
-          </div>
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-2">
-              Description
-            </label>
-            <input
-              type="text"
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              placeholder="A refreshing rum-based cocktail..."
-            />
-          </div>
-          <div>
-            <label htmlFor="instructions" className="block text-sm font-medium text-slate-300 mb-2">
-              Instructions
-            </label>
-            <textarea
-              id="instructions"
-              name="instructions"
-              value={formData.instructions}
-              onChange={handleChange}
-              required
-              rows={6}
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              placeholder="1. Muddle mint leaves with sugar and lime juice&#10;2. Add rum and ice&#10;3. Top with soda water"
-            />
-            <p className="mt-1 text-xs text-slate-500">
-              Separate steps with new lines
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <>
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <Link
+            to="/cocktails"
+            className="text-slate-400 hover:text-white flex items-center space-x-2"
+          >
+            <span>←</span>
+            <span>Back to Cocktails</span>
+          </Link>
+        </div>
+        <div className="bg-slate-800 rounded-lg border border-slate-700 p-8">
+          <h1 className="text-3xl font-bold text-white mb-6">Create New Cocktail</h1>
+          {error && (
+            <div className="mb-6 p-4 bg-red-900/50 border border-red-700 rounded text-red-400">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="glass_type" className="block text-sm font-medium text-slate-300 mb-2">
-                Glass Type
+              <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
+                Cocktail Name
               </label>
               <input
                 type="text"
-                id="glass_type"
-                name="glass_type"
-                value={formData.glass_type}
+                id="name"
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
+                required
                 className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                placeholder="e.g., Highball, Rocks"
+                placeholder="e.g., Mojito"
               />
             </div>
             <div>
-              <label htmlFor="difficulty" className="block text-sm font-medium text-slate-300 mb-2">
-                Difficulty
+              <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-2">
+                Description
               </label>
-              <select
-                id="difficulty"
-                name="difficulty"
-                value={formData.difficulty}
+              <input
+                type="text"
+                id="description"
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-              >
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Advanced">Advanced</option>
-              </select>
+                className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                placeholder="A refreshing rum-based cocktail..."
+              />
             </div>
-          </div>
-          <div>
-            <label htmlFor="garnish" className="block text-sm font-medium text-slate-300 mb-2">
-              Garnish
-            </label>
-            <input
-              type="text"
-              id="garnish"
-              name="garnish"
-              value={formData.garnish}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              placeholder="Enter a cocktail name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-3">
-              Ingredients ({formData.ingredient_ids.length} selected)
-            </label>
-            <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {ingredients.map((ingredient) => (
-                  <label
-                    key={ingredient.id}
-                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      formData.ingredient_ids.includes(ingredient.id)
-                        ? 'bg-emerald-500/20 border border-emerald-500/50'
-                        : 'bg-slate-800/50 hover:bg-slate-700/50'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.ingredient_ids.includes(ingredient.id)}
-                      onChange={() => toggleIngredient(ingredient.id)}
-                      className="w-4 h-4 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="text-xl">{getCategoryIcon(ingredient.category)}</span>
-                    <div className="flex-1">
-                      <div className="text-white text-sm font-medium">{ingredient.name}</div>
-                      <div className="text-xs text-slate-500">{ingredient.category}</div>
-                    </div>
-                  </label>
-                ))}
+            <div>
+              <label htmlFor="instructions" className="block text-sm font-medium text-slate-300 mb-2">
+                Instructions
+              </label>
+              <textarea
+                id="instructions"
+                name="instructions"
+                value={formData.instructions}
+                onChange={handleChange}
+                required
+                rows={6}
+                className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                placeholder="1. Muddle mint leaves with sugar and lime juice&#10;2. Add rum and ice&#10;3. Top with soda water"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Separate steps with new lines
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="glass_type" className="block text-sm font-medium text-slate-300 mb-2">
+                  Glass Type
+                </label>
+                <input
+                  type="text"
+                  id="glass_type"
+                  name="glass_type"
+                  value={formData.glass_type}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  placeholder="e.g., Highball, Rocks"
+                />
+              </div>
+              <div>
+                <label htmlFor="difficulty" className="block text-sm font-medium text-slate-300 mb-2">
+                  Difficulty
+                </label>
+                <select
+                  id="difficulty"
+                  name="difficulty"
+                  value={formData.difficulty}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
               </div>
             </div>
-          </div>
-          <div className="flex gap-4 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
-            >
-              {loading ? 'Creating...' : 'Create Cocktail'}
-            </button>
-            <Link
-              to="/cocktails"
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
-            >
-              Cancel
-            </Link>
-          </div>
-        </form>
+            <div>
+              <label htmlFor="garnish" className="block text-sm font-medium text-slate-300 mb-2">
+                Garnish
+              </label>
+              <input
+                type="text"
+                id="garnish"
+                name="garnish"
+                value={formData.garnish}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                placeholder="e.g., Mint sprig, lime wheel"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-3">
+                <label className="block text-sm font-medium text-slate-300">
+                  Ingredients ({formData.ingredient_ids.length} selected)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(true)}
+                  className="px-3 py-1 text-sm bg-emerald-500 hover:bg-emerald-600 text-white rounded transition-colors"
+                >
+                  + Add Custom Ingredient
+                </button>
+              </div>
+              <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 max-h-96 overflow-y-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {ingredients.map((ingredient) => (
+                    <label
+                      key={ingredient.id}
+                      className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                        formData.ingredient_ids.includes(ingredient.id)
+                          ? 'bg-emerald-500/20 border border-emerald-500/50'
+                          : 'bg-slate-800/50 hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.ingredient_ids.includes(ingredient.id)}
+                        onChange={() => toggleIngredient(ingredient.id)}
+                        className="w-4 h-4 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span className="text-xl">{getCategoryIcon(ingredient.category)}</span>
+                      <div className="flex-1">
+                        <div className="text-white text-sm font-medium">{ingredient.name}</div>
+                        <div className="text-xs text-slate-500">{ingredient.category}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex gap-4 pt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
+              >
+                {loading ? 'Creating...' : 'Create Cocktail'}
+              </button>
+              <Link
+                to="/cocktails"
+                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+              >
+                Cancel
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full">
+            <h2 className="text-2xl font-bold text-white mb-4">Add Custom Ingredient</h2>
+
+            {modalError && (
+              <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
+                {modalError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateCustomIngredient} className="space-y-4">
+              <div>
+                <label htmlFor="custom-name" className="block text-sm font-medium text-slate-300 mb-2">
+                  Ingredient Name
+                </label>
+                <input
+                  type="text"
+                  id="custom-name"
+                  name="name"
+                  value={customIngredient.name}
+                  onChange={handleCustomIngredientChange}
+                  required
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  placeholder="e.g., Elderflower Liqueur"
+                />
+              </div>
+              <div>
+                <label htmlFor="custom-category" className="block text-sm font-medium text-slate-300 mb-2">
+                  Category
+                </label>
+                <select
+                  id="custom-category"
+                  name="category"
+                  value={customIngredient.category}
+                  onChange={handleCustomIngredientChange}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="Spirit">Spirit</option>
+                  <option value="Liqueur">Liqueur</option>
+                  <option value="Mixer">Mixer</option>
+                  <option value="Garnish">Garnish</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="custom-abv" className="block text-sm font-medium text-slate-300 mb-2">
+                  ABV (%)
+                </label>
+                <input
+                  type="number"
+                  id="custom-abv"
+                  name="abv"
+                  value={customIngredient.abv}
+                  onChange={handleCustomIngredientChange}
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label htmlFor="custom-description" className="block text-sm font-medium text-slate-300 mb-2">
+                  Description (optional)
+                </label>
+                <textarea
+                  id="custom-description"
+                  name="description"
+                  value={customIngredient.description}
+                  onChange={handleCustomIngredientChange}
+                  rows={2}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  placeholder="A floral, sweet liqueur..."
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={modalLoading}
+                  className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
+                >
+                  {modalLoading ? 'Adding...' : 'Add Ingredient'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false)
+                    setModalError('')
+                    setCustomIngredient({
+                      name: '',
+                      category: 'Mixer',
+                      description: '',
+                      abv: 0
+                    })
+                  }}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
