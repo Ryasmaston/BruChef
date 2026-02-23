@@ -84,7 +84,7 @@ export default function Ingredients() {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <div className="text-4xl mb-4">🧪</div>
+          <div className="text-4xl mb-4">🍎</div>
           <p className="text-slate-400">Loading ingredients...</p>
         </div>
       </div>
@@ -142,21 +142,6 @@ export default function Ingredients() {
             ))}
           </select>
         </div>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {categories.map(category => {
-          const count = ingredients.filter(i => i.category === category).length
-          return (
-            <div
-              key={category}
-              className="bg-slate-800 rounded-lg p-4 text-center border border-slate-700"
-            >
-              <div className="text-2xl mb-1">{getCategoryIcon(category)}</div>
-              <div className="text-xl font-bold text-white">{count}</div>
-              <div className="text-xs text-slate-400">{category}</div>
-            </div>
-          )
-        })}
       </div>
       {filteredIngredients.length === 0 ? (
         <div className="text-center py-12">
