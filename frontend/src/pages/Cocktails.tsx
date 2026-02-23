@@ -135,7 +135,7 @@ export default function Cocktails() {
               to={`/cocktails/${cocktail.id}`}
               className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
             >
-              <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
+              <div className={`h-48 ${getDifficultyColor(cocktail.difficulty)} flex items-center justify-center`}>
                 <span className="text-6xl">🍹</span>
               </div>
               <div className="p-5">
