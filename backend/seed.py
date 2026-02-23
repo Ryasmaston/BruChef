@@ -1,13 +1,48 @@
 from app import create_app
-from app.models import db, Cocktail, Ingredient
+from app.models import db, Cocktail, Ingredient, User
 
 
 def seed_database():
     app = create_app()
     with app.app_context():
-        print("Clearing existing data...")
+        print("Clearing existing data")
         db.drop_all()
         db.create_all()
+        print("Creating users")
+        users_data = [
+            {
+                "username": "admin",
+                "email": "admin@example.com",
+                "password": "admin123"
+            },
+            {
+                "username": "Alice",
+                "email": "alice@email.com",
+                "password": "Password123"
+            },
+            {
+                "username": "John",
+                "email": "john@email.com",
+                "password": "Password123"
+            },
+            {
+                "username": "Ryan",
+                "email": "ryan@email.com",
+                "password": "Password123"
+            }
+        ]
+        users = []
+        for data in users_data:
+            user = User(
+                username=data["username"],
+                email=data["email"]
+            )
+            user.set_password(data["password"])
+            users.append(user)
+
+        db.session.add_all(users)
+        db.session.commit()
+        print(f"✓ {User.query.count()} users created")
         print("Creating ingredients...")
         vodka = Ingredient(name="Vodka", category="Spirit", abv=40.0)
         gin = Ingredient(name="Gin", category="Spirit", abv=40.0)
@@ -51,10 +86,10 @@ def seed_database():
         margarita = Cocktail(
             name="Margarita",
             description="A classic tequila cocktail with lime and triple sec",
-            instructions="""1. Add tequila, triple sec, and lime juice to shaker with ice
-                            2. Shake well
-                            3. Strain into salt-rimmed rocks glass
-                            4. Garnish with lime wheel""",
+            instructions="""Add tequila, triple sec, and lime juice to shaker with ice
+                            Shake well
+                            Strain into salt-rimmed rocks glass
+                            Garnish with lime wheel""",
             glass_type="Rocks",
             garnish="Lime wheel, salt rim",
             difficulty="Easy"
@@ -64,11 +99,11 @@ def seed_database():
         mojito = Cocktail(
             name="Mojito",
             description="A refreshing rum cocktail with mint and lime",
-            instructions="""1. Muddle mint with simple syrup and lime juice
-                            2. Add rum and ice
-                            3. Top with soda water
-                            4. Stir gently
-                            5. Garnish with mint sprig""",
+            instructions="""Muddle mint with simple syrup and lime juice
+                            Add rum and ice
+                            Top with soda water
+                            Stir gently
+                            Garnish with mint sprig""",
             glass_type="Highball",
             garnish="Mint sprig",
             difficulty="Easy"
@@ -78,10 +113,10 @@ def seed_database():
         cosmopolitan = Cocktail(
             name="Cosmopolitan",
             description="A vodka cocktail with cranberry and citrus",
-            instructions="""1. Add vodka, triple sec, lime juice, cranberry juice to shaker with ice
-            2. Shake well
-            3. Strain into chilled martini glass
-            4. Garnish with lime wheel""",
+            instructions="""Add vodka, triple sec, lime juice, cranberry juice to shaker with ice
+                            Shake well
+                            Strain into chilled martini glass
+                            Garnish with lime wheel""",
             glass_type="Martini",
             garnish="Lime wheel",
             difficulty="Medium"
@@ -91,10 +126,10 @@ def seed_database():
         old_fashioned = Cocktail(
             name="Old Fashioned",
             description="A timeless whiskey cocktail with bitters and sugar",
-            instructions="""1. Muddle sugar cube with bitters
-                            2. Add bourbon and ice
-                            3. Stir gently
-                            4. Garnish with orange peel""",
+            instructions="""Muddle sugar cube with bitters
+                            Add bourbon and ice
+                            Stir gently
+                            Garnish with orange peel""",
             glass_type="Rocks",
             garnish="Orange peel",
             difficulty="Easy"
@@ -104,10 +139,10 @@ def seed_database():
         negroni = Cocktail(
             name="Negroni",
             description="A bold gin cocktail with Campari and sweet vermouth",
-            instructions="""1. Add gin, Campari, sweet vermouth to mixing glass with ice
-                            2. Stir until chilled
-                            3. Strain over ice in rocks glass
-                            4. Garnish with orange peel""",
+            instructions="""Add gin, Campari, sweet vermouth to mixing glass with ice
+                            Stir until chilled
+                            Strain over ice in rocks glass
+                            Garnish with orange peel""",
             glass_type="Rocks",
             garnish="Orange peel",
             difficulty="Medium"
@@ -117,11 +152,11 @@ def seed_database():
         whiskey_sour = Cocktail(
             name="Whiskey Sour",
             description="A balanced cocktail with lemon and egg white",
-            instructions="""1. Add whiskey, lemon juice, simple syrup, egg white
-                            2. Dry shake
-                            3. Add ice and shake again
-                            4. Strain into rocks glass
-                            5. Garnish with cherry""",
+            instructions="""Add whiskey, lemon juice, simple syrup, egg white
+                            Dry shake
+                            Add ice and shake again
+                            Strain into rocks glass
+                            Garnish with cherry""",
             glass_type="Rocks",
             garnish="Cherry",
             difficulty="Medium"
@@ -131,10 +166,10 @@ def seed_database():
         pina_colada = Cocktail(
             name="Piña Colada",
             description="A tropical rum cocktail with pineapple and coconut",
-            instructions="""1. Add rum, pineapple juice, coconut cream to blender
-                            2. Add ice and blend
-                            3. Pour into hurricane glass
-                            4. Garnish with pineapple wedge""",
+            instructions="""Add rum, pineapple juice, coconut cream to blender
+                            Add ice and blend
+                            Pour into hurricane glass
+                            Garnish with pineapple wedge""",
             glass_type="Hurricane",
             garnish="Pineapple wedge",
             difficulty="Easy"
@@ -144,11 +179,11 @@ def seed_database():
         aperol_spritz = Cocktail(
             name="Aperol Spritz",
             description="A light Italian aperitif with prosecco and Aperol",
-            instructions="""1. Fill wine glass with ice
-                            2. Add prosecco
-                            3. Add Aperol
-                            4. Top with soda water
-                            5. Stir gently""",
+            instructions="""Fill wine glass with ice
+                            Add prosecco
+                            Add Aperol
+                            Top with soda water
+                            Stir gently""",
             glass_type="Wine",
             garnish="Orange slice",
             difficulty="Easy"
@@ -158,10 +193,10 @@ def seed_database():
         rum_and_coke = Cocktail(
             name="Rum & Coke",
             description="A simple highball with rum and cola",
-            instructions="""1. Fill highball glass with ice
-                            2. Add rum
-                            3. Top with cola
-                            4. Stir gently""",
+            instructions="""Fill highball glass with ice
+                            Add rum
+                            Top with cola
+                            Stir gently""",
             glass_type="Highball",
             garnish="Lime wedge",
             difficulty="Easy"
