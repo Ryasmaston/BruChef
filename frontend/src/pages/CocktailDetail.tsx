@@ -74,7 +74,7 @@ export default function CocktailDetail() {
         case 'Garnish':
           return '🍋'
         default:
-          return '🧪'
+          return '🍎'
       }
     }
 
