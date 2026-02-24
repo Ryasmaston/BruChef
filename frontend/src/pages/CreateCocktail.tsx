@@ -375,7 +375,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                             <div className="flex-1">
                               <div className="text-white text-sm font-medium">{ingredient.name}</div>
                               <div className="text-xs text-slate-500 flex items-center gap-1">
-                                <span className="text-emerald-400">{ingredient.category}</span>
+                                <span className="text-emerald-600">{ingredient.category}</span>
                                 {ingredient.subcategory && (
                                   <>
                                     <span className="text-slate-600">•</span>

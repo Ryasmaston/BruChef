@@ -118,13 +118,6 @@ export default function Home({ isAuthenticated }: HomeProps) {
           </div>
         </div>
       )}
-      {!loading && !error && (
-        <div className="text-center">
-          <div className="inline-block p-3 bg-green-900/50 border border-green-700 rounded">
-            <p className="text-green-400 text-sm">✓ Backend connected!</p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
