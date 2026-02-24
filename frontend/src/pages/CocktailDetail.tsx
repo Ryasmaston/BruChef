@@ -17,6 +17,7 @@ interface Ingredient {
   id: number
   name: string
   category: string
+  subcategory: string | null
   abv: number
 }
 
@@ -64,19 +65,33 @@ export default function CocktailDetail() {
   }
 
   const getCategoryIcon = (category: string) => {
-      switch (category) {
-        case 'Spirit':
-          return '🥃'
-        case 'Liqueur':
-          return '🍾'
-        case 'Mixer':
-          return '🧃'
-        case 'Garnish':
-          return '🍋'
-        default:
-          return '🍎'
-      }
+    switch (category) {
+      case 'Spirit':
+        return '🥃'
+      case 'Liqueur':
+        return '🍾'
+      case 'Wine':
+        return '🍷'
+      case 'Bitters':
+        return '🧴'
+      case 'Juice':
+        return '🍊'
+      case 'Syrup':
+        return '🍯'
+      case 'Soda':
+        return '🥤'
+      case 'Dairy':
+        return '🥛'
+      case 'Egg':
+        return '🥚'
+      case 'Fresh Ingredient':
+        return '🌿'
+      case 'Garnish':
+        return '🍋'
+      default:
+        return '🍎'
     }
+  }
 
   if (loading) {
     return (
@@ -161,7 +176,15 @@ export default function CocktailDetail() {
                       <span className="text-2xl">{getCategoryIcon(ingredient.category)}</span>
                       <div className="flex-1">
                         <div className="text-white font-medium">{ingredient.name}</div>
-                        <div className="text-xs text-slate-500">{ingredient.category}</div>
+                        <div className="text-xs text-slate-500 flex items-center gap-1">
+                          <span className="text-emerald-600">{ingredient.category}</span>
+                          {ingredient.subcategory && (
+                            <>
+                              <span className="text-slate-600">•</span>
+                              <span>{ingredient.subcategory}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                       {ingredient.abv > 0 && (
                         <span className="text-xs text-slate-400">{ingredient.abv}% ABV</span>

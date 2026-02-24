@@ -62,12 +62,12 @@ def seed_database():
         cranberry = Ingredient(name="Cranberry Juice", category="Juice", subcategory="Berry", abv=0.0)
         orange_juice = Ingredient(name="Orange Juice", category="Juice", subcategory="Citrus", abv=0.0)
         pineapple = Ingredient(name="Pineapple Juice", category="Juice", subcategory="Tropical", abv=0.0)
-        simple_syrup = Ingredient(name="Simple Syrup", category="Syrup", subcategory="Simple", abv=0.0)
-        sugar_cube = Ingredient(name="Sugar Cube", category="Syrup", subcategory="Simple", abv=0.0)
+        simple_syrup = Ingredient(name="Simple Syrup", category="Syrup", abv=0.0)
+        sugar_cube = Ingredient(name="Sugar Cube", category="Syrup", abv=0.0)
         soda_water = Ingredient(name="Soda Water", category="Soda", subcategory="Club Soda", abv=0.0)
         coke = Ingredient(name="Cola", category="Soda", subcategory="Cola", abv=0.0)
-        coconut_cream = Ingredient(name="Coconut Cream", category="Dairy", subcategory="Coconut Cream", abv=0.0)
-        egg_white = Ingredient(name="Egg White", category="Egg", subcategory="Egg White", abv=0.0)
+        coconut_cream = Ingredient(name="Coconut Cream", category="Dairy", abv=0.0)
+        egg_white = Ingredient(name="Egg White", category="Egg", abv=0.0)
         mint = Ingredient(name="Fresh Mint", category="Fresh Ingredient", subcategory="Herb", abv=0.0)
 
         db.session.add_all([

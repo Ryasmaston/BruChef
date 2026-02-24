@@ -34,6 +34,7 @@ class Cocktail(db.Model):
                     "id": ingredient.id,
                     "name": ingredient.name,
                     "category": ingredient.category,
+                    "subcategory": ingredient.subcategory,
                     "abv": ingredient.abv
                 }
                 for ingredient in self.ingredients
