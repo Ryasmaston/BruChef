@@ -34,6 +34,7 @@ class IngredientService:
             new_ingredient = Ingredient(
                 name = data['name'],
                 category = data.get('category', ''),
+                subcategory = data.get('subcategory', ''),
                 description = data.get('description', ''),
                 abv = data.get('abv', 0.0)
             )
@@ -56,9 +57,10 @@ class IngredientService:
                 if IngredientService.get_ingredient_by_name(data['name']):
                     raise ValueError(f"Ingredient '{data['name']}' already exists")
                 ingredient.name = data['name']
-
             if 'category' in data:
                 ingredient.category = data['category']
+            if 'subcategory' in data:
+                ingredient.subcategory = data['subcategory']
             if 'description' in data:
                 ingredient.description = data['description']
             if 'abv' in data:
