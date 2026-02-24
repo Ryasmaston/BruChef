@@ -5,11 +5,27 @@ interface Ingredient {
   id: number
   name: string
   category: string
+  subcategory: string | null
   abv: number
 }
 
 interface CreateCocktailProps {
   isAuthenticated: boolean
+}
+
+const CATEGORIES: Record<string, string[]> = {
+  'Spirit': ['Vodka', 'Gin', 'Rum', 'Tequila', 'Mezcal', 'Whiskey', 'Bourbon', 'Scotch', 'Brandy', 'Cognac', 'Other Spirit'],
+  'Liqueur': ['Orange', 'Coffee', 'Herbal', 'Cream', 'Fruit', 'Nut', 'Chocolate', 'Other Liqueur'],
+  'Wine': ['Sparkling', 'Red', 'White', 'Rosé', 'Fortified', 'Other Wine'],
+  'Bitters': ['Aromatic', 'Orange', 'Herbal', 'Other Bitters'],
+  'Juice': ['Citrus', 'Berry', 'Tropical', 'Vegetable', 'Other Juice'],
+  'Syrup': ['Simple', 'Flavored', 'Honey', 'Agave', 'Grenadine', 'Other Syrup'],
+  'Soda': ['Club Soda', 'Tonic', 'Ginger Beer', 'Ginger Ale', 'Cola', 'Other Soda'],
+  'Dairy': ['Cream', 'Milk', 'Coconut Cream', 'Other Dairy'],
+  'Egg': ['Egg White', 'Egg Yolk', 'Whole Egg'],
+  'Fresh Ingredient': ['Herb', 'Fruit', 'Vegetable', 'Spice', 'Other Fresh'],
+  'Garnish': ['Citrus', 'Berry', 'Olive', 'Cherry', 'Herb', 'Salt/Sugar', 'Other Garnish'],
+  'Other': ['Uncategorized']
 }
 
 export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps) {
@@ -29,7 +45,8 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   const [showModal, setShowModal] = useState(false)
   const [customIngredient, setCustomIngredient] = useState({
     name: '',
-    category: 'Mixer',
+    category: 'Spirit',
+    subcategory: CATEGORIES['Spirit'][0],
     description: '',
     abv: 0
   })
@@ -92,12 +109,16 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   }
 
   const handleCustomIngredientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const value = e.target.name === 'abv' ? parseFloat(e.target.value) || 0 : e.target.value
-    setCustomIngredient({
-      ...customIngredient,
-      [e.target.name]: value
-    })
-  }
+      const { name, value } = e.target
+      if (name === 'abv') {
+        setCustomIngredient(prev => ({ ...prev, abv: parseFloat(value) || 0 }))
+      } else if (name === 'category') {
+        const firstSubcategory = CATEGORIES[value]?.[0]
+        setCustomIngredient(prev => ({ ...prev, category: value, subcategory: firstSubcategory }))
+      } else {
+        setCustomIngredient(prev => ({ ...prev, [name]: value }))
+      }
+    }
 
   const handleCreateCustomIngredient = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -123,7 +144,8 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
       }))
       setCustomIngredient({
         name: '',
-        category: 'Mixer',
+        category: 'Spirit',
+        subcategory: 'Vodka',
         description: '',
         abv: 0
       })
@@ -141,14 +163,36 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
         return '🥃'
       case 'Liqueur':
         return '🍾'
-      case 'Mixer':
+      case 'Wine':
+        return '🍷'
+      case 'Bitters':
+        return '💧'
+      case 'Juice':
         return '🧃'
+      case 'Syrup':
+        return '🍯'
+      case 'Soda':
+        return '🥤'
+      case 'Dairy':
+        return '🥛'
+      case 'Egg':
+        return '🥚'
+      case 'Fresh Ingredient':
+        return '🌿'
       case 'Garnish':
         return '🍋'
       default:
-        return '🍎'
+        return '🧪'
     }
   }
+
+  const groupedIngredients = ingredients.reduce((acc, ingredient) => {
+      if (!acc[ingredient.category]) {
+        acc[ingredient.category] = []
+      }
+      acc[ingredient.category].push(ingredient)
+      return acc
+    }, {} as Record<string, Ingredient[]>)
 
   if (!isAuthenticated) {
     return (
@@ -305,34 +349,49 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                 </button>
               </div>
               <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 max-h-96 overflow-y-auto">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {ingredients.map((ingredient) => (
-                    <label
-                      key={ingredient.id}
-                      className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                        formData.ingredient_ids.includes(ingredient.id)
-                          ? 'bg-emerald-500/20 border border-emerald-500/50'
-                          : 'bg-slate-800/50 hover:bg-slate-700/50'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.ingredient_ids.includes(ingredient.id)}
-                        onChange={() => toggleIngredient(ingredient.id)}
-                        className="w-4 h-4 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500"
-                      />
-                      <span className="text-xl">{getCategoryIcon(ingredient.category)}</span>
-                      <div className="flex-1">
-                        <div className="text-white text-sm font-medium">{ingredient.name}</div>
-                        <div className="text-xs text-slate-500">{ingredient.category}</div>
+                <div className="space-y-4">
+                  {Object.entries(groupedIngredients).map(([category, categoryIngredients]) => (
+                    <div key={category}>
+                      <h3 className="text-sm font-semibold text-emerald-400 mb-2 flex items-center">
+                        <span className="mr-2">{getCategoryIcon(category)}</span>
+                        {category}
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {categoryIngredients.map((ingredient) => (
+                          <label
+                            key={ingredient.id}
+                            className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                              formData.ingredient_ids.includes(ingredient.id)
+                                ? 'bg-emerald-500/20 border border-emerald-500/50'
+                                : 'bg-slate-800/50 hover:bg-slate-700/50'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.ingredient_ids.includes(ingredient.id)}
+                              onChange={() => toggleIngredient(ingredient.id)}
+                              className="w-4 h-4 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <div className="flex-1">
+                              <div className="text-white text-sm font-medium">{ingredient.name}</div>
+                              <div className="text-xs text-slate-500 flex items-center gap-1">
+                                <span className="text-emerald-600">{ingredient.category}</span>
+                                {ingredient.subcategory && (
+                                  <>
+                                    <span className="text-slate-600">•</span>
+                                    <span>{ingredient.subcategory}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </label>
+                        ))}
                       </div>
-                    </label>
+                    </div>
                   ))}
                 </div>
               </div>
             </div>
-
-            {/* Submit Button */}
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
@@ -353,19 +412,17 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
       </div>
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-white mb-4">Add Custom Ingredient</h2>
-
             {modalError && (
               <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
                 {modalError}
               </div>
             )}
-
             <form onSubmit={handleCreateCustomIngredient} className="space-y-4">
               <div>
                 <label htmlFor="custom-name" className="block text-sm font-medium text-slate-300 mb-2">
-                  Ingredient Name
+                  Ingredient Name *
                 </label>
                 <input
                   type="text"
@@ -380,7 +437,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
               </div>
               <div>
                 <label htmlFor="custom-category" className="block text-sm font-medium text-slate-300 mb-2">
-                  Category
+                  Category *
                 </label>
                 <select
                   id="custom-category"
@@ -389,10 +446,25 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                   onChange={handleCustomIngredientChange}
                   className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="Spirit">Spirit</option>
-                  <option value="Liqueur">Liqueur</option>
-                  <option value="Mixer">Mixer</option>
-                  <option value="Garnish">Garnish</option>
+                  {Object.keys(CATEGORIES).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="custom-subcategory" className="block text-sm font-medium text-slate-300 mb-2">
+                  Subcategory *
+                </label>
+                <select
+                  id="custom-subcategory"
+                  name="subcategory"
+                  value={customIngredient.subcategory}
+                  onChange={handleCustomIngredientChange}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  {CATEGORIES[customIngredient.category].map(subcat => (
+                    <option key={subcat} value={subcat}>{subcat}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -441,7 +513,8 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                     setModalError('')
                     setCustomIngredient({
                       name: '',
-                      category: 'Mixer',
+                      category: 'Spirit',
+                      subcategory: CATEGORIES['Spirit'][0],
                       description: '',
                       abv: 0
                     })

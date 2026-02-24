@@ -42,44 +42,48 @@ def seed_database():
 
         db.session.add_all(users)
         db.session.commit()
-        print(f"✓ {User.query.count()} users created")
-        print("Creating ingredients...")
-        vodka = Ingredient(name="Vodka", category="Spirit", abv=40.0)
-        gin = Ingredient(name="Gin", category="Spirit", abv=40.0)
-        rum = Ingredient(name="White Rum", category="Spirit", abv=40.0)
-        dark_rum = Ingredient(name="Dark Rum", category="Spirit", abv=40.0)
-        tequila = Ingredient(name="Tequila", category="Spirit", abv=40.0)
-        whiskey = Ingredient(name="Bourbon Whiskey", category="Spirit", abv=45.0)
-        triple_sec = Ingredient(name="Triple Sec", category="Liqueur", abv=40.0)
-        campari = Ingredient(name="Campari", category="Liqueur", abv=24.0)
-        aperol = Ingredient(name="Aperol", category="Liqueur", abv=11.0)
-        sweet_vermouth = Ingredient(name="Sweet Vermouth", category="Fortified Wine", abv=16.0)
-        dry_vermouth = Ingredient(name="Dry Vermouth", category="Fortified Wine", abv=18.0)
-        prosecco = Ingredient(name="Prosecco", category="Sparkling Wine", abv=11.0)
-        angostura = Ingredient(name="Angostura Bitters", category="Bitters", abv=44.7)
-        lime_juice = Ingredient(name="Lime Juice", category="Mixer", abv=0.0)
-        lemon_juice = Ingredient(name="Lemon Juice", category="Mixer", abv=0.0)
-        simple_syrup = Ingredient(name="Simple Syrup", category="Mixer", abv=0.0)
-        cranberry = Ingredient(name="Cranberry Juice", category="Mixer", abv=0.0)
-        orange_juice = Ingredient(name="Orange Juice", category="Mixer", abv=0.0)
-        pineapple = Ingredient(name="Pineapple Juice", category="Mixer", abv=0.0)
-        coconut_cream = Ingredient(name="Coconut Cream", category="Mixer", abv=0.0)
-        soda_water = Ingredient(name="Soda Water", category="Mixer", abv=0.0)
-        coke = Ingredient(name="Cola", category="Mixer", abv=0.0)
-        mint = Ingredient(name="Fresh Mint", category="Garnish", abv=0.0)
-        egg_white = Ingredient(name="Egg White", category="Other", abv=0.0)
-        sugar_cube = Ingredient(name="Sugar Cube", category="Sweetener", abv=0.0)
+        print("Creating ingredients")
+
+        vodka = Ingredient(name="Vodka", category="Spirit", subcategory="Vodka", abv=40.0)
+        gin = Ingredient(name="Gin", category="Spirit", subcategory="Gin", abv=40.0)
+        rum = Ingredient(name="White Rum", category="Spirit", subcategory="Rum", abv=40.0)
+        dark_rum = Ingredient(name="Dark Rum", category="Spirit", subcategory="Rum", abv=40.0)
+        tequila = Ingredient(name="Tequila", category="Spirit", subcategory="Tequila", abv=40.0)
+        whiskey = Ingredient(name="Bourbon Whiskey", category="Spirit", subcategory="Bourbon", abv=45.0)
+        triple_sec = Ingredient(name="Triple Sec", category="Liqueur", subcategory="Orange", abv=40.0)
+        campari = Ingredient(name="Campari", category="Liqueur", subcategory="Herbal", abv=24.0)
+        aperol = Ingredient(name="Aperol", category="Liqueur", subcategory="Herbal", abv=11.0)
+        sweet_vermouth = Ingredient(name="Sweet Vermouth", category="Wine", subcategory="Fortified", abv=16.0)
+        dry_vermouth = Ingredient(name="Dry Vermouth", category="Wine", subcategory="Fortified", abv=18.0)
+        prosecco = Ingredient(name="Prosecco", category="Wine", subcategory="Sparkling", abv=11.0)
+        angostura = Ingredient(name="Angostura Bitters", category="Bitters", subcategory="Aromatic", abv=44.7)
+        lime_juice = Ingredient(name="Lime Juice", category="Juice", subcategory="Citrus", abv=0.0)
+        lemon_juice = Ingredient(name="Lemon Juice", category="Juice", subcategory="Citrus", abv=0.0)
+        cranberry = Ingredient(name="Cranberry Juice", category="Juice", subcategory="Berry", abv=0.0)
+        orange_juice = Ingredient(name="Orange Juice", category="Juice", subcategory="Citrus", abv=0.0)
+        pineapple = Ingredient(name="Pineapple Juice", category="Juice", subcategory="Tropical", abv=0.0)
+        simple_syrup = Ingredient(name="Simple Syrup", category="Syrup", abv=0.0)
+        sugar_cube = Ingredient(name="Sugar Cube", category="Syrup", abv=0.0)
+        soda_water = Ingredient(name="Soda Water", category="Soda", subcategory="Club Soda", abv=0.0)
+        coke = Ingredient(name="Cola", category="Soda", subcategory="Cola", abv=0.0)
+        coconut_cream = Ingredient(name="Coconut Cream", category="Dairy", abv=0.0)
+        egg_white = Ingredient(name="Egg White", category="Egg", abv=0.0)
+        mint = Ingredient(name="Fresh Mint", category="Fresh Ingredient", subcategory="Herb", abv=0.0)
 
         db.session.add_all([
             vodka, gin, rum, dark_rum, tequila, whiskey,
             triple_sec, campari, aperol,
             sweet_vermouth, dry_vermouth,
-            prosecco, angostura,
-            lime_juice, lemon_juice, simple_syrup,
-            cranberry, orange_juice, pineapple,
-            coconut_cream, soda_water, coke,
-            mint, egg_white, sugar_cube
+            angostura,
+            lime_juice, lemon_juice, cranberry,
+            orange_juice, pineapple,
+            simple_syrup, sugar_cube,
+            soda_water, coke,
+            coconut_cream,
+            egg_white,
+            mint
         ])
+
         db.session.commit()
 
         print("Creating cocktails")

@@ -30,20 +30,19 @@ export default function Layout({ children, isAuthenticated, username, onLogout }
       onLogout()
     }
   }
-
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
       <nav className="bg-slate-800 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <img
+            <div className="flex items-center space-x-8">
+              <Link to="/" className="flex items-center">
+                <img
                   src="/Bru-chef.PNG"
                   alt="BruChef Logo"
-                  className="mx-auto w-50 h-auto mt-5"
-              />
-            </Link>
-            <div className="flex items-center space-x-6">
+                  className="w-40 h-auto"
+                />
+              </Link>
               <div className="flex space-x-4">
                 {navLinks.map((link) => (
                   <Link
@@ -59,36 +58,36 @@ export default function Layout({ children, isAuthenticated, username, onLogout }
                   </Link>
                 ))}
               </div>
-              <div className="flex items-center space-x-4 border-l border-slate-700 pl-4">
-                {isAuthenticated ? (
-                  <>
-                    <span className="text-sm text-slate-400">
-                      Hello, <span className="text-emerald-400 font-semibold">{username}</span>
-                    </span>
-                    <button
-                      onClick={handleLogout}
-                      className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      to="/login"
-                      className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors"
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      to="/register"
-                      className="px-4 py-2 text-sm bg-emerald-500 hover:bg-emerald-600 text-white rounded-md transition-colors font-medium"
-                    >
-                      Sign Up
-                    </Link>
-                  </>
-                )}
-              </div>
+            </div>
+            <div className="flex items-center space-x-4 pl-4">
+              {isAuthenticated ? (
+                <>
+                  <span className="text-sm text-slate-400">
+                    Hello, <span className="text-emerald-400 font-semibold">{username}</span>
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-4 py-2 text-sm bg-emerald-500 hover:bg-emerald-600 text-white rounded-md transition-colors font-medium"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

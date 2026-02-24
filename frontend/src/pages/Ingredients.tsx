@@ -4,6 +4,7 @@ interface Ingredient {
   id: number
   name: string
   category: string
+  subcategory: string | null
   description: string
   abv: number
 }
@@ -56,8 +57,22 @@ export default function Ingredients() {
         return '🥃'
       case 'Liqueur':
         return '🍾'
-      case 'Mixer':
+      case 'Wine':
+        return '🍷'
+      case 'Bitters':
+        return '💧'
+      case 'Juice':
         return '🧃'
+      case 'Syrup':
+        return '🍯'
+      case 'Soda':
+        return '🥤'
+      case 'Dairy':
+        return '🥛'
+      case 'Egg':
+        return '🥚'
+      case 'Fresh Ingredient':
+        return '🌿'
       case 'Garnish':
         return '🍋'
       default:
@@ -71,10 +86,24 @@ export default function Ingredients() {
         return 'bg-amber-500/20 text-amber-400 border-amber-500/50'
       case 'Liqueur':
         return 'bg-purple-500/20 text-purple-400 border-purple-500/50'
-      case 'Mixer':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/50'
-      case 'Garnish':
+      case 'Wine':
+        return 'bg-red-500/20 text-red-400 border-red-500/50'
+      case 'Bitters':
+        return 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+      case 'Juice':
         return 'bg-green-500/20 text-green-400 border-green-500/50'
+      case 'Syrup':
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+      case 'Soda':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+      case 'Dairy':
+        return 'bg-slate-300/20 text-slate-300 border-slate-300/50'
+      case 'Egg':
+        return 'bg-amber-200/20 text-amber-200 border-amber-200/50'
+      case 'Fresh Ingredient':
+        return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50'
+      case 'Garnish':
+        return 'bg-lime-500/20 text-lime-400 border-lime-500/50'
       default:
         return 'bg-slate-500/20 text-slate-400 border-slate-500/50'
     }
@@ -170,13 +199,20 @@ export default function Ingredients() {
                     <h3 className="text-lg font-semibold text-white">
                       {ingredient.name}
                     </h3>
-                    <span
-                      className={`inline-block px-2 py-1 text-xs rounded border mt-1 ${getCategoryColor(
-                        ingredient.category
-                      )}`}
-                    >
-                      {ingredient.category}
-                    </span>
+                    <div className="mt-1 flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`inline-block px-2 py-1 text-xs rounded border ${getCategoryColor(
+                          ingredient.category
+                        )}`}
+                      >
+                        {ingredient.category}
+                      </span>
+                      {ingredient.subcategory && (
+                        <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-300 border-slate-600">
+                          {ingredient.subcategory}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
