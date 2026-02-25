@@ -1,5 +1,5 @@
 from app import create_app
-from app.models import db, Cocktail, Ingredient, User
+from app.models import db, Cocktail, Ingredient, User, cocktail_ingredients
 
 
 def seed_database():
@@ -42,8 +42,8 @@ def seed_database():
 
         db.session.add_all(users)
         db.session.commit()
-        print("Creating ingredients")
 
+        print("Creating ingredients")
         vodka = Ingredient(name="Vodka", category="Spirit", subcategory="Vodka", abv=40.0)
         gin = Ingredient(name="Gin", category="Spirit", subcategory="Gin", abv=40.0)
         rum = Ingredient(name="White Rum", category="Spirit", subcategory="Rum", abv=40.0)
@@ -62,18 +62,18 @@ def seed_database():
         cranberry = Ingredient(name="Cranberry Juice", category="Juice", subcategory="Berry", abv=0.0)
         orange_juice = Ingredient(name="Orange Juice", category="Juice", subcategory="Citrus", abv=0.0)
         pineapple = Ingredient(name="Pineapple Juice", category="Juice", subcategory="Tropical", abv=0.0)
-        simple_syrup = Ingredient(name="Simple Syrup", category="Syrup", abv=0.0)
+        simple_syrup = Ingredient(name="Simple Syrup", category="Syrup", subcategory="Simple", abv=0.0)
         sugar_cube = Ingredient(name="Sugar Cube", category="Syrup", abv=0.0)
         soda_water = Ingredient(name="Soda Water", category="Soda", subcategory="Club Soda", abv=0.0)
         coke = Ingredient(name="Cola", category="Soda", subcategory="Cola", abv=0.0)
-        coconut_cream = Ingredient(name="Coconut Cream", category="Dairy", abv=0.0)
-        egg_white = Ingredient(name="Egg White", category="Egg", abv=0.0)
+        coconut_cream = Ingredient(name="Coconut Cream", category="Dairy", subcategory="Coconut Cream", abv=0.0)
+        egg_white = Ingredient(name="Egg White", category="Egg", subcategory="Egg White", abv=0.0)
         mint = Ingredient(name="Fresh Mint", category="Fresh Ingredient", subcategory="Herb", abv=0.0)
 
         db.session.add_all([
             vodka, gin, rum, dark_rum, tequila, whiskey,
             triple_sec, campari, aperol,
-            sweet_vermouth, dry_vermouth,
+            sweet_vermouth, dry_vermouth, prosecco,
             angostura,
             lime_juice, lemon_juice, cranberry,
             orange_juice, pineapple,
@@ -87,6 +87,7 @@ def seed_database():
         db.session.commit()
 
         print("Creating cocktails")
+
         margarita = Cocktail(
             name="Margarita",
             description="A classic tequila cocktail with lime and triple sec",
@@ -98,7 +99,15 @@ def seed_database():
             garnish="Lime wheel, salt rim",
             difficulty="Easy"
         )
-        margarita.ingredients.extend([tequila, triple_sec, lime_juice])
+        db.session.add(margarita)
+        db.session.flush()
+        db.session.execute(
+            cocktail_ingredients.insert().values([
+                {'cocktail_id': margarita.id, 'ingredient_id': tequila.id, 'quantity': '2 oz'},
+                {'cocktail_id': margarita.id, 'ingredient_id': triple_sec.id, 'quantity': '1 oz'},
+                {'cocktail_id': margarita.id, 'ingredient_id': lime_juice.id, 'quantity': '1 oz'}
+            ])
+        )
 
         mojito = Cocktail(
             name="Mojito",
@@ -112,7 +121,17 @@ def seed_database():
             garnish="Mint sprig",
             difficulty="Easy"
         )
-        mojito.ingredients.extend([rum, lime_juice, simple_syrup, mint, soda_water])
+        db.session.add(mojito)
+        db.session.flush()
+        db.session.execute(
+            cocktail_ingredients.insert().values([
+                {'cocktail_id': mojito.id, 'ingredient_id': rum.id, 'quantity': '2 oz'},
+                {'cocktail_id': mojito.id, 'ingredient_id': lime_juice.id, 'quantity': '0.75 oz'},
+                {'cocktail_id': mojito.id, 'ingredient_id': simple_syrup.id, 'quantity': '0.5 oz'},
+                {'cocktail_id': mojito.id, 'ingredient_id': mint.id, 'quantity': '8 leaves'},
+                {'cocktail_id': mojito.id, 'ingredient_id': soda_water.id, 'quantity': 'Top with'}
+            ])
+        )
 
         cosmopolitan = Cocktail(
             name="Cosmopolitan",
@@ -125,7 +144,16 @@ def seed_database():
             garnish="Lime wheel",
             difficulty="Medium"
         )
-        cosmopolitan.ingredients.extend([vodka, triple_sec, lime_juice, cranberry])
+        db.session.add(cosmopolitan)
+        db.session.flush()
+        db.session.execute(
+            cocktail_ingredients.insert().values([
+                {'cocktail_id': cosmopolitan.id, 'ingredient_id': vodka.id, 'quantity': '1.5 oz'},
+                {'cocktail_id': cosmopolitan.id, 'ingredient_id': triple_sec.id, 'quantity': '0.5 oz'},
+                {'cocktail_id': cosmopolitan.id, 'ingredient_id': lime_juice.id, 'quantity': '0.5 oz'},
+                {'cocktail_id': cosmopolitan.id, 'ingredient_id': cranberry.id, 'quantity': '0.25 oz'}
+            ])
+        )
 
         old_fashioned = Cocktail(
             name="Old Fashioned",
@@ -138,7 +166,15 @@ def seed_database():
             garnish="Orange peel",
             difficulty="Easy"
         )
-        old_fashioned.ingredients.extend([whiskey, angostura, sugar_cube])
+        db.session.add(old_fashioned)
+        db.session.flush()
+        db.session.execute(
+            cocktail_ingredients.insert().values([
+                {'cocktail_id': old_fashioned.id, 'ingredient_id': whiskey.id, 'quantity': '2 oz'},
+                {'cocktail_id': old_fashioned.id, 'ingredient_id': angostura.id, 'quantity': '2 dashes'},
+                {'cocktail_id': old_fashioned.id, 'ingredient_id': sugar_cube.id, 'quantity': '1 cube'}
+            ])
+        )
 
         negroni = Cocktail(
             name="Negroni",
@@ -151,7 +187,16 @@ def seed_database():
             garnish="Orange peel",
             difficulty="Medium"
         )
-        negroni.ingredients.extend([gin, campari, sweet_vermouth])
+        db.session.add(negroni)
+        db.session.flush()
+
+        db.session.execute(
+            cocktail_ingredients.insert().values([
+                {'cocktail_id': negroni.id, 'ingredient_id': gin.id, 'quantity': '1 oz'},
+                {'cocktail_id': negroni.id, 'ingredient_id': campari.id, 'quantity': '1 oz'},
+                {'cocktail_id': negroni.id, 'ingredient_id': sweet_vermouth.id, 'quantity': '1 oz'}
+            ])
+        )
 
         whiskey_sour = Cocktail(
             name="Whiskey Sour",
@@ -165,7 +210,16 @@ def seed_database():
             garnish="Cherry",
             difficulty="Medium"
         )
-        whiskey_sour.ingredients.extend([whiskey, lemon_juice, simple_syrup, egg_white])
+        db.session.add(whiskey_sour)
+        db.session.flush()
+        db.session.execute(
+            cocktail_ingredients.insert().values([
+                {'cocktail_id': whiskey_sour.id, 'ingredient_id': whiskey.id, 'quantity': '2 oz'},
+                {'cocktail_id': whiskey_sour.id, 'ingredient_id': lemon_juice.id, 'quantity': '0.75 oz'},
+                {'cocktail_id': whiskey_sour.id, 'ingredient_id': simple_syrup.id, 'quantity': '0.5 oz'},
+                {'cocktail_id': whiskey_sour.id, 'ingredient_id': egg_white.id, 'quantity': '1 egg white'}
+            ])
+        )
 
         pina_colada = Cocktail(
             name="Piña Colada",
@@ -178,7 +232,15 @@ def seed_database():
             garnish="Pineapple wedge",
             difficulty="Easy"
         )
-        pina_colada.ingredients.extend([rum, pineapple, coconut_cream])
+        db.session.add(pina_colada)
+        db.session.flush()
+        db.session.execute(
+            cocktail_ingredients.insert().values([
+                {'cocktail_id': pina_colada.id, 'ingredient_id': rum.id, 'quantity': '2 oz'},
+                {'cocktail_id': pina_colada.id, 'ingredient_id': pineapple.id, 'quantity': '3 oz'},
+                {'cocktail_id': pina_colada.id, 'ingredient_id': coconut_cream.id, 'quantity': '1.5 oz'}
+            ])
+        )
 
         aperol_spritz = Cocktail(
             name="Aperol Spritz",
@@ -192,7 +254,15 @@ def seed_database():
             garnish="Orange slice",
             difficulty="Easy"
         )
-        aperol_spritz.ingredients.extend([aperol, prosecco, soda_water])
+        db.session.add(aperol_spritz)
+        db.session.flush()
+        db.session.execute(
+            cocktail_ingredients.insert().values([
+                {'cocktail_id': aperol_spritz.id, 'ingredient_id': prosecco.id, 'quantity': '3 oz'},
+                {'cocktail_id': aperol_spritz.id, 'ingredient_id': aperol.id, 'quantity': '2 oz'},
+                {'cocktail_id': aperol_spritz.id, 'ingredient_id': soda_water.id, 'quantity': 'Splash'}
+            ])
+        )
 
         rum_and_coke = Cocktail(
             name="Rum & Coke",
@@ -205,15 +275,19 @@ def seed_database():
             garnish="Lime wedge",
             difficulty="Easy"
         )
-        rum_and_coke.ingredients.extend([rum, coke])
+        db.session.add(rum_and_coke)
+        db.session.flush()
+        db.session.execute(
+            cocktail_ingredients.insert().values([
+                {'cocktail_id': rum_and_coke.id, 'ingredient_id': rum.id, 'quantity': '2 oz'},
+                {'cocktail_id': rum_and_coke.id, 'ingredient_id': coke.id, 'quantity': 'Fill'}
+            ])
+        )
 
-        db.session.add_all([
-            margarita, mojito, cosmopolitan,
-            old_fashioned, negroni, whiskey_sour,
-            pina_colada, aperol_spritz, rum_and_coke
-        ])
         db.session.commit()
+
         print("✓ Database seeded successfully")
+        print(f"  - {User.query.count()} users")
         print(f"  - {Ingredient.query.count()} ingredients")
         print(f"  - {Cocktail.query.count()} cocktails")
 
