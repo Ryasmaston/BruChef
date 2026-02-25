@@ -4,6 +4,7 @@ from .db import db
 cocktail_ingredients = db.Table('cocktail_ingredients',
     db.Column('cocktail_id', db.Integer, db.ForeignKey('cocktail.id'), primary_key=True),
     db.Column('ingredient_id', db.Integer, db.ForeignKey('ingredient.id'), primary_key=True),
+    db.Column('quantity', db.String(50))
 )
 
 class Cocktail(db.Model):
@@ -29,14 +30,23 @@ class Cocktail(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
         if include_ingredients:
-            data['ingredients'] = [
-                {
+            ingredients_with_quantities = []
+            for ingredient in self.ingredients:
+                result = db.session.execute(
+                    db.select(cocktail_ingredients.c.quantity).where(
+                        db.and_(
+                            cocktail_ingredients.c.cocktail_id == self.id,
+                            cocktail_ingredients.c.ingredient_id == ingredient.id
+                        )
+                    )
+                ).scalar()
+                ingredients_with_quantities.append({
                     "id": ingredient.id,
                     "name": ingredient.name,
                     "category": ingredient.category,
                     "subcategory": ingredient.subcategory,
-                    "abv": ingredient.abv
-                }
-                for ingredient in self.ingredients
-            ]
+                    "abv": ingredient.abv,
+                    "quantity": result or ""
+                })
+            data['ingredients'] = ingredients_with_quantities
         return data

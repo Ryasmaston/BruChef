@@ -19,6 +19,7 @@ interface Ingredient {
   category: string
   subcategory: string | null
   abv: number
+  quantity: string
 }
 
 export default function CocktailDetail() {
@@ -27,7 +28,6 @@ export default function CocktailDetail() {
   const [cocktail, setCocktail] = useState<Cocktail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-
   useEffect(() => {
     fetchCocktail()
   }, [id])
@@ -129,6 +129,7 @@ export default function CocktailDetail() {
         <span>←</span>
         <span>Back to Cocktails</span>
       </button>
+
       <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
         <div className="bg-gradient-to-br from-emerald-900/50 to-slate-800 p-8">
           <div className="flex items-start justify-between">
@@ -167,27 +168,37 @@ export default function CocktailDetail() {
                 What You'll Need
               </h2>
               <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-3">
                   {cocktail.ingredients.map((ingredient) => (
                     <div
                       key={ingredient.id}
-                      className="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors"
+                      className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors"
                     >
-                      <span className="text-2xl">{getCategoryIcon(ingredient.category)}</span>
-                      <div className="flex-1">
-                        <div className="text-white font-medium">{ingredient.name}</div>
-                        <div className="text-xs text-slate-500 flex items-center gap-1">
-                          <span className="text-emerald-600">{ingredient.category}</span>
-                          {ingredient.subcategory && (
-                            <>
-                              <span className="text-slate-600">•</span>
-                              <span>{ingredient.subcategory}</span>
-                            </>
-                          )}
+                      <div className="flex items-center space-x-3 flex-1">
+                        <span className="text-2xl">{getCategoryIcon(ingredient.category)}</span>
+                        <div className="flex-1">
+                          <div className="text-white font-medium">{ingredient.name}</div>
+                          <div className="text-xs text-slate-500 flex items-center gap-1">
+                            <span className="text-emerald-600">{ingredient.category}</span>
+                            {ingredient.subcategory && (
+                              <>
+                                <span className="text-slate-600">•</span>
+                                <span>{ingredient.subcategory}</span>
+                              </>
+                            )}
+                            {ingredient.abv > 0 && (
+                              <>
+                                <span className="text-slate-600">•</span>
+                                <span>{ingredient.abv}% ABV</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      {ingredient.abv > 0 && (
-                        <span className="text-xs text-slate-400">{ingredient.abv}% ABV</span>
+                      {ingredient.quantity && (
+                        <div className="text-emerald-400 font-semibold text-sm ml-4">
+                          {ingredient.quantity}
+                        </div>
                       )}
                     </div>
                   ))}

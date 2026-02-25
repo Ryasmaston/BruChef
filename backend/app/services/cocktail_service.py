@@ -1,4 +1,4 @@
-from app.models import db, Cocktail, Ingredient
+from app.models import db, Cocktail, Ingredient, cocktail_ingredients
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional, Dict, Any
 
@@ -36,11 +36,20 @@ class CocktailService:
                 garnish = data.get('garnish', ''),
                 difficulty = data.get('difficulty', 'Medium')
             )
-            ingredient_ids = data.get('ingredient_ids', [])
-            if ingredient_ids:
-                ingredients = Ingredient.query.filter(Ingredient.id.in_(ingredient_ids)).all()
-                new_cocktail.ingredients.extend(ingredients)
             db.session.add(new_cocktail)
+            db.session.flush()
+            ingredient_quantities = data.get('ingredient_quantities', [])
+            for item in ingredient_quantities:
+                ingredient_id = item.get('id')
+                quantity = item.get('quantity', '').strip()
+                if ingredient_id:
+                    db.session.execute(
+                        cocktail_ingredients.insert().values(
+                            cocktail_id = new_cocktail.id,
+                            ingredient_id = ingredient_id,
+                            quantity = quantity
+                        )
+                    )
             db.session.commit()
             return new_cocktail
         except SQLAlchemyError as e:
@@ -65,11 +74,23 @@ class CocktailService:
                 cocktail.garnish = data['garnish']
             if 'difficulty' in data:
                 cocktail.difficulty = data['difficulty']
-            if 'ingredient_ids' in data:
-                cocktail.ingredients.clear()
-                ingredient_ids = data['ingredient_ids']
-                ingredients = Ingredient.query.filter(Ingredient.id.in_(ingredient_ids)).all()
-                cocktail.ingredients.extend(ingredients)
+            if 'ingredient_quantities' in data:
+                db.session.execute(
+                    cocktail_ingredients.delete().where(
+                        cocktail_ingredients.c.cocktail_id == cocktail_id
+                    )
+                )
+                for item in data['ingredient_quantities']:
+                    ingredient_id = item.get('id')
+                    quantity = item.get('quantity', '').strip()
+                    if ingredient_id:
+                        db.session.execute(
+                            cocktail_ingredients.insert().values(
+                                cocktail_id=cocktail_id,
+                                ingredient_id=ingredient_id,
+                                quantity=quantity
+                            )
+                        )
             db.session.commit()
             return cocktail
         except SQLAlchemyError as e:
