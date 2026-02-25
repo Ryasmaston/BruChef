@@ -161,7 +161,7 @@ export default function Ingredients() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+            className="px-2 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-left focus:outline-none focus:border-emerald-500"
           >
             <option value="all">All Categories</option>
             {categories.map(category => (
