@@ -15,6 +15,7 @@ export default function Layout({ children, isAuthenticated, username, onLogout }
     { path: '/', label: 'Home' },
     { path: '/cocktails', label: 'Cocktails' },
     { path: '/ingredients', label: 'Ingredients' },
+    { path: '/inventory', label: 'Inventory'},
     { path: '/about', label: 'About' }
   ]
 

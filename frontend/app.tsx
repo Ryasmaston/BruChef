@@ -9,6 +9,7 @@ import Ingredients from './src/pages/Ingredients'
 import About from './src/pages/About'
 import Login from './src/pages/Login'
 import Register from './src/pages/Register'
+import Inventory from './src/pages/Inventory'
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -84,6 +85,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/register" element={<Register onRegisterSuccess={handleRegisterSuccess} />} />
+          <Route path="/inventory" element={<Inventory isAuthenticated={isAuthenticated} />} />
         </Routes>
       </Layout>
     </Router>
