@@ -9,6 +9,11 @@ interface Ingredient {
   abv: number
 }
 
+interface IngredientQuantity {
+  id: number
+  quantity: string
+}
+
 interface CreateCocktailProps {
   isAuthenticated: boolean
 }
@@ -38,7 +43,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     glass_type: '',
     garnish: '',
     difficulty: 'Medium',
-    ingredient_ids: [] as number[]
+    ingredient_quantities: [] as IngredientQuantity[]
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -100,13 +105,39 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   }
 
   const toggleIngredient = (ingredientId: number) => {
+    setFormData(prev => {
+      const exists = prev.ingredient_quantities.find(iq => iq.id === ingredientId)
+      if (exists) {
+        return {
+          ...prev,
+          ingredient_quantities: prev.ingredient_quantities.filter(iq => iq.id !== ingredientId)
+        }
+      } else {
+        return {
+          ...prev,
+          ingredient_quantities: [...prev.ingredient_quantities, { id: ingredientId, quantity: '' }]
+        }
+      }
+    })
+  }
+
+  const updateQuantity = (ingredientId: number, quantity: string) => {
     setFormData(prev => ({
       ...prev,
-      ingredient_ids: prev.ingredient_ids.includes(ingredientId)
-        ? prev.ingredient_ids.filter(id => id !== ingredientId)
-        : [...prev.ingredient_ids, ingredientId]
+      ingredient_quantities: prev.ingredient_quantities.map(iq =>
+        iq.id === ingredientId ? { ...iq, quantity } : iq
+      )
     }))
   }
+
+  const isIngredientSelected = (ingredientId: number) => {
+    return formData.ingredient_quantities.some(iq => iq.id === ingredientId)
+  }
+
+  const getIngredientQuantity = (ingredientId: number) => {
+    return formData.ingredient_quantities.find(iq => iq.id === ingredientId)?.quantity || ''
+  }
+
 
   const handleCustomIngredientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target
@@ -140,12 +171,12 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
       setIngredients(prev => [...prev, data])
       setFormData(prev => ({
         ...prev,
-        ingredient_ids: [...prev.ingredient_ids, data.id]
+        ingredient_quantities: [...prev.ingredient_quantities, { id: data.id, quantity: '' }]
       }))
       setCustomIngredient({
         name: '',
         category: 'Spirit',
-        subcategory: 'Vodka',
+        subcategory: CATEGORIES['Spirit'][0],
         description: '',
         abv: 0
       })
@@ -182,7 +213,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
       case 'Garnish':
         return '🍋'
       default:
-        return '🧪'
+        return '🍎'
     }
   }
 
@@ -225,10 +256,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     <>
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <Link
-            to="/cocktails"
-            className="text-slate-400 hover:text-white flex items-center space-x-2"
-          >
+          <Link to="/cocktails" className="text-slate-400 hover:text-white flex items-center space-x-2">
             <span>←</span>
             <span>Back to Cocktails</span>
           </Link>
@@ -240,11 +268,10 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
               {error}
             </div>
           )}
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
-                Cocktail Name
+                Cocktail Name *
               </label>
               <input
                 type="text"
@@ -273,7 +300,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
             </div>
             <div>
               <label htmlFor="instructions" className="block text-sm font-medium text-slate-300 mb-2">
-                Instructions
+                Instructions *
               </label>
               <textarea
                 id="instructions"
@@ -285,9 +312,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                 className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 placeholder="1. Muddle mint leaves with sugar and lime juice&#10;2. Add rum and ice&#10;3. Top with soda water"
               />
-              <p className="mt-1 text-xs text-slate-500">
-                Separate steps with new lines
-              </p>
+              <p className="mt-1 text-xs text-slate-500">Separate steps with new lines</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -338,7 +363,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
             <div>
               <div className="flex justify-between items-center mb-3">
                 <label className="block text-sm font-medium text-slate-300">
-                  Ingredients ({formData.ingredient_ids.length} selected)
+                  Ingredients ({formData.ingredient_quantities.length} selected)
                 </label>
                 <button
                   type="button"
@@ -356,35 +381,48 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                         <span className="mr-2">{getCategoryIcon(category)}</span>
                         {category}
                       </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="space-y-2">
                         {categoryIngredients.map((ingredient) => (
-                          <label
+                          <div
                             key={ingredient.id}
-                            className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                              formData.ingredient_ids.includes(ingredient.id)
+                            className={`p-3 rounded-lg transition-colors ${
+                              isIngredientSelected(ingredient.id)
                                 ? 'bg-emerald-500/20 border border-emerald-500/50'
                                 : 'bg-slate-800/50 hover:bg-slate-700/50'
                             }`}
                           >
-                            <input
-                              type="checkbox"
-                              checked={formData.ingredient_ids.includes(ingredient.id)}
-                              onChange={() => toggleIngredient(ingredient.id)}
-                              className="w-4 h-4 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500"
-                            />
-                            <div className="flex-1">
-                              <div className="text-white text-sm font-medium">{ingredient.name}</div>
-                              <div className="text-xs text-slate-500 flex items-center gap-1">
-                                <span className="text-emerald-600">{ingredient.category}</span>
-                                {ingredient.subcategory && (
-                                  <>
-                                    <span className="text-slate-600">•</span>
-                                    <span>{ingredient.subcategory}</span>
-                                  </>
-                                )}
+                            <div className="flex items-center space-x-3 mb-2">
+                              <input
+                                type="checkbox"
+                                checked={isIngredientSelected(ingredient.id)}
+                                onChange={() => toggleIngredient(ingredient.id)}
+                                className="w-4 h-4 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500"
+                              />
+                              <div className="flex-1">
+                                <div className="text-white text-sm font-medium">{ingredient.name}</div>
+                                <div className="text-xs text-slate-500 flex items-center gap-1">
+                                  <span className="text-emerald-600">{ingredient.category}</span>
+                                  {ingredient.subcategory && (
+                                    <>
+                                      <span className="text-slate-600">•</span>
+                                      <span>{ingredient.subcategory}</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </label>
+                            {isIngredientSelected(ingredient.id) && (
+                              <div className="ml-7">
+                                <input
+                                  type="text"
+                                  value={getIngredientQuantity(ingredient.id)}
+                                  onChange={(e) => updateQuantity(ingredient.id, e.target.value)}
+                                  placeholder="e.g., 2 oz, 1 dash, Top with"
+                                  className="w-full px-3 py-1.5 text-sm bg-slate-900 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                                />
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -414,6 +452,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-white mb-4">Add Custom Ingredient</h2>
+
             {modalError && (
               <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
                 {modalError}
