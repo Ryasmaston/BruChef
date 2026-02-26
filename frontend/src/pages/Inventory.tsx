@@ -37,6 +37,27 @@ interface InventoryProps {
   isAuthenticated: boolean
 }
 
+const CATEGORIES: Record<string, string[]> = {
+  'Spirit': ['Vodka', 'Gin', 'Rum', 'Tequila', 'Mezcal', 'Whiskey', 'Bourbon', 'Scotch', 'Brandy', 'Cognac', 'Other Spirit'],
+  'Liqueur': ['Orange', 'Coffee', 'Herbal', 'Cream', 'Fruit', 'Nut', 'Chocolate', 'Other Liqueur'],
+  'Wine': ['Sparkling', 'Red', 'White', 'Rosé', 'Fortified', 'Other Wine'],
+  'Bitters': ['Aromatic', 'Orange', 'Herbal', 'Other Bitters'],
+  'Juice': ['Citrus', 'Berry', 'Tropical', 'Vegetable', 'Other Juice'],
+  'Syrup': ['Simple', 'Flavored', 'Honey', 'Agave', 'Grenadine', 'Other Syrup'],
+  'Soda': ['Club Soda', 'Tonic', 'Ginger Beer', 'Ginger Ale', 'Cola', 'Other Soda'],
+  'Dairy': ['Cream', 'Milk', 'Coconut Cream', 'Other Dairy'],
+  'Egg': ['Egg White', 'Egg Yolk', 'Whole Egg'],
+  'Fresh Ingredient': ['Herb', 'Fruit', 'Vegetable', 'Spice', 'Other Fresh'],
+  'Garnish': ['Citrus', 'Berry', 'Olive', 'Cherry', 'Herb', 'Salt/Sugar', 'Other Garnish'],
+  'Other': ['Uncategorized']
+}
+
+const UNIT_OPTIONS = {
+  volume: ['ml', 'L', 'oz', 'cup'],
+  mass: ['g', 'kg', 'lb', 'oz(weight)'],
+  count: ['pieces', 'bottles', 'cans', 'leaves']
+}
+
 export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [availableIngredients, setAvailableIngredients] = useState<Ingredient[]>([])
@@ -47,9 +68,20 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [ingredientSearch, setIngredientSearch] = useState('')
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null)
   const [quantity, setQuantity] = useState('750')
+  const [unitType, setUnitType] = useState<'volume'|'mass'|'count'>('volume')
   const [unit, setUnit] = useState('ml')
   const [notes, setNotes] = useState('')
   const [addLoading, setAddLoading] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [newIngredient, setNewIngredient] = useState({
+    name: '',
+    category: 'Spirit',
+    subcategory: CATEGORIES['Spirit'][0],
+    description: '',
+    abv: 0
+  })
+  const [createLoading, setCreateLoading] = useState(false)
+  const [createError, setCreateError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'inventory' | 'available'>('inventory')
 
@@ -60,6 +92,10 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
       fetchAvailableCocktails()
     }
   }, [isAuthenticated])
+
+  useEffect(() => {
+    setUnit(UNIT_OPTIONS[unitType][0])
+  }, [unitType])
 
   const fetchInventory = async () => {
     try {
@@ -98,6 +134,40 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
       setAvailableCocktails(data)
     } catch (err) {
       console.error('Error fetching available cocktails:', err)
+    }
+  }
+
+  const handleCreateIngredient = async () => {
+    setCreateError('')
+    setCreateLoading(true)
+    try {
+      const response = await fetch('http://localhost:5001/api/ingredients/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(newIngredient)
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create ingredient')
+      }
+      setAvailableIngredients(prev => [...prev, data])
+      setSelectedIngredient(data)
+      setIngredientSearch(data.name)
+      setShowCreateModal(false)
+      setNewIngredient({
+        name: '',
+        category: 'Spirit',
+        subcategory: CATEGORIES['Spirit'][0],
+        description: '',
+        abv: 0
+      })
+      setCreateLoading(false)
+    } catch (err: any) {
+      setCreateError(err.message || 'Failed to create ingredient')
+      setCreateLoading(false)
     }
   }
 
@@ -258,9 +328,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
             <button
               onClick={() => setViewMode('inventory')}
               className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                viewMode === 'inventory'
-                  ? 'bg-emerald-500 text-white'
-                  : 'text-slate-400 hover:text-white'
+                viewMode === 'inventory' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               📦 My Inventory
@@ -268,9 +336,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
             <button
               onClick={() => setViewMode('available')}
               className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                viewMode === 'available'
-                  ? 'bg-emerald-500 text-white'
-                  : 'text-slate-400 hover:text-white'
+                viewMode === 'available' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               🍸 Available Cocktails
@@ -294,27 +360,19 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                 <p className="text-slate-400 mb-4">
                   {searchQuery ? 'No ingredients found' : 'Your inventory is empty'}
                 </p>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
-                >
+                <button onClick={() => setShowAddModal(true)} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors">
                   Add Ingredient
                 </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredInventory.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors"
-                  >
+                  <div key={item.id} className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <span className="text-3xl">{getCategoryIcon(item.ingredient.category)}</span>
                         <div>
-                          <h3 className="text-lg font-semibold text-white">
-                            {item.ingredient.name}
-                          </h3>
+                          <h3 className="text-lg font-semibold text-white">{item.ingredient.name}</h3>
                           <div className="text-xs text-slate-500">
                             {item.ingredient.category}
                             {item.ingredient.subcategory && ` • ${item.ingredient.subcategory}`}
@@ -330,16 +388,10 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                         </span>
                       </div>
                       {item.notes && (
-                        <div className="text-xs text-slate-500 italic">
-                          "{item.notes}"
-                        </div>
+                        <div className="text-xs text-slate-500 italic">"{item.notes}"</div>
                       )}
                     </div>
-
-                    <button
-                      onClick={() => handleRemoveFromInventory(item.id)}
-                      className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors"
-                    >
+                    <button onClick={() => handleRemoveFromInventory(item.id)} className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors">
                       Remove
                     </button>
                   </div>
@@ -353,34 +405,22 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
               <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
                 <div className="text-4xl mb-4">🍸</div>
                 <p className="text-slate-400 mb-4">
-                  {searchQuery
-                    ? 'No cocktails found'
-                    : 'Add more ingredients to discover cocktails you can make!'}
+                  {searchQuery ? 'No cocktails found' : 'Add more ingredients to discover cocktails you can make!'}
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCocktails.map((cocktail) => (
-                  <Link
-                    key={cocktail.id}
-                    to={`/cocktails/${cocktail.id}`}
-                    className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
-                  >
+                  <Link key={cocktail.id} to={`/cocktails/${cocktail.id}`} className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group">
                     <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
                       <span className="text-6xl">🍹</span>
                     </div>
                     <div className="p-5">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
-                          {cocktail.name}
-                        </h3>
-                        <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
-                          {cocktail.difficulty}
-                        </span>
+                        <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">{cocktail.name}</h3>
+                        <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>{cocktail.difficulty}</span>
                       </div>
-                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">
-                        {cocktail.description || 'No description available'}
-                      </p>
+                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">{cocktail.description || 'No description available'}</p>
                       <div className="flex items-center text-emerald-400 text-sm">
                         <span className="mr-2">✓</span>
                         <span>You have all ingredients!</span>
@@ -412,31 +452,44 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                   placeholder="Type to search ingredients..."
                   className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
-                {ingredientSearch && !selectedIngredient && searchFilteredIngredients.length > 0 && (
-                  <div className="mt-2 max-h-48 overflow-y-auto bg-slate-900 border border-slate-700 rounded-lg">
-                    {searchFilteredIngredients.slice(0, 10).map((ing) => (
-                      <button
-                        key={ing.id}
-                        onClick={() => {
-                          setSelectedIngredient(ing)
-                          setIngredientSearch(ing.name)
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-slate-800 transition-colors flex items-center space-x-3"
-                      >
-                        <span className="text-xl">{getCategoryIcon(ing.category)}</span>
-                        <div className="flex-1">
-                          <div className="text-white text-sm font-medium">{ing.name}</div>
-                          <div className="text-xs text-slate-500">
-                            {ing.category}
-                            {ing.subcategory && ` • ${ing.subcategory}`}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {ingredientSearch && searchFilteredIngredients.length === 0 && (
-                  <p className="mt-2 text-sm text-slate-500">No ingredients found</p>
+                {ingredientSearch && !selectedIngredient && (
+                  <>
+                    {searchFilteredIngredients.length > 0 ? (
+                      <div className="mt-2 max-h-48 overflow-y-auto bg-slate-900 border border-slate-700 rounded-lg">
+                        {searchFilteredIngredients.slice(0, 10).map((ing) => (
+                          <button
+                            key={ing.id}
+                            onClick={() => {
+                              setSelectedIngredient(ing)
+                              setIngredientSearch(ing.name)
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-slate-800 transition-colors flex items-center space-x-3"
+                          >
+                            <span className="text-xl">{getCategoryIcon(ing.category)}</span>
+                            <div className="flex-1">
+                              <div className="text-white text-sm font-medium">{ing.name}</div>
+                              <div className="text-xs text-slate-500">
+                                {ing.category}{ing.subcategory && ` • ${ing.subcategory}`}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-2 p-4 bg-slate-900 border border-slate-700 rounded-lg text-center">
+                        <p className="text-sm text-slate-400 mb-3">No ingredient found with that name</p>
+                        <button
+                          onClick={() => {
+                            setNewIngredient(prev => ({ ...prev, name: ingredientSearch }))
+                            setShowCreateModal(true)
+                          }}
+                          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm rounded transition-colors"
+                        >
+                          + Create "{ingredientSearch}"
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               {selectedIngredient && (
@@ -446,13 +499,52 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     <div>
                       <div className="text-white font-medium">{selectedIngredient.name}</div>
                       <div className="text-xs text-slate-400">
-                        {selectedIngredient.category}
-                        {selectedIngredient.subcategory && ` • ${selectedIngredient.subcategory}`}
+                        {selectedIngredient.category}{selectedIngredient.subcategory && ` • ${selectedIngredient.subcategory}`}
                       </div>
                     </div>
                   </div>
                 </div>
               )}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Measurement Type *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setUnitType('volume')}
+                    className={`px-4 py-2 text-sm rounded transition-colors ${
+                      unitType === 'volume'
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-slate-900 text-slate-400 hover:bg-slate-700'
+                    }`}
+                  >
+                    Volume
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUnitType('mass')}
+                    className={`px-4 py-2 text-sm rounded transition-colors ${
+                      unitType === 'mass'
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-slate-900 text-slate-400 hover:bg-slate-700'
+                    }`}
+                  >
+                    Mass
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUnitType('count')}
+                    className={`px-4 py-2 text-sm rounded transition-colors ${
+                      unitType === 'count'
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-slate-900 text-slate-400 hover:bg-slate-700'
+                    }`}
+                  >
+                    Count
+                  </button>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -476,9 +568,9 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     onChange={(e) => setUnit(e.target.value)}
                     className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="ml">ml</option>
-                    <option value="oz">oz</option>
-                    <option value="L">L</option>
+                    {UNIT_OPTIONS[unitType].map(u => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -508,8 +600,118 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     setSelectedIngredient(null)
                     setIngredientSearch('')
                     setQuantity('750')
+                    setUnitType('volume')
                     setUnit('ml')
                     setNotes('')
+                  }}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-white mb-4">Create New Ingredient</h2>
+            {createError && (
+              <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
+                {createError}
+              </div>
+            )}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Ingredient Name *
+                </label>
+                <input
+                  type="text"
+                  value={newIngredient.name}
+                  onChange={(e) => setNewIngredient(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                  placeholder="e.g., Elderflower Liqueur"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Category *
+                </label>
+                <select
+                  value={newIngredient.category}
+                  onChange={(e) => setNewIngredient(prev => ({
+                    ...prev,
+                    category: e.target.value,
+                    subcategory: CATEGORIES[e.target.value][0]
+                  }))}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  {Object.keys(CATEGORIES).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Subcategory *
+                </label>
+                <select
+                  value={newIngredient.subcategory}
+                  onChange={(e) => setNewIngredient(prev => ({ ...prev, subcategory: e.target.value }))}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  {CATEGORIES[newIngredient.category].map(subcat => (
+                    <option key={subcat} value={subcat}>{subcat}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  ABV (%)
+                </label>
+                <input
+                  type="number"
+                  value={newIngredient.abv}
+                  onChange={(e) => setNewIngredient(prev => ({ ...prev, abv: parseFloat(e.target.value) || 0 }))}
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Description (optional)
+                </label>
+                <textarea
+                  value={newIngredient.description}
+                  onChange={(e) => setNewIngredient(prev => ({ ...prev, description: e.target.value }))}
+                  rows={2}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                  placeholder="A floral, sweet liqueur..."
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleCreateIngredient}
+                  disabled={!newIngredient.name || createLoading}
+                  className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
+                >
+                  {createLoading ? 'Creating...' : 'Create Ingredient'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false)
+                    setCreateError('')
+                    setNewIngredient({
+                      name: '',
+                      category: 'Spirit',
+                      subcategory: CATEGORIES['Spirit'][0],
+                      description: '',
+                      abv: 0
+                    })
                   }}
                   className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
                 >
