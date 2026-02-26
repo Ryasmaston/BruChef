@@ -44,7 +44,8 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
-  const [selectedIngredient, setSelectedIngredient] = useState<number | null>(null)
+  const [ingredientSearch, setIngredientSearch] = useState('')
+  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null)
   const [quantity, setQuantity] = useState('750')
   const [unit, setUnit] = useState('ml')
   const [notes, setNotes] = useState('')
@@ -102,7 +103,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
 
   const handleAddToInventory = async () => {
     if (!selectedIngredient) return
-
     setAddLoading(true)
     try {
       const response = await fetch('http://localhost:5001/api/inventory/', {
@@ -112,19 +112,18 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
         },
         credentials: 'include',
         body: JSON.stringify({
-          ingredient_id: selectedIngredient,
+          ingredient_id: selectedIngredient.id,
           quantity: parseFloat(quantity),
           unit,
           notes
         })
       })
-
       if (!response.ok) throw new Error('Failed to add to inventory')
       await fetchInventory()
       await fetchAvailableCocktails()
-
       setShowAddModal(false)
       setSelectedIngredient(null)
+      setIngredientSearch('')
       setQuantity('750')
       setUnit('ml')
       setNotes('')
@@ -188,6 +187,10 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
     ing => !inventory.some(item => item.ingredient_id === ing.id)
   )
 
+  const searchFilteredIngredients = ingredientsNotInInventory.filter(ing =>
+    ing.name.toLowerCase().includes(ingredientSearch.toLowerCase())
+  )
+
   if (!isAuthenticated) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -209,7 +212,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
       </div>
     )
   }
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -224,7 +226,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
   return (
     <>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-white">My Bar Inventory</h1>
@@ -339,6 +340,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                         </div>
                       )}
                     </div>
+
                     <button
                       onClick={() => handleRemoveFromInventory(item.id)}
                       className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors"
@@ -403,21 +405,59 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Ingredient *
+                  Search Ingredient *
                 </label>
-                <select
-                  value={selectedIngredient || ''}
-                  onChange={(e) => setSelectedIngredient(parseInt(e.target.value))}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="">Select an ingredient</option>
-                  {ingredientsNotInInventory.map((ing) => (
-                    <option key={ing.id} value={ing.id}>
-                      {getCategoryIcon(ing.category)} {ing.name}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  value={ingredientSearch}
+                  onChange={(e) => {
+                    setIngredientSearch(e.target.value)
+                    setSelectedIngredient(null)
+                  }}
+                  placeholder="Type to search ingredients..."
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+                {ingredientSearch && searchFilteredIngredients.length > 0 && (
+                  <div className="mt-2 max-h-48 overflow-y-auto bg-slate-900 border border-slate-700 rounded-lg">
+                    {searchFilteredIngredients.slice(0, 10).map((ing) => (
+                      <button
+                        key={ing.id}
+                        onClick={() => {
+                          setSelectedIngredient(ing)
+                          setIngredientSearch(ing.name)
+                        }}
+                        className="w-full px-4 py-3 text-left hover:bg-slate-800 transition-colors flex items-center space-x-3"
+                      >
+                        <span className="text-xl">{getCategoryIcon(ing.category)}</span>
+                        <div className="flex-1">
+                          <div className="text-white text-sm font-medium">{ing.name}</div>
+                          <div className="text-xs text-slate-500">
+                            {ing.category}
+                            {ing.subcategory && ` • ${ing.subcategory}`}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {ingredientSearch && searchFilteredIngredients.length === 0 && (
+                  <p className="mt-2 text-sm text-slate-500">No ingredients found</p>
+                )}
               </div>
+              {selectedIngredient && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{getCategoryIcon(selectedIngredient.category)}</span>
+                    <div>
+                      <div className="text-white font-medium">{selectedIngredient.name}</div>
+                      <div className="text-xs text-slate-400">
+                        {selectedIngredient.category}
+                        {selectedIngredient.subcategory && ` • ${selectedIngredient.subcategory}`}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -444,8 +484,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     <option value="ml">ml</option>
                     <option value="oz">oz</option>
                     <option value="L">L</option>
-                    <option value="bottle">bottle</option>
-                    <option value="pieces">pieces</option>
                   </select>
                 </div>
               </div>
@@ -473,6 +511,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                   onClick={() => {
                     setShowAddModal(false)
                     setSelectedIngredient(null)
+                    setIngredientSearch('')
                     setQuantity('750')
                     setUnit('ml')
                     setNotes('')
