@@ -33,6 +33,12 @@ const CATEGORIES: Record<string, string[]> = {
   'Other': ['Uncategorized']
 }
 
+const UNIT_OPTIONS = {
+  volume: ['ml', 'L', 'oz', 'cup', 'tsp', 'tbsp', 'dash', 'splash'],
+  mass: ['g', 'kg', 'lb', 'oz(weight)'],
+  count: ['pieces', 'bottles', 'leaves', 'slices', 'wedges']
+}
+
 export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps) {
   const navigate = useNavigate()
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
@@ -47,7 +53,9 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showModal, setShowModal] = useState(false)
+  const [showIngredientSearch, setShowIngredientSearch] = useState(false)
+  const [ingredientSearchQuery, setIngredientSearchQuery] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [customIngredient, setCustomIngredient] = useState({
     name: '',
     category: 'Spirit',
@@ -104,21 +112,11 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     })
   }
 
-  const toggleIngredient = (ingredientId: number) => {
-    setFormData(prev => {
-      const exists = prev.ingredient_quantities.find(iq => iq.id === ingredientId)
-      if (exists) {
-        return {
-          ...prev,
-          ingredient_quantities: prev.ingredient_quantities.filter(iq => iq.id !== ingredientId)
-        }
-      } else {
-        return {
-          ...prev,
-          ingredient_quantities: [...prev.ingredient_quantities, { id: ingredientId, quantity: '' }]
-        }
-      }
-    })
+  const addIngredient = (ingredientId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      ingredient_quantities: [...prev.ingredient_quantities, { id: ingredientId, quantity: '' }]
+    }))
   }
 
   const updateQuantity = (ingredientId: number, quantity: string) => {
