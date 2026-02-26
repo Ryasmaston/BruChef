@@ -412,7 +412,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                   placeholder="Type to search ingredients..."
                   className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
-                {ingredientSearch && searchFilteredIngredients.length > 0 && (
+                {ingredientSearch && !selectedIngredient && searchFilteredIngredients.length > 0 && (
                   <div className="mt-2 max-h-48 overflow-y-auto bg-slate-900 border border-slate-700 rounded-lg">
                     {searchFilteredIngredients.slice(0, 10).map((ing) => (
                       <button
