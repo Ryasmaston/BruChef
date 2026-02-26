@@ -228,7 +228,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white">My Bar Inventory</h1>
+            <h1 className="text-3xl font-bold text-white">My Inventory</h1>
             <p className="text-slate-400 mt-1">
               Manage your ingredients and discover what you can make
             </p>
@@ -241,7 +241,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
             <span>Add Ingredient</span>
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
             <div className="text-3xl mb-2">📦</div>
             <div className="text-2xl font-bold text-white">{inventory.length}</div>
@@ -251,11 +251,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
             <div className="text-3xl mb-2">🍸</div>
             <div className="text-2xl font-bold text-emerald-400">{availableCocktails.length}</div>
             <div className="text-slate-400 text-sm">Cocktails You Can Make</div>
-          </div>
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-            <div className="text-3xl mb-2">🛒</div>
-            <div className="text-2xl font-bold text-white">{ingredientsNotInInventory.length}</div>
-            <div className="text-slate-400 text-sm">More to Discover</div>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-4">
@@ -303,7 +298,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                   onClick={() => setShowAddModal(true)}
                   className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
                 >
-                  Add Your First Ingredient
+                  Add Ingredient
                 </button>
               </div>
             ) : (
