@@ -617,7 +617,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-white mb-4">Create New Ingredient</h2>
-
             {createError && (
               <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
                 {createError}
