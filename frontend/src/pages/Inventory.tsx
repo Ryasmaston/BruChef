@@ -1,10 +1,491 @@
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+
+interface InventoryItem {
+  id: number
+  ingredient_id: number
+  ingredient: {
+    id: number
+    name: string
+    category: string
+    subcategory: string | null
+    abv: number
+  }
+  quantity: number
+  unit: string
+  notes: string
+  added_at: string
+  updated_at: string
+}
+
+interface Ingredient {
+  id: number
+  name: string
+  category: string
+  subcategory: string | null
+  abv: number
+}
+
+interface Cocktail {
+  id: number
+  name: string
+  description: string
+  difficulty: string
+}
 
 interface InventoryProps {
   isAuthenticated: boolean
 }
 
 export default function Inventory({ isAuthenticated }: InventoryProps) {
-  return isAuthenticated
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [availableIngredients, setAvailableIngredients] = useState<Ingredient[]>([])
+  const [availableCocktails, setAvailableCocktails] = useState<Cocktail[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [selectedIngredient, setSelectedIngredient] = useState<number | null>(null)
+  const [quantity, setQuantity] = useState('750')
+  const [unit, setUnit] = useState('ml')
+  const [notes, setNotes] = useState('')
+  const [addLoading, setAddLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [viewMode, setViewMode] = useState<'inventory' | 'available'>('inventory')
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchInventory()
+      fetchIngredients()
+      fetchAvailableCocktails()
+    }
+  }, [isAuthenticated])
+
+  const fetchInventory = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/inventory/', {
+        credentials: 'include'
+      })
+      if (!response.ok) throw new Error('Failed to fetch inventory')
+      const data = await response.json()
+      setInventory(data)
+      setLoading(false)
+    } catch (err) {
+      setError('Failed to load inventory')
+      setLoading(false)
+      console.error(err)
+    }
+  }
+
+  const fetchIngredients = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/ingredients/')
+      if (!response.ok) throw new Error('Failed to fetch ingredients')
+      const data = await response.json()
+      setAvailableIngredients(data)
+    } catch (err) {
+      console.error('Error fetching ingredients:', err)
+    }
+  }
+
+  const fetchAvailableCocktails = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/inventory/available-cocktails', {
+        credentials: 'include'
+      })
+      if (!response.ok) throw new Error('Failed to fetch available cocktails')
+      const data = await response.json()
+      setAvailableCocktails(data)
+    } catch (err) {
+      console.error('Error fetching available cocktails:', err)
+    }
+  }
+
+  const handleAddToInventory = async () => {
+    if (!selectedIngredient) return
+
+    setAddLoading(true)
+    try {
+      const response = await fetch('http://localhost:5001/api/inventory/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          ingredient_id: selectedIngredient,
+          quantity: parseFloat(quantity),
+          unit,
+          notes
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to add to inventory')
+      await fetchInventory()
+      await fetchAvailableCocktails()
+
+      setShowAddModal(false)
+      setSelectedIngredient(null)
+      setQuantity('750')
+      setUnit('ml')
+      setNotes('')
+      setAddLoading(false)
+    } catch (err: any) {
+      alert(err.message || 'Failed to add to inventory')
+      setAddLoading(false)
+    }
+  }
+
+  const handleRemoveFromInventory = async (itemId: number) => {
+    if (!confirm('Remove this ingredient from your inventory?')) return
+    try {
+      const response = await fetch(`http://localhost:5001/api/inventory/${itemId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      if (!response.ok) throw new Error('Failed to remove from inventory')
+      await fetchInventory()
+      await fetchAvailableCocktails()
+    } catch (err: any) {
+      alert(err.message || 'Failed to remove from inventory')
+    }
+  }
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Spirit': return '🥃'
+      case 'Liqueur': return '🍾'
+      case 'Wine': return '🍷'
+      case 'Bitters': return '💧'
+      case 'Juice': return '🧃'
+      case 'Syrup': return '🍯'
+      case 'Soda': return '🥤'
+      case 'Dairy': return '🥛'
+      case 'Egg': return '🥚'
+      case 'Fresh Ingredient': return '🌿'
+      case 'Garnish': return '🍋'
+      default: return '🍎'
+    }
+  }
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy': return 'bg-green-500/20 text-green-400 border-green-500/50'
+      case 'Medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+      case 'Advanced': return 'bg-red-500/20 text-red-400 border-red-500/50'
+      default: return 'bg-slate-500/20 text-slate-400 border-slate-500/50'
+    }
+  }
+
+  const filteredInventory = inventory.filter(item =>
+    item.ingredient.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const filteredCocktails = availableCocktails.filter(cocktail =>
+    cocktail.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const ingredientsNotInInventory = availableIngredients.filter(
+    ing => !inventory.some(item => item.ingredient_id === ing.id)
+  )
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-white mb-4">Sign In Required</h2>
+          <p className="text-slate-400 mb-6">
+            You need to be signed in to manage your bar inventory.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link to="/login" className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors">
+              Sign In
+            </Link>
+            <Link to="/register" className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors">
+              Create Account
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="text-4xl mb-4">📦</div>
+          <p className="text-slate-400">Loading inventory...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white">My Bar Inventory</h1>
+            <p className="text-slate-400 mt-1">
+              Manage your ingredients and discover what you can make
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2"
+          >
+            <span>+</span>
+            <span>Add Ingredient</span>
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+            <div className="text-3xl mb-2">📦</div>
+            <div className="text-2xl font-bold text-white">{inventory.length}</div>
+            <div className="text-slate-400 text-sm">Ingredients in Stock</div>
+          </div>
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+            <div className="text-3xl mb-2">🍸</div>
+            <div className="text-2xl font-bold text-emerald-400">{availableCocktails.length}</div>
+            <div className="text-slate-400 text-sm">Cocktails You Can Make</div>
+          </div>
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+            <div className="text-3xl mb-2">🛒</div>
+            <div className="text-2xl font-bold text-white">{ingredientsNotInInventory.length}</div>
+            <div className="text-slate-400 text-sm">More to Discover</div>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+            <button
+              onClick={() => setViewMode('inventory')}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                viewMode === 'inventory'
+                  ? 'bg-emerald-500 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              📦 My Inventory
+            </button>
+            <button
+              onClick={() => setViewMode('available')}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                viewMode === 'available'
+                  ? 'bg-emerald-500 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🍸 Available Cocktails
+            </button>
+          </div>
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder={viewMode === 'inventory' ? "Search ingredients..." : "Search cocktails..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+        </div>
+        {viewMode === 'inventory' ? (
+          <>
+            {filteredInventory.length === 0 ? (
+              <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
+                <div className="text-4xl mb-4">📦</div>
+                <p className="text-slate-400 mb-4">
+                  {searchQuery ? 'No ingredients found' : 'Your inventory is empty'}
+                </p>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Add Your First Ingredient
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredInventory.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-3xl">{getCategoryIcon(item.ingredient.category)}</span>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">
+                            {item.ingredient.name}
+                          </h3>
+                          <div className="text-xs text-slate-500">
+                            {item.ingredient.category}
+                            {item.ingredient.subcategory && ` • ${item.ingredient.subcategory}`}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-slate-700 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-slate-400">Quantity:</span>
+                        <span className="text-sm font-semibold text-emerald-400">
+                          {item.quantity} {item.unit}
+                        </span>
+                      </div>
+                      {item.notes && (
+                        <div className="text-xs text-slate-500 italic">
+                          "{item.notes}"
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleRemoveFromInventory(item.id)}
+                      className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {filteredCocktails.length === 0 ? (
+              <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
+                <div className="text-4xl mb-4">🍸</div>
+                <p className="text-slate-400 mb-4">
+                  {searchQuery
+                    ? 'No cocktails found'
+                    : 'Add more ingredients to discover cocktails you can make!'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCocktails.map((cocktail) => (
+                  <Link
+                    key={cocktail.id}
+                    to={`/cocktails/${cocktail.id}`}
+                    className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
+                  >
+                    <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
+                      <span className="text-6xl">🍹</span>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                          {cocktail.name}
+                        </h3>
+                        <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
+                          {cocktail.difficulty}
+                        </span>
+                      </div>
+                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+                        {cocktail.description || 'No description available'}
+                      </p>
+                      <div className="flex items-center text-emerald-400 text-sm">
+                        <span className="mr-2">✓</span>
+                        <span>You have all ingredients!</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-white mb-4">Add to Inventory</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Ingredient *
+                </label>
+                <select
+                  value={selectedIngredient || ''}
+                  onChange={(e) => setSelectedIngredient(parseInt(e.target.value))}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="">Select an ingredient</option>
+                  {ingredientsNotInInventory.map((ing) => (
+                    <option key={ing.id} value={ing.id}>
+                      {getCategoryIcon(ing.category)} {ing.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Quantity *
+                  </label>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    min="0"
+                    step="0.1"
+                    className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Unit
+                  </label>
+                  <select
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="ml">ml</option>
+                    <option value="oz">oz</option>
+                    <option value="L">L</option>
+                    <option value="bottle">bottle</option>
+                    <option value="pieces">pieces</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Notes (optional)
+                </label>
+                <input
+                  type="text"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="e.g., Half full bottle"
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleAddToInventory}
+                  disabled={!selectedIngredient || addLoading}
+                  className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
+                >
+                  {addLoading ? 'Adding...' : 'Add to Inventory'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddModal(false)
+                    setSelectedIngredient(null)
+                    setQuantity('750')
+                    setUnit('ml')
+                    setNotes('')
+                  }}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
 }
