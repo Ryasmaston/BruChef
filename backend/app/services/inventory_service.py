@@ -1,6 +1,7 @@
 from app.models import db, Inventory, Ingredient, User, Cocktail, cocktail_ingredients
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional, Dict, Any
+from app.utilities.unit_conversion import standardize_quantity, can_make_cocktail
 
 class InventoryService:
 
@@ -82,45 +83,75 @@ class InventoryService:
 
     @staticmethod
     def get_available_cocktails(user_id: int) -> List[Dict[str, Any]]:
-        try:
-            user_ingredients = db.session.query(Inventory.ingredient_id).filter(
-                Inventory.user_id == user_id,
-                Inventory.quantity > 0
-            ).all()
-            user_ingredient_ids = set([item[0] for item in user_ingredients])
-            if not user_ingredient_ids:
-                return []
-            cocktails = Cocktail.query.all()
-            available_cocktails = []
-            for cocktail in cocktails:
-                cocktail_ingredient_ids = set([ing.id for ing in cocktail.ingredients])
-                if cocktail_ingredient_ids.issubset(user_ingredient_ids):
-                    available_cocktails.append(cocktail.to_dict())
-            return available_cocktails
-        except SQLAlchemyError as e:
-            raise Exception(f"Error fetching available cocktails: {str(e)}")
+            try:
+                inventory_items = Inventory.query.filter_by(user_id=user_id).all()
+                user_inventory_ml = {}
+                for item in inventory_items:
+                    quantity_ml = standardize_quantity(f"{item.quantity} {item.unit}")
+                    if quantity_ml > 0:
+                        user_inventory_ml[item.ingredient_id] = quantity_ml
+                if not user_inventory_ml:
+                    return []
+                cocktails = Cocktail.query.all()
+                available_cocktails = []
+                for cocktail in cocktails:
+                    cocktail_ingredients_data = []
+                    for ingredient in cocktail.ingredients:
+                        result = db.session.execute(
+                            db.select(cocktail_ingredients.c.quantity).where(
+                                db.and_(
+                                    cocktail_ingredients.c.cocktail_id == cocktail.id,
+                                    cocktail_ingredients.c.ingredient_id == ingredient.id
+                                )
+                            )
+                        ).scalar()
+                        cocktail_ingredients_data.append({
+                            'ingredient_id': ingredient.id,
+                            'quantity': result or ''
+                        })
+                    can_make, missing = can_make_cocktail(cocktail_ingredients_data, user_inventory_ml)
+                    if can_make:
+                        available_cocktails.append(cocktail.to_dict())
+                return available_cocktails
+            except SQLAlchemyError as e:
+                raise Exception(f"Error fetching available cocktails: {str(e)}")
 
     @staticmethod
     def get_missing_ingredients(user_id: int, cocktail_id: int) -> List[Dict[str, Any]]:
-        try:
-            cocktail = Cocktail.query.get(cocktail_id)
-            if not cocktail:
-                return []
-            user_ingredients = db.session.query(Inventory.ingredient_id).filter(
-                Inventory.user_id == user_id,
-                Inventory.quantity > 0
-            ).all()
-            user_ingredient_ids = set([item[0] for item in user_ingredients])
-            missing = []
-            for ingredient in cocktail.ingredients:
-                if ingredient.id not in user_ingredient_ids:
-                    missing.append({
-                        'id': ingredient.id,
-                        'name': ingredient.name,
-                        'category': ingredient.category,
-                        'subcategory': ingredient.subcategory,
-                        'abv': ingredient.abv
-                    })
-            return missing
-        except SQLAlchemyError as e:
-            raise Exception(f"Error checking missing ingredients: {str(e)}")
+            try:
+                cocktail = Cocktail.query.get(cocktail_id)
+                if not cocktail:
+                    return []
+                inventory_items = Inventory.query.filter_by(user_id=user_id).all()
+                user_inventory_ml = {}
+                for item in inventory_items:
+                    quantity_ml = standardize_quantity(f"{item.quantity} {item.unit}")
+                    if quantity_ml > 0:
+                        user_inventory_ml[item.ingredient_id] = quantity_ml
+                missing = []
+                for ingredient in cocktail.ingredients:
+                    result = db.session.execute(
+                        db.select(cocktail_ingredients.c.quantity).where(
+                            db.and_(
+                                cocktail_ingredients.c.cocktail_id == cocktail_id,
+                                cocktail_ingredients.c.ingredient_id == ingredient.id
+                            )
+                        )
+                    ).scalar()
+                    required_ml = standardize_quantity(result or '')
+                    available_ml = user_inventory_ml.get(ingredient.id, 0)
+                    if available_ml < required_ml:
+                        missing.append({
+                            'id': ingredient.id,
+                            'name': ingredient.name,
+                            'category': ingredient.category,
+                            'subcategory': ingredient.subcategory,
+                            'abv': ingredient.abv,
+                            'required': result,
+                            'required_ml': required_ml,
+                            'available_ml': available_ml,
+                            'shortage_ml': required_ml - available_ml
+                        })
+                return missing
+            except SQLAlchemyError as e:
+                raise Exception(f"Error checking missing ingredients: {str(e)}")
