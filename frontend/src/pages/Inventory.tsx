@@ -78,7 +78,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
     category: 'Spirit',
     subcategory: CATEGORIES['Spirit'][0],
     description: '',
-    abv: 0
+    abv: ''
   })
   const [createLoading, setCreateLoading] = useState(false)
   const [createError, setCreateError] = useState('')
@@ -162,7 +162,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
         category: 'Spirit',
         subcategory: CATEGORIES['Spirit'][0],
         description: '',
-        abv: 0
+        abv: ''
       })
       setCreateLoading(false)
     } catch (err: any) {
@@ -674,10 +674,11 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                 <input
                   type="number"
                   value={newIngredient.abv}
-                  onChange={(e) => setNewIngredient(prev => ({ ...prev, abv: parseFloat(e.target.value) || 0 }))}
+                  onChange={(e) => setNewIngredient(prev => ({ ...prev, abv: e.target.value }))}
                   min="0"
                   max="100"
                   step="0.1"
+                  placeholder="e.g. 40"
                   className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
@@ -710,7 +711,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                       category: 'Spirit',
                       subcategory: CATEGORIES['Spirit'][0],
                       description: '',
-                      abv: 0
+                      abv: ''
                     })
                   }}
                   className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
