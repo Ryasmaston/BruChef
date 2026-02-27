@@ -64,7 +64,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     category: 'Spirit',
     subcategory: CATEGORIES['Spirit'][0],
     description: '',
-    abv: 0
+    abv: ''
   })
   const [modalLoading, setModalLoading] = useState(false)
   const [modalError, setModalError] = useState('')
@@ -157,7 +157,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   const handleCustomIngredientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     if (name === 'abv') {
-      setCustomIngredient(prev => ({ ...prev, abv: parseFloat(value) || 0 }))
+      setCustomIngredient(prev => ({ ...prev, abv: value }))
     } else if (name === 'category') {
       const firstSubcategory = CATEGORIES[value]?.[0]
       setCustomIngredient(prev => ({ ...prev, category: value, subcategory: firstSubcategory }))
@@ -193,7 +193,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
         category: 'Spirit',
         subcategory: CATEGORIES['Spirit'][0],
         description: '',
-        abv: 0
+        abv: ''
       })
       setModalLoading(false)
     } catch (err: any) {
@@ -275,7 +275,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                placeholder="e.g., Mojito"
+                placeholder="e.g. Mojito"
               />
             </div>
             <div>
@@ -320,7 +320,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                   value={formData.glass_type}
                   onChange={handleChange}
                   className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  placeholder="e.g., Highball, Rocks"
+                  placeholder="e.g. Highball, Rocks"
                 />
               </div>
               <div>
@@ -351,7 +351,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                 value={formData.garnish}
                 onChange={handleChange}
                 className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                placeholder="e.g., Mint sprig, lime wheel"
+                placeholder="e.g. Mint sprig, lime wheel"
               />
             </div>
             <div>
@@ -588,7 +588,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                   onChange={handleCustomIngredientChange}
                   required
                   className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  placeholder="e.g., Elderflower Liqueur"
+                  placeholder="e.g. Elderflower Liqueur"
                 />
               </div>
               <div>
@@ -637,7 +637,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                   max="100"
                   step="0.1"
                   className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  placeholder="0"
+                  placeholder="e.g. 40"
                 />
               </div>
               <div>
