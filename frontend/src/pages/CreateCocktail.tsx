@@ -11,7 +11,9 @@ interface Ingredient {
 
 interface IngredientQuantity {
   id: number
-  quantity: string
+  amount: string
+  unitType: 'volume'|'mass'|'count'
+  unit: string
 }
 
 interface CreateCocktailProps {
@@ -49,12 +51,13 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     glass_type: '',
     garnish: '',
     difficulty: 'Medium',
-    ingredient_quantities: [] as IngredientQuantity[]
+    ingredient_quantities: [] as Array<{id: number, quantity: string}>
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showIngredientSearch, setShowIngredientSearch] = useState(false)
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState('')
+  const [ingredientInputs, setIngredientInputs] = useState<IngredientQuantity[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [customIngredient, setCustomIngredient] = useState({
     name: '',
@@ -69,6 +72,14 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   useEffect(() => {
     fetchIngredients()
   }, [])
+
+  useEffect(() => {
+    const quantities = ingredientInputs.map(input => ({
+      id: input.id,
+      quantity: input.amount && input.unit ? `${input.amount} ${input.unit}` : ''
+    }))
+    setFormData(prev => ({ ...prev, ingredient_quantities: quantities }))
+  }, [ingredientInputs])
 
   const fetchIngredients = async () => {
     try {
@@ -113,26 +124,34 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   }
 
   const addIngredient = (ingredientId: number) => {
-    setFormData(prev => ({
-      ...prev,
-      ingredient_quantities: [...prev.ingredient_quantities, { id: ingredientId, quantity: '' }]
-    }))
+    setIngredientInputs(prev => [...prev, {
+      id: ingredientId,
+      amount: '',
+      unitType: 'volume',
+      unit: 'oz'
+    }])
   }
 
   const removeIngredient = (ingredientId: number) => {
-    setFormData(prev => ({
-      ...prev,
-      ingredient_quantities: prev.ingredient_quantities.filter(iq => iq.id !== ingredientId)
-    }))
+    setIngredientInputs(prev => prev.filter(input => input.id !== ingredientId))
   }
 
-  const updateQuantity = (ingredientId: number, quantity: string) => {
-    setFormData(prev => ({
-      ...prev,
-      ingredient_quantities: prev.ingredient_quantities.map(iq =>
-        iq.id === ingredientId ? { ...iq, quantity } : iq
-      )
-    }))
+  const updateIngredientAmount = (ingredientId: number, amount: string) => {
+    setIngredientInputs(prev => prev.map(input =>
+      input.id === ingredientId ? { ...input, amount } : input
+    ))
+  }
+
+  const updateIngredientUnitType = (ingredientId: number, unitType: 'volume' | 'mass' | 'count') => {
+    setIngredientInputs(prev => prev.map(input =>
+      input.id === ingredientId ? { ...input, unitType, unit: UNIT_OPTIONS[unitType][0] } : input
+    ))
+  }
+
+  const updateIngredientUnit = (ingredientId: number, unit: string) => {
+    setIngredientInputs(prev => prev.map(input =>
+      input.id === ingredientId ? { ...input, unit } : input
+    ))
   }
 
   const handleCustomIngredientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -259,7 +278,6 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                 placeholder="e.g., Mojito"
               />
             </div>
-
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-2">
                 Description
@@ -339,7 +357,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
             <div>
               <div className="flex justify-between items-center mb-3">
                 <label className="block text-sm font-medium text-slate-300">
-                  Ingredients ({formData.ingredient_quantities.length} selected)
+                  Ingredients ({ingredientInputs.length} selected)
                 </label>
                 <button
                   type="button"
@@ -349,7 +367,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                   + Add Ingredient
                 </button>
               </div>
-              {formData.ingredient_quantities.length === 0 ? (
+              {ingredientInputs.length === 0 ? (
                 <div className="text-center py-8 bg-slate-900 border border-slate-700 rounded-lg">
                   <p className="text-slate-500 text-sm mb-3">No ingredients added yet</p>
                   <button
@@ -361,30 +379,98 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {formData.ingredient_quantities.map((item) => {
-                    const ing = ingredients.find(i => i.id === item.id)
+                <div className="space-y-4">
+                  {ingredientInputs.map((input) => {
+                    const ing = ingredients.find(i => i.id === input.id)
                     if (!ing) return null
                     return (
-                      <div key={item.id} className="flex items-center gap-3 p-3 bg-slate-900 rounded-lg border border-slate-700">
-                        <span className="text-2xl">{getCategoryIcon(ing.category)}</span>
-                        <div className="flex-1">
-                          <div className="text-white font-medium">{ing.name}</div>
-                          <input
-                            type="text"
-                            value={item.quantity}
-                            onChange={(e) => updateQuantity(item.id, e.target.value)}
-                            placeholder="e.g., 2 oz, 1 dash, Top with"
-                            className="mt-1 w-full px-3 py-1.5 text-sm bg-slate-800 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                          />
+                      <div key={input.id} className="p-4 bg-slate-900 rounded-lg border border-slate-700">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">{getCategoryIcon(ing.category)}</span>
+                          <div className="flex-1">
+                            <div className="text-white font-medium text-lg">{ing.name}</div>
+                            <div className="text-xs text-slate-500">
+                              {ing.category}{ing.subcategory && ` • ${ing.subcategory}`}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeIngredient(input.id)}
+                            className="px-3 py-1 text-sm bg-red-900/20 text-red-400 rounded border border-red-900/50 hover:bg-red-900/40 transition-colors"
+                          >
+                            Remove
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => removeIngredient(item.id)}
-                          className="px-3 py-1 text-sm bg-red-900/20 text-red-400 rounded border border-red-900/50 hover:bg-red-900/40 transition-colors"
-                        >
-                          Remove
-                        </button>
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-slate-400 mb-2">
+                            Measurement Type
+                          </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => updateIngredientUnitType(input.id, 'volume')}
+                              className={`px-3 py-2 text-sm rounded transition-colors ${
+                                input.unitType === 'volume'
+                                  ? 'bg-emerald-500 text-white'
+                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                              }`}
+                            >
+                              Volume
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateIngredientUnitType(input.id, 'mass')}
+                              className={`px-3 py-2 text-sm rounded transition-colors ${
+                                input.unitType === 'mass'
+                                  ? 'bg-emerald-500 text-white'
+                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                              }`}
+                            >
+                              Mass
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateIngredientUnitType(input.id, 'count')}
+                              className={`px-3 py-2 text-sm rounded transition-colors ${
+                                input.unitType === 'count'
+                                  ? 'bg-emerald-500 text-white'
+                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                              }`}
+                            >
+                              Count
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">
+                              Amount
+                            </label>
+                            <input
+                              type="number"
+                              value={input.amount}
+                              onChange={(e) => updateIngredientAmount(input.id, e.target.value)}
+                              min="0"
+                              step="0.1"
+                              placeholder="0"
+                              className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">
+                              Unit
+                            </label>
+                            <select
+                              value={input.unit}
+                              onChange={(e) => updateIngredientUnit(input.id, e.target.value)}
+                              className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-emerald-500"
+                            >
+                              {UNIT_OPTIONS[input.unitType].map(u => (
+                                <option key={u} value={u}>{u}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
                       </div>
                     )
                   })}
@@ -455,7 +541,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                       }}
                       className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm rounded transition-colors"
                     >
-                      + Create "{ingredientSearchQuery}"
+                      Create Ingredient
                     </button>
                   </div>
                 )}
@@ -475,6 +561,126 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-white mb-4">Create New Ingredient</h2>
+
+            {modalError && (
+              <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
+                {modalError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateCustomIngredient} className="space-y-4">
+              <div>
+                <label htmlFor="custom-name" className="block text-sm font-medium text-slate-300 mb-2">
+                  Ingredient Name *
+                </label>
+                <input
+                  type="text"
+                  id="custom-name"
+                  name="name"
+                  value={customIngredient.name}
+                  onChange={handleCustomIngredientChange}
+                  required
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  placeholder="e.g., Elderflower Liqueur"
+                />
+              </div>
+              <div>
+                <label htmlFor="custom-category" className="block text-sm font-medium text-slate-300 mb-2">
+                  Category *
+                </label>
+                <select
+                  id="custom-category"
+                  name="category"
+                  value={customIngredient.category}
+                  onChange={handleCustomIngredientChange}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  {Object.keys(CATEGORIES).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="custom-subcategory" className="block text-sm font-medium text-slate-300 mb-2">
+                  Subcategory *
+                </label>
+                <select
+                  id="custom-subcategory"
+                  name="subcategory"
+                  value={customIngredient.subcategory}
+                  onChange={handleCustomIngredientChange}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  {CATEGORIES[customIngredient.category].map(subcat => (
+                    <option key={subcat} value={subcat}>{subcat}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="custom-abv" className="block text-sm font-medium text-slate-300 mb-2">
+                  ABV (%)
+                </label>
+                <input
+                  type="number"
+                  id="custom-abv"
+                  name="abv"
+                  value={customIngredient.abv}
+                  onChange={handleCustomIngredientChange}
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label htmlFor="custom-description" className="block text-sm font-medium text-slate-300 mb-2">
+                  Description (optional)
+                </label>
+                <textarea
+                  id="custom-description"
+                  name="description"
+                  value={customIngredient.description}
+                  onChange={handleCustomIngredientChange}
+                  rows={2}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  placeholder="A floral, sweet liqueur..."
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={modalLoading}
+                  className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
+                >
+                  {modalLoading ? 'Creating...' : 'Create Ingredient'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateModal(false)
+                    setModalError('')
+                    setCustomIngredient({
+                      name: '',
+                      category: 'Spirit',
+                      subcategory: CATEGORIES['Spirit'][0],
+                      description: '',
+                      abv: 0
+                    })
+                  }}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
