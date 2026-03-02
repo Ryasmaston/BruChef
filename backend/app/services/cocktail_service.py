@@ -34,7 +34,8 @@ class CocktailService:
                 instructions = data['instructions'],
                 glass_type = data.get('glass_type', ''),
                 garnish = data.get('garnish', ''),
-                difficulty = data.get('difficulty', 'Medium')
+                difficulty = data.get('difficulty', 'Medium'),
+                servings = data.get('servings', 1)
             )
             db.session.add(new_cocktail)
             db.session.flush()
