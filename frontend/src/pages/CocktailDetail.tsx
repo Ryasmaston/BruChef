@@ -11,6 +11,7 @@ interface Cocktail {
   garnish: string
   created_at: string
   ingredients: Ingredient[]
+  servings: number
 }
 
 interface Ingredient {
@@ -28,9 +29,53 @@ export default function CocktailDetail() {
   const [cocktail, setCocktail] = useState<Cocktail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [currentServings, setCurrentServings] = useState(1)
+
   useEffect(() => {
     fetchCocktail()
   }, [id])
+
+  useEffect(() => {
+    if (cocktail) {
+      setCurrentServings(cocktail.servings || 1)
+    }
+  }, [cocktail])
+
+  const parseQuantity = (quantityStr: string) => {
+    if (!quantityStr) return null
+    const lower = quantityStr.toLowerCase().trim()
+    if (lower.includes('top with') || lower.includes('fill')) {
+      return null
+    }
+    const match = quantityStr.match(/^([\d.]+)\s*(.+)$/)
+    if (!match) return null
+    return {
+      amount: parseFloat(match[1]),
+      unit: match[2].trim()
+    }
+  }
+
+  const scaleQuantity = (original: string, scale: number) => {
+    const parsed = parseQuantity(original)
+    if (!parsed) return original
+    const scaled = parsed.amount * scale
+    const formatted = scaled % 1 === 0
+      ? scaled.toString()
+      : scaled.toFixed(2).replace(/\.?0+$/, '')
+
+    return `${formatted} ${parsed.unit}`
+  }
+
+  const getScaledIngredients = () => {
+    if (!cocktail) return []
+    const baseServings = cocktail.servings || 1
+    const scale = currentServings / baseServings
+    return cocktail.ingredients.map(ing => ({
+      ...ing,
+      scaledQuantity: scaleQuantity(ing.quantity, scale)
+    }))
+  }
+  const scaledIngredients = getScaledIngredients()
 
   const fetchCocktail = async () => {
     try {
@@ -160,6 +205,30 @@ export default function CocktailDetail() {
             <div className="text-8xl ml-4">🍹</div>
           </div>
         </div>
+        <div>
+          <div className="flex justify-end gap-8 mb-4 mr-10">
+            <h2 className="text-xl font-semibold text-white flex items-center">
+              <span className="ml-4">Servings</span>
+            </h2>
+            <div className="flex items-center gap-0">
+              <button
+                onClick={() => setCurrentServings(Math.max(1, currentServings - 1))}
+                className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 text-white"
+              >
+                −
+              </button>
+              <span className="text-2xl font-bold text-emerald-400 min-w-[3rem] text-center">
+                {currentServings}
+              </span>
+              <button
+                onClick={() => setCurrentServings(Math.min(20, currentServings + 1))}
+                className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 text-white"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
         <div className="p-8 space-y-8">
           {cocktail.ingredients && cocktail.ingredients.length > 0 && (
             <div>
@@ -169,11 +238,8 @@ export default function CocktailDetail() {
               </h2>
               <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
                 <div className="space-y-3">
-                  {cocktail.ingredients.map((ingredient) => (
-                    <div
-                      key={ingredient.id}
-                      className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors"
-                    >
+                  {scaledIngredients.map((ingredient) => (
+                    <div key={ingredient.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors">
                       <div className="flex items-center space-x-3 flex-1">
                         <span className="text-2xl">{getCategoryIcon(ingredient.category)}</span>
                         <div className="flex-1">
@@ -195,9 +261,9 @@ export default function CocktailDetail() {
                           </div>
                         </div>
                       </div>
-                      {ingredient.quantity && (
+                      {ingredient.scaledQuantity && (
                         <div className="text-emerald-400 font-semibold text-sm ml-4">
-                          {ingredient.quantity}
+                          {ingredient.scaledQuantity}  {/* ✅ Shows scaled quantity */}
                         </div>
                       )}
                     </div>

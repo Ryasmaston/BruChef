@@ -51,6 +51,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     glass_type: '',
     garnish: '',
     difficulty: 'Medium',
+    servings: 1,
     ingredient_quantities: [] as Array<{id: number, quantity: string}>
   })
   const [loading, setLoading] = useState(false)
@@ -338,6 +339,20 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                   <option value="Medium">Medium</option>
                   <option value="Advanced">Advanced</option>
                 </select>
+              </div>
+              <div>
+                <label htmlFor="servings">Serves: </label>
+                <input
+                  type="number"
+                  id="servings"
+                  name="servings"
+                  value={formData.servings}
+                  onChange={handleChange}
+                  min="1"
+                  max="20"
+                  required
+                  placeholder="1"
+                />
               </div>
             </div>
             <div>
