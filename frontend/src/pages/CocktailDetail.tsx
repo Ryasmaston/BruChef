@@ -21,6 +21,16 @@ interface Ingredient {
   subcategory: string | null
   abv: number
   quantity: string
+  scaledQuantity?: string
+}
+
+interface MissingIngredient {
+  id: number
+  name: string
+  required: string
+  required_ml: number
+  available_ml: number
+  shortage_ml: number
 }
 
 export default function CocktailDetail() {
@@ -30,9 +40,14 @@ export default function CocktailDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [currentServings, setCurrentServings] = useState(1)
+  const [canMake, setCanMake] = useState(false)
+  const [missingIngredients, setMissingIngredients] = useState<MissingIngredient[]>([])
+  const [makingCocktail, setMakingCocktail] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     fetchCocktail()
+    checkCanMakeCocktail()
   }, [id])
 
   useEffect(() => {
@@ -40,6 +55,68 @@ export default function CocktailDetail() {
       setCurrentServings(cocktail.servings || 1)
     }
   }, [cocktail])
+
+  useEffect(() => {
+    if (cocktail && isAuthenticated) {
+      checkCanMakeCocktail()
+    }
+  }, [currentServings])
+
+  const checkCanMakeCocktail = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/inventory/missing/${id}`, {
+        credentials: 'include'
+      })
+      if (!response.ok) {
+        setCanMake(false)
+        setIsAuthenticated(false)
+        return
+      }
+      const data = await response.json()
+      setIsAuthenticated(true)
+      setMissingIngredients(data)
+      setCanMake(data.length === 0)
+    } catch (err) {
+      console.error('Error checking ingredients:', err)
+      setCanMake(false)
+      setIsAuthenticated(false)
+    }
+  }
+
+  const handleMakeCocktail = async () => {
+    if (!canMake || !cocktail) return
+    const scaledIngredients = getScaledIngredients()
+    const ingredientsList = scaledIngredients
+      .map(ing => `• ${ing.name}: ${ing.scaledQuantity}`)
+      .join('\n')
+    const confirmed = window.confirm(
+      `Make ${currentServings} serving${currentServings > 1 ? 's' : ''} of ${cocktail.name}?\n\n` +
+      `This will deduct the following from your inventory:\n${ingredientsList}`
+    )
+    if (!confirmed) return
+    setMakingCocktail(true)
+    try {
+      const response = await fetch(`http://localhost:5001/api/inventory/make-cocktail/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ servings: currentServings })
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to make cocktail')
+      }
+      alert(`🍸 ${data.message}`)
+      await checkCanMakeCocktail()
+
+    } catch (err: any) {
+      alert(err.message || 'Failed to make cocktail')
+    } finally {
+      setMakingCocktail(false)
+    }
+  }
 
   const parseQuantity = (quantityStr: string) => {
     if (!quantityStr) return null
@@ -174,7 +251,6 @@ export default function CocktailDetail() {
         <span>←</span>
         <span>Back to Cocktails</span>
       </button>
-
       <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
         <div className="bg-gradient-to-br from-emerald-900/50 to-slate-800 p-8">
           <div className="flex items-start justify-between">
@@ -263,7 +339,7 @@ export default function CocktailDetail() {
                       </div>
                       {ingredient.scaledQuantity && (
                         <div className="text-emerald-400 font-semibold text-sm ml-4">
-                          {ingredient.scaledQuantity}  {/* ✅ Shows scaled quantity */}
+                          {ingredient.scaledQuantity}
                         </div>
                       )}
                     </div>
@@ -309,9 +385,41 @@ export default function CocktailDetail() {
         </div>
       </div>
       <div className="mt-6 flex gap-4">
+        {canMake && isAuthenticated && (
+          <button
+            onClick={handleMakeCocktail}
+            disabled={makingCocktail}
+            className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-700 text-white rounded-lg font-semibold text-center transition-colors flex items-center justify-center gap-2"
+          >
+            {makingCocktail ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                <span>Making...</span>
+              </>
+            ) : (
+              <>
+                <span>🍸</span>
+                <span>Make This Cocktail ({currentServings} serving{currentServings > 1 ? 's' : ''})</span>
+              </>
+            )}
+          </button>
+        )}
+        {!canMake && isAuthenticated && missingIngredients.length > 0 && (
+          <div className="flex-1 px-6 py-3 bg-slate-700 border border-slate-600 rounded-lg">
+            <div className="text-white font-semibold mb-2 flex items-center gap-2">
+              <span>⚠️</span>
+              <span>Missing Ingredients:</span>
+            </div>
+            <div className="text-slate-400 text-sm">
+              {missingIngredients.slice(0, 3).map(ing => ing.name).join(', ')}
+              {missingIngredients.length > 3 && ` and ${missingIngredients.length - 3} more`}
+            </div>
+          </div>
+        )}
+
         <Link
           to="/cocktails"
-          className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold text-center transition-colors"
+          className={`${canMake && isAuthenticated ? '' : 'flex-1'} px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold text-center transition-colors`}
         >
           Browse More Cocktails
         </Link>
