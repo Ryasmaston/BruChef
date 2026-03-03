@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import MakeCocktailConfirm from '../components/MakeCocktailConfirm'
+import AlertDialog from '../components/AlertDialog'
 
 interface Cocktail {
   id: number
@@ -44,6 +46,11 @@ export default function CocktailDetail() {
   const [missingIngredients, setMissingIngredients] = useState<MissingIngredient[]>([])
   const [makingCocktail, setMakingCocktail] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [showAlertDialog, setShowAlertDialog] = useState(false)
+  const [alertType, setAlertType] = useState<'success' | 'error'>('success')
+  const [alertTitle, setAlertTitle] = useState('')
+  const [alertMessage, setAlertMessage] = useState('')
 
   useEffect(() => {
     fetchCocktail()
@@ -83,17 +90,12 @@ export default function CocktailDetail() {
     }
   }
 
-  const handleMakeCocktail = async () => {
+  const handleMakeCocktail = () => {
     if (!canMake || !cocktail) return
-    const scaledIngredients = getScaledIngredients()
-    const ingredientsList = scaledIngredients
-      .map(ing => `• ${ing.name}: ${ing.scaledQuantity}`)
-      .join('\n')
-    const confirmed = window.confirm(
-      `Make ${currentServings} serving${currentServings > 1 ? 's' : ''} of ${cocktail.name}?\n\n` +
-      `This will deduct the following from your inventory:\n${ingredientsList}`
-    )
-    if (!confirmed) return
+    setShowConfirmDialog(true)
+  }
+
+  const confirmMakeCocktail = async () => {
     setMakingCocktail(true)
     try {
       const response = await fetch(`http://localhost:5001/api/inventory/make-cocktail/${id}`, {
@@ -108,11 +110,18 @@ export default function CocktailDetail() {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to make cocktail')
       }
-      alert(`🍸 ${data.message}`)
+      setShowConfirmDialog(false)
+      setAlertType('success')
+      setAlertTitle('Cocktail Made!')
+      setAlertMessage(data.message)
+      setShowAlertDialog(true)
       await checkCanMakeCocktail()
-
     } catch (err: any) {
-      alert(err.message || 'Failed to make cocktail')
+      setShowConfirmDialog(false)
+      setAlertType('error')
+      setAlertTitle('Error')
+      setAlertMessage(err.message || 'Failed to make cocktail')
+      setShowAlertDialog(true)
     } finally {
       setMakingCocktail(false)
     }
@@ -416,7 +425,6 @@ export default function CocktailDetail() {
             </div>
           </div>
         )}
-
         <Link
           to="/cocktails"
           className={`${canMake && isAuthenticated ? '' : 'flex-1'} px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold text-center transition-colors`}
@@ -424,6 +432,27 @@ export default function CocktailDetail() {
           Browse More Cocktails
         </Link>
       </div>
+      <MakeCocktailConfirm
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={confirmMakeCocktail}
+        title={`Make ${currentServings} Serving${currentServings > 1 ? 's' : ''}?`}
+        message={`You're about to make ${currentServings} serving${currentServings > 1 ? 's' : ''} of ${cocktail?.name}.`}
+        ingredients={scaledIngredients.map(ing => ({
+          name: ing.name,
+          quantity: ing.scaledQuantity || ''
+        }))}
+        confirmText="Make Cocktail"
+        cancelText="Cancel"
+        isLoading={makingCocktail}
+      />
+      <AlertDialog
+        isOpen={showAlertDialog}
+        onClose={() => setShowAlertDialog(false)}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+      />
     </div>
   )
 }
