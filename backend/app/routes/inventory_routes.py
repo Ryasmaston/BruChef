@@ -86,3 +86,18 @@ def get_missing_ingredients(cocktail_id):
         return jsonify(missing), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@inventory_bp.route('/make-cocktail/<int:cocktail_id>', methods=['POST'])
+def make_cocktail(cocktail_id):
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 401
+    try:
+        data = request.get_json()
+        servings = data.get('servings', 1)
+        result = InventoryService.make_cocktail(user_id, cocktail_id, servings)
+        if result.get('error'):
+            return jsonify(result), 400
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
