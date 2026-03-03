@@ -62,7 +62,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-2">
-                Username or Email
+                Email
               </label>
               <input
                 type="text"

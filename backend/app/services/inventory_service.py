@@ -195,17 +195,13 @@ class InventoryService:
                         'shortage_ml': round(required_ml - available_ml, 1)
                     })
             if missing:
-                return {
-                    'error': f'Missing ingredients: {", ".join(missing)}'
-                }
+                return {'error': f'Missing ingredients: {", ".join(missing)}'}
             if insufficient:
                 details = "; ".join([
                     f"{item['name']} (need {item['required_ml']} ml, have {item['available_ml']} ml)"
                     for item in insufficient
                 ])
-                return {
-                    'error': f'Insufficient quantities: {details}'
-                }
+                return {'error': f'Insufficient quantities: {details}'}
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
                     db.select(cocktail_ingredients.c.quantity).where(
@@ -221,21 +217,39 @@ class InventoryService:
                 current_ml = user_inventory_ml[ingredient.id]
                 remaining_ml = current_ml - required_ml
                 if inventory_item.unit == 'ml':
-                    inventory_item.quantity = remaining_ml
+                    inventory_item.quantity = round(remaining_ml, 1)
                 elif inventory_item.unit == 'oz':
-                    inventory_item.quantity = remaining_ml / 29.5735
+                    inventory_item.quantity = round(remaining_ml / 29.5735, 1)
                 elif inventory_item.unit == 'L':
-                    inventory_item.quantity = remaining_ml / 1000
+                    inventory_item.quantity = round(remaining_ml / 1000, 1)
                 elif inventory_item.unit == 'cup':
-                    inventory_item.quantity = remaining_ml / 236.588
+                    inventory_item.quantity = round(remaining_ml / 236.588, 1)
                 elif inventory_item.unit == 'cl':
-                    inventory_item.quantity = remaining_ml / 10
+                    inventory_item.quantity = round(remaining_ml / 10, 1)
                 elif inventory_item.unit == 'tsp':
-                    inventory_item.quantity = remaining_ml / 4.92892
+                    inventory_item.quantity = round(remaining_ml / 4.92892, 1)
                 elif inventory_item.unit == 'tbsp':
-                    inventory_item.quantity = remaining_ml / 14.7868
+                    inventory_item.quantity = round(remaining_ml / 14.7868, 1)
+                elif inventory_item.unit in ['dash', 'dashes']:
+                    inventory_item.quantity = round(remaining_ml / 0.616, 1)
+                elif inventory_item.unit in ['splash', 'splashes']:
+                    inventory_item.quantity = round(remaining_ml / 7.5, 1)
+                elif inventory_item.unit in ['pieces', 'piece']:
+                    inventory_item.quantity = round(remaining_ml / 1000, 1)
+                elif inventory_item.unit in ['cubes', 'cube']:
+                    inventory_item.quantity = round(remaining_ml / 1000, 1)
+                elif inventory_item.unit in ['leaves', 'leaf']:
+                    inventory_item.quantity = round(remaining_ml / 1000, 1)
+                elif inventory_item.unit in ['slices', 'slice']:
+                    inventory_item.quantity = round(remaining_ml / 1000, 1)
+                elif inventory_item.unit in ['wedges', 'wedge']:
+                    inventory_item.quantity = round(remaining_ml / 1000, 1)
+                elif inventory_item.unit in ['bottles', 'bottle']:
+                    inventory_item.quantity = round(remaining_ml / 750, 1)
+                elif inventory_item.unit in ['cans', 'can']:
+                    inventory_item.quantity = round(remaining_ml / 355, 1)
                 else:
-                    inventory_item.quantity = remaining_ml
+                    inventory_item.quantity = round(remaining_ml, 1)
                     inventory_item.unit = 'ml'
                 if inventory_item.quantity <= 0.1:
                     db.session.delete(inventory_item)

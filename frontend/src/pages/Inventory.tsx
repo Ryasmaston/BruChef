@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog'
+import AlertDialog from '../components/AlertDialog'
 
 interface InventoryItem {
   id: number
@@ -84,6 +86,18 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [createError, setCreateError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'inventory' | 'available'>('inventory')
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<{
+    id: number
+    name: string
+    quantity: number
+    unit: string
+  } | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [showAlertDialog, setShowAlertDialog] = useState(false)
+  const [alertType, setAlertType] = useState<'success' | 'error'>('success')
+  const [alertTitle, setAlertTitle] = useState('')
+  const [alertMessage, setAlertMessage] = useState('')
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -204,18 +218,42 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
     }
   }
 
-  const handleRemoveFromInventory = async (itemId: number) => {
-    if (!confirm('Remove this ingredient from your inventory?')) return
+  const handleRemoveFromInventory = (item: InventoryItem) => {
+    setItemToDelete({
+      id: item.id,
+      name: item.ingredient.name,
+      quantity: item.quantity,
+      unit: item.unit
+    })
+    setShowDeleteDialog(true)
+  }
+
+  const confirmRemoveFromInventory = async () => {
+    if (!itemToDelete) return
+    setDeleteLoading(true)
     try {
-      const response = await fetch(`http://localhost:5001/api/inventory/${itemId}`, {
+      const response = await fetch(`http://localhost:5001/api/inventory/${itemToDelete.id}`, {
         method: 'DELETE',
         credentials: 'include'
       })
       if (!response.ok) throw new Error('Failed to remove from inventory')
+      setShowDeleteDialog(false)
+      setItemToDelete(null)
+      setAlertType('success')
+      setAlertTitle('Removed!')
+      setAlertMessage(`${itemToDelete.name} has been removed from your inventory.`)
+      setShowAlertDialog(true)
       await fetchInventory()
       await fetchAvailableCocktails()
     } catch (err: any) {
-      alert(err.message || 'Failed to remove from inventory')
+      setShowDeleteDialog(false)
+      setItemToDelete(null)
+      setAlertType('error')
+      setAlertTitle('Error')
+      setAlertMessage(err.message || 'Failed to remove from inventory')
+      setShowAlertDialog(true)
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -391,7 +429,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                         <div className="text-xs text-slate-500 italic">"{item.notes}"</div>
                       )}
                     </div>
-                    <button onClick={() => handleRemoveFromInventory(item.id)} className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors">
+                    <button onClick={() => handleRemoveFromInventory(item)} className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors">
                       Remove
                     </button>
                   </div>
@@ -723,6 +761,25 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           </div>
         </div>
       )}
+      <ConfirmDeleteDialog
+        isOpen={showDeleteDialog}
+        onClose={() => {
+          setShowDeleteDialog(false)
+          setItemToDelete(null)
+        }}
+        onConfirm={confirmRemoveFromInventory}
+        itemName={itemToDelete?.name || ''}
+        quantity={itemToDelete?.quantity.toString() || ''}
+        unit={itemToDelete?.unit || ''}
+        isLoading={deleteLoading}
+      />
+      <AlertDialog
+        isOpen={showAlertDialog}
+        onClose={() => setShowAlertDialog(false)}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+      />
     </>
   )
 }
