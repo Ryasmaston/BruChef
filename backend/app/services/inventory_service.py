@@ -207,7 +207,6 @@ class InventoryService:
                     'error': f'Insufficient quantities: {details}'
                 }
             for ingredient in cocktail.ingredients:
-                # Get quantity needed
                 result = db.session.execute(
                     db.select(cocktail_ingredients.c.quantity).where(
                         db.and_(
@@ -216,20 +215,11 @@ class InventoryService:
                         )
                     )
                 ).scalar()
-
                 base_required_ml = standardize_quantity(result or '0 ml')
                 required_ml = base_required_ml * servings
-
-                # Get the inventory item
                 inventory_item = inventory_map[ingredient.id]
-
-                # Get current quantity in ml
                 current_ml = user_inventory_ml[ingredient.id]
-
-                # Calculate remaining
                 remaining_ml = current_ml - required_ml
-
-                # Convert back to user's preferred unit
                 if inventory_item.unit == 'ml':
                     inventory_item.quantity = remaining_ml
                 elif inventory_item.unit == 'oz':
@@ -245,11 +235,8 @@ class InventoryService:
                 elif inventory_item.unit == 'tbsp':
                     inventory_item.quantity = remaining_ml / 14.7868
                 else:
-                    # Unknown unit, keep as ml
                     inventory_item.quantity = remaining_ml
                     inventory_item.unit = 'ml'
-
-                # If quantity is very low, remove from inventory
                 if inventory_item.quantity <= 0.1:
                     db.session.delete(inventory_item)
             db.session.commit()
