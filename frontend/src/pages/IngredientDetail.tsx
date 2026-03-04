@@ -1,6 +1,274 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 
+interface Ingredient {
+  id: number
+  name: string
+  category: string
+  subcategory: string | null
+  description: string
+  abv: number
+}
+
+interface Cocktail {
+  id: number
+  name: string
+  description: string
+  difficulty: string
+  glass_type: string
+  garnish: string
+}
+
 export default function IngredientDetail() {
-  return (IngredientDetail)
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [ingredient, setIngredient] = useState<Ingredient | null>(null)
+  const [cocktails, setCocktails] = useState<Cocktail[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetchIngredient()
+    fetchCocktailsUsingIngredient()
+  }, [id])
+
+  const fetchIngredient = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/ingredients/${id}`)
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Ingredient not found')
+        }
+        throw new Error('Failed to fetch ingredient')
+      }
+      const data = await response.json()
+      setIngredient(data)
+      setLoading(false)
+    } catch (err: any) {
+      setError(err.message || 'Failed to load ingredient')
+      setLoading(false)
+      console.error(err)
+    }
+  }
+
+  const fetchCocktailsUsingIngredient = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/ingredients/${id}/cocktails`)
+      if (!response.ok) throw new Error('Failed to fetch cocktails')
+      const data = await response.json()
+      setCocktails(data)
+    } catch (err) {
+      console.error('Error fetching cocktails:', err)
+    }
+  }
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Spirit': return '🥃'
+      case 'Liqueur': return '🍾'
+      case 'Wine': return '🍷'
+      case 'Bitters': return '🧴'
+      case 'Juice': return '🍊'
+      case 'Syrup': return '🍯'
+      case 'Soda': return '🥤'
+      case 'Dairy': return '🥛'
+      case 'Egg': return '🥚'
+      case 'Fresh Ingredient': return '🌿'
+      case 'Garnish': return '🍋'
+      default: return '🍎'
+    }
+  }
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'Spirit': return 'from-amber-900/50 to-slate-800'
+      case 'Liqueur': return 'from-purple-900/50 to-slate-800'
+      case 'Wine': return 'from-red-900/50 to-slate-800'
+      case 'Bitters': return 'from-orange-900/50 to-slate-800'
+      case 'Juice': return 'from-green-900/50 to-slate-800'
+      case 'Syrup': return 'from-yellow-900/50 to-slate-800'
+      case 'Soda': return 'from-blue-900/50 to-slate-800'
+      case 'Dairy': return 'from-slate-700/50 to-slate-800'
+      case 'Egg': return 'from-amber-800/50 to-slate-800'
+      case 'Fresh Ingredient': return 'from-emerald-900/50 to-slate-800'
+      case 'Garnish': return 'from-lime-900/50 to-slate-800'
+      default: return 'from-slate-900/50 to-slate-800'
+    }
+  }
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy': return 'bg-green-500/20 text-green-400 border-green-500/50'
+      case 'Medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+      case 'Advanced': return 'bg-red-500/20 text-red-400 border-red-500/50'
+      default: return 'bg-slate-500/20 text-slate-400 border-slate-500/50'
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🍎</div>
+          <p className="text-slate-400">Loading ingredient...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !ingredient) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⚠️</div>
+          <p className="text-red-400 mb-4">{error}</p>
+          <Link
+            to="/ingredients"
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white inline-block"
+          >
+            ← Back to Ingredients
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto">
+      <button
+        onClick={() => navigate('/ingredients')}
+        className="mb-6 text-slate-400 hover:text-white flex items-center space-x-2"
+      >
+        <span>←</span>
+        <span>Back to Ingredients</span>
+      </button>
+      <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden mb-8">
+        <div className={`bg-gradient-to-br ${getCategoryColor(ingredient.category)} p-8`}>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold text-white mb-3">
+                {ingredient.name}
+              </h1>
+              {ingredient.description && (
+                <p className="text-xl text-slate-300 mb-4">
+                  {ingredient.description}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-3">
+                <span className="px-3 py-1 text-sm rounded border bg-slate-700/50 text-slate-300 border-slate-600">
+                  {ingredient.category}
+                </span>
+                {ingredient.subcategory && (
+                  <span className="px-3 py-1 text-sm rounded border bg-slate-700/50 text-slate-300 border-slate-600">
+                    {ingredient.subcategory}
+                  </span>
+                )}
+                {ingredient.abv > 0 && (
+                  <span className="px-3 py-1 text-sm rounded border bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
+                    {ingredient.abv}% ABV
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="text-8xl ml-4">
+              {getCategoryIcon(ingredient.category)}
+            </div>
+          </div>
+        </div>
+        <div className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
+              <div className="text-sm text-slate-400 mb-2">Category</div>
+              <div className="text-2xl font-bold text-white">{ingredient.category}</div>
+            </div>
+            <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
+              <div className="text-sm text-slate-400 mb-2">Subcategory</div>
+              <div className="text-2xl font-bold text-white">
+                {ingredient.subcategory || 'N/A'}
+              </div>
+            </div>
+            <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
+              <div className="text-sm text-slate-400 mb-2">Alcohol Content</div>
+              <div className="text-2xl font-bold text-emerald-400">
+                {ingredient.abv}% ABV
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-white flex items-center">
+            <span className="mr-3">🍹</span>
+            Cocktails Using {ingredient.name}
+          </h2>
+          <span className="text-slate-400">
+            {cocktails.length} {cocktails.length === 1 ? 'cocktail' : 'cocktails'}
+          </span>
+        </div>
+
+        {cocktails.length === 0 ? (
+          <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
+            <div className="text-4xl mb-4">🔍</div>
+            <p className="text-slate-400 mb-4">
+              No cocktails found using {ingredient.name}
+            </p>
+            <p className="text-sm text-slate-500">
+              This ingredient hasn't been added to any cocktails yet
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cocktails.map((cocktail) => (
+              <Link
+                key={cocktail.id}
+                to={`/cocktails/${cocktail.id}`}
+                className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
+              >
+                <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
+                  <span className="text-6xl">🍹</span>
+                </div>
+                <div className="p-5">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                      {cocktail.name}
+                    </h3>
+                    <span
+                      className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(
+                        cocktail.difficulty
+                      )}`}
+                    >
+                      {cocktail.difficulty}
+                    </span>
+                  </div>
+                  <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+                    {cocktail.description || 'No description available'}
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    {cocktail.glass_type && (
+                      <div className="flex items-center text-slate-500">
+                        <span className="mr-2">🥃</span>
+                        <span>{cocktail.glass_type}</span>
+                      </div>
+                    )}
+                    {cocktail.garnish && (
+                      <div className="flex items-center text-slate-500">
+                        <span className="mr-2">🍋</span>
+                        <span className="line-clamp-1">{cocktail.garnish}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-700">
+                    <span className="text-emerald-400 text-sm group-hover:text-emerald-300">
+                      View Recipe →
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
