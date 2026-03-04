@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 interface Ingredient {
   id: number
@@ -203,15 +204,16 @@ export default function Ingredients() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredIngredients.map((ingredient) => (
-            <div
+            <Link
               key={ingredient.id}
-              className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors"
+              to={`/ingredients/${ingredient.id}`}
+              className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors group"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center space-x-3">
                   <span className="text-3xl">{getCategoryIcon(ingredient.category)}</span>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">
                       {ingredient.name}
                     </h3>
                     <div className="mt-1 flex items-center gap-2 flex-wrap">
@@ -232,7 +234,7 @@ export default function Ingredients() {
                 </div>
               </div>
               {ingredient.description && (
-                <p className="text-slate-400 text-sm mb-3">
+                <p className="text-slate-400 text-sm mb-3 line-clamp-2 italic">
                   {ingredient.description}
                 </p>
               )}
@@ -242,7 +244,12 @@ export default function Ingredients() {
                   {ingredient.abv}%
                 </span>
               </div>
-            </div>
+              <div className="mt-3 pt-3 border-t border-slate-700">
+                <span className="text-emerald-400 text-sm group-hover:text-emerald-300">
+                  View Details →
+                </span>
+              </div>
+            </Link>
           ))}
         </div>
       )}
