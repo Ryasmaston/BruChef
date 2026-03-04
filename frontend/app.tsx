@@ -10,6 +10,7 @@ import About from './src/pages/About'
 import Login from './src/pages/Login'
 import Register from './src/pages/Register'
 import Inventory from './src/pages/Inventory'
+import IngredientDetail from './src/pages/IngredientDetail'
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -82,6 +83,7 @@ export default function App() {
           <Route path="/cocktails/new" element={<CreateCocktail isAuthenticated={isAuthenticated} />} />
           <Route path="/cocktails/:id" element={<CocktailDetail />} />
           <Route path="/ingredients" element={<Ingredients />} />
+          <Route path="/ingredients/:id" element={<IngredientDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/register" element={<Register onRegisterSuccess={handleRegisterSuccess} />} />
