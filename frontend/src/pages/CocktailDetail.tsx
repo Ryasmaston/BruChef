@@ -14,6 +14,14 @@ interface Cocktail {
   created_at: string
   ingredients: Ingredient[]
   servings: number
+  user_id: string
+  status: string
+  submitted_at: string
+  reviewed_at: string
+  reviewed_by: string
+  rejection_reason: string
+  creator_name: string
+  is_official: string
 }
 
 interface Ingredient {
@@ -51,6 +59,7 @@ export default function CocktailDetail() {
   const [alertType, setAlertType] = useState<'success' | 'error'>('success')
   const [alertTitle, setAlertTitle] = useState('')
   const [alertMessage, setAlertMessage] = useState('')
+  const [isCreator, setIsCreator] = useState(false)
 
   useEffect(() => {
     fetchCocktail()
@@ -60,6 +69,7 @@ export default function CocktailDetail() {
   useEffect(() => {
     if (cocktail) {
       setCurrentServings(cocktail.servings || 1)
+      checkIfCreator()
     }
   }, [cocktail])
 
@@ -68,6 +78,19 @@ export default function CocktailDetail() {
       checkCanMakeCocktail()
     }
   }, [currentServings])
+  const checkIfCreator = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/auth/check', {
+        credentials: 'include'
+      })
+      const data = await response.json()
+      if (data.authenticated && data.user && cocktail) {
+        setIsCreator(data.user.id === cocktail.user_id)
+      }
+    } catch (err) {
+      setIsCreator(false)
+    }
+  }
 
   const checkCanMakeCocktail = async () => {
     try {
@@ -195,6 +218,28 @@ export default function CocktailDetail() {
     }
   }
 
+
+  const handleSubmitForReview = async () => {
+    const confirmed = window.confirm(
+      `Submit "${cocktail?.name}" for admin review?\n\nOnce approved, it will be visible to all users in the community recipes.`
+    )
+    if (!confirmed) return
+    try {
+      const response = await fetch(`http://localhost:5001/api/cocktails/submit/${id}`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit cocktail')
+      }
+      alert("✓ Cocktail submitted for review! You'll be notified once it's been reviewed.")
+      fetchCocktail() // Refresh to show new status
+    } catch (err: any) {
+      alert(err.message || 'Failed to submit cocktail')
+    }
+  }
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'Spirit':
@@ -283,6 +328,31 @@ export default function CocktailDetail() {
                 {cocktail.glass_type && (
                   <span className="px-3 py-1 text-sm rounded border bg-slate-700/50 text-slate-300 border-slate-600">
                     🥃 {cocktail.glass_type}
+                  </span>
+                )}
+                {cocktail.status === 'pending' && (
+                  <span className="px-3 py-1 text-sm rounded border bg-yellow-500/20 text-yellow-400 border-yellow-500/50">
+                    ⏳ Pending Review
+                  </span>
+                )}
+                {cocktail.status === 'approved' && !cocktail.is_official && (
+                  <span className="px-3 py-1 text-sm rounded border bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
+                    ✓ Community Verified
+                  </span>
+                )}
+                {cocktail.status === 'rejected' && (
+                  <span className="px-3 py-1 text-sm rounded border bg-red-500/20 text-red-400 border-red-500/50">
+                    ✗ Rejected
+                  </span>
+                )}
+                {cocktail.is_official && (
+                  <span className="px-3 py-1 text-sm rounded border bg-blue-500/20 text-blue-400 border-blue-500/50">
+                    ⭐ Official Recipe
+                  </span>
+                )}
+                {!cocktail.is_official && (
+                  <span className="px-3 py-1 text-sm rounded border bg-slate-700/50 text-slate-300 border-slate-600">
+                    👤 by {cocktail.creator_name}
                   </span>
                 )}
               </div>
@@ -423,6 +493,21 @@ export default function CocktailDetail() {
               {missingIngredients.slice(0, 3).map(ing => ing.name).join(', ')}
               {missingIngredients.length > 3 && ` and ${missingIngredients.length - 3} more`}
             </div>
+          </div>
+        )}
+        {isCreator && cocktail.status === 'private' && (
+          <button
+            onClick={handleSubmitForReview}
+            className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-center transition-colors flex items-center justify-center gap-2"
+          >
+            <span>📤</span>
+            <span>Submit for Review</span>
+          </button>
+        )}
+        {cocktail.status === 'rejected' && cocktail.rejection_reason && (
+          <div className="flex-1 px-6 py-3 bg-red-900/20 border border-red-700/50 rounded-lg">
+            <div className="text-red-400 font-semibold mb-2">Rejection Reason:</div>
+            <div className="text-slate-300 text-sm">{cocktail.rejection_reason}</div>
           </div>
         )}
         <Link
