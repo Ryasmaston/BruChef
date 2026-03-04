@@ -55,9 +55,9 @@ const CATEGORIES: Record<string, string[]> = {
 }
 
 const UNIT_OPTIONS = {
-  volume: ['ml', 'L', 'oz', 'cup'],
-  mass: ['g', 'kg', 'lb', 'oz(weight)'],
-  count: ['pieces', 'bottles', 'cans', 'leaves']
+  volume: ['ml', 'oz'],
+  mass: ['g', 'lb'],
+  count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'bottles', 'cans']
 }
 
 export default function Inventory({ isAuthenticated }: InventoryProps) {

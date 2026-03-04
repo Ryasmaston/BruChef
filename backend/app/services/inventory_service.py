@@ -83,78 +83,81 @@ class InventoryService:
 
     @staticmethod
     def get_available_cocktails(user_id: int) -> List[Dict[str, Any]]:
-            try:
-                inventory_items = Inventory.query.filter_by(user_id=user_id).all()
-                user_inventory_ml = {}
-                for item in inventory_items:
-                    quantity_ml = standardize_quantity(f"{item.quantity} {item.unit}")
-                    if quantity_ml > 0:
-                        user_inventory_ml[item.ingredient_id] = quantity_ml
-                if not user_inventory_ml:
-                    return []
-                cocktails = Cocktail.query.all()
-                available_cocktails = []
-                for cocktail in cocktails:
-                    cocktail_ingredients_data = []
-                    for ingredient in cocktail.ingredients:
-                        result = db.session.execute(
-                            db.select(cocktail_ingredients.c.quantity).where(
-                                db.and_(
-                                    cocktail_ingredients.c.cocktail_id == cocktail.id,
-                                    cocktail_ingredients.c.ingredient_id == ingredient.id
-                                )
-                            )
-                        ).scalar()
-                        cocktail_ingredients_data.append({
-                            'ingredient_id': ingredient.id,
-                            'quantity': result or ''
-                        })
-                    can_make, missing = can_make_cocktail(cocktail_ingredients_data, user_inventory_ml)
-                    if can_make:
-                        available_cocktails.append(cocktail.to_dict())
-                return available_cocktails
-            except SQLAlchemyError as e:
-                raise Exception(f"Error fetching available cocktails: {str(e)}")
-
-    @staticmethod
-    def get_missing_ingredients(user_id: int, cocktail_id: int) -> List[Dict[str, Any]]:
-            try:
-                cocktail = Cocktail.query.get(cocktail_id)
-                if not cocktail:
-                    return []
-                inventory_items = Inventory.query.filter_by(user_id=user_id).all()
-                user_inventory_ml = {}
-                for item in inventory_items:
-                    quantity_ml = standardize_quantity(f"{item.quantity} {item.unit}")
-                    if quantity_ml > 0:
-                        user_inventory_ml[item.ingredient_id] = quantity_ml
-                missing = []
+        try:
+            inventory_items = Inventory.query.filter_by(user_id=user_id).all()
+            user_inventory = {}
+            for item in inventory_items:
+                standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
+                if standardized_amount > 0:
+                    user_inventory[item.ingredient_id] = (standardized_amount, unit_type)
+            if not user_inventory:
+                return []
+            cocktails = Cocktail.query.all()
+            available_cocktails = []
+            for cocktail in cocktails:
+                cocktail_ingredients_data = []
                 for ingredient in cocktail.ingredients:
                     result = db.session.execute(
                         db.select(cocktail_ingredients.c.quantity).where(
                             db.and_(
-                                cocktail_ingredients.c.cocktail_id == cocktail_id,
+                                cocktail_ingredients.c.cocktail_id == cocktail.id,
                                 cocktail_ingredients.c.ingredient_id == ingredient.id
                             )
                         )
                     ).scalar()
-                    required_ml = standardize_quantity(result or '')
-                    available_ml = user_inventory_ml.get(ingredient.id, 0)
-                    if available_ml < required_ml:
-                        missing.append({
-                            'id': ingredient.id,
-                            'name': ingredient.name,
-                            'category': ingredient.category,
-                            'subcategory': ingredient.subcategory,
-                            'abv': ingredient.abv,
-                            'required': result,
-                            'required_ml': required_ml,
-                            'available_ml': available_ml,
-                            'shortage_ml': required_ml - available_ml
-                        })
-                return missing
-            except SQLAlchemyError as e:
-                raise Exception(f"Error checking missing ingredients: {str(e)}")
+                    cocktail_ingredients_data.append({
+                        'ingredient_id': ingredient.id,
+                        'quantity': result or ''
+                    })
+                can_make, missing = can_make_cocktail(cocktail_ingredients_data, user_inventory)
+                if can_make:
+                    available_cocktails.append(cocktail.to_dict())
+            return available_cocktails
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching available cocktails: {str(e)}")
+
+    @staticmethod
+    def get_missing_ingredients(user_id: int, cocktail_id: int) -> List[Dict[str, Any]]:
+        try:
+            cocktail = Cocktail.query.get(cocktail_id)
+            if not cocktail:
+                return []
+            inventory_items = Inventory.query.filter_by(user_id=user_id).all()
+            user_inventory = {}
+            for item in inventory_items:
+                standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
+                if standardized_amount > 0:
+                    user_inventory[item.ingredient_id] = (standardized_amount, unit_type)
+            missing = []
+            for ingredient in cocktail.ingredients:
+                result = db.session.execute(
+                    db.select(cocktail_ingredients.c.quantity).where(
+                        db.and_(
+                            cocktail_ingredients.c.cocktail_id == cocktail_id,
+                            cocktail_ingredients.c.ingredient_id == ingredient.id
+                        )
+                    )
+                ).scalar()
+                required_amount, required_type = standardize_quantity(result or '')
+                if required_type == 'special':
+                    continue
+                available_info = user_inventory.get(ingredient.id, (0, required_type))
+                available_amount, available_type = available_info
+                if available_type != required_type or available_amount < required_amount:
+                    missing.append({
+                        'id': ingredient.id,
+                        'name': ingredient.name,
+                        'category': ingredient.category,
+                        'subcategory': ingredient.subcategory,
+                        'abv': ingredient.abv,
+                        'required': result,
+                        'required_standardized': required_amount,
+                        'available_standardized': available_amount if available_type == required_type else 0,
+                        'unit_type': required_type
+                    })
+            return missing
+        except SQLAlchemyError as e:
+            raise Exception(f"Error checking missing ingredients: {str(e)}")
 
     @staticmethod
     def make_cocktail(user_id: int, cocktail_id: int, servings: int = 1) -> Dict[str, Any]:
