@@ -36,9 +36,9 @@ const CATEGORIES: Record<string, string[]> = {
 }
 
 const UNIT_OPTIONS = {
-  volume: ['ml', 'L', 'oz', 'cup', 'tsp', 'tbsp', 'dash', 'splash'],
-  mass: ['g', 'kg', 'lb', 'oz(weight)'],
-  count: ['pieces', 'bottles', 'leaves', 'slices', 'wedges']
+  volume: ['ml', 'oz'],
+  mass: ['g', 'lb'],
+  count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'bottles', 'cans']
 }
 
 export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps) {
