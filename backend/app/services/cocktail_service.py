@@ -7,7 +7,7 @@ class CocktailService:
     def get_all_cocktails() -> List[Cocktail]:
         try:
             cocktails = Cocktail.query.all()
-            return [cocktail.to_dict() for cocktail in cocktails]
+            return [cocktail.to_dict(include_ingredients=True) for cocktail in cocktails]
         except SQLAlchemyError as e:
             raise Exception(f'Error fetching cocktails: {str(e)}')
 
