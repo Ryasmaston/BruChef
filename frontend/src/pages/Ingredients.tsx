@@ -234,7 +234,7 @@ export default function Ingredients() {
                 </div>
               </div>
               {ingredient.description && (
-                <p className="text-slate-400 text-sm mb-3 line-clamp-2">
+                <p className="text-slate-400 text-sm mb-3 line-clamp-2 italic">
                   {ingredient.description}
                 </p>
               )}

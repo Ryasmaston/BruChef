@@ -176,24 +176,15 @@ export default function IngredientDetail() {
           </div>
         </div>
         <div className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
-              <div className="text-sm text-slate-400 mb-2">Category</div>
-              <div className="text-2xl font-bold text-white">{ingredient.category}</div>
+          {ingredient.description ? (
+              <p className="text-slate-400 leading-relaxed italic text-base">
+                {ingredient.description}
+              </p>
+          ) : (
+            <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700 text-center">
+              <p className="text-slate-500">No description available</p>
             </div>
-            <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
-              <div className="text-sm text-slate-400 mb-2">Subcategory</div>
-              <div className="text-2xl font-bold text-white">
-                {ingredient.subcategory || 'N/A'}
-              </div>
-            </div>
-            <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
-              <div className="text-sm text-slate-400 mb-2">Alcohol Content</div>
-              <div className="text-2xl font-bold text-emerald-400">
-                {ingredient.abv}% ABV
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
       <div>
