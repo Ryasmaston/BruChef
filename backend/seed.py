@@ -13,29 +13,34 @@ def seed_database():
             {
                 "username": "admin",
                 "email": "admin@example.com",
-                "password": "admin123"
+                "password": "admin123",
+                "is_admin": False
             },
             {
                 "username": "Alice",
                 "email": "alice@email.com",
-                "password": "Password123"
+                "password": "Password123",
+                "is_admin": False
             },
             {
                 "username": "John",
                 "email": "john@email.com",
-                "password": "Password123"
+                "password": "Password123",
+                "is_admin": False
             },
             {
                 "username": "Ryan",
                 "email": "ryan@email.com",
-                "password": "Password123"
+                "password": "Password123",
+                "is_admin": True
             }
         ]
         users = []
         for data in users_data:
             user = User(
                 username=data["username"],
-                email=data["email"]
+                email=data["email"],
+                is_admin=data.get("is_admin", False)
             )
             user.set_password(data["password"])
             users.append(user)
@@ -246,7 +251,9 @@ def seed_database():
                             Garnish with lime wheel""",
             glass_type="Rocks",
             garnish="Lime wheel, salt rim",
-            difficulty="Easy"
+            difficulty="Easy",
+            status='approved',
+            user_id=None
         )
         db.session.add(margarita)
         db.session.flush()
@@ -268,7 +275,9 @@ def seed_database():
                             Garnish with mint sprig""",
             glass_type="Highball",
             garnish="Mint sprig",
-            difficulty="Easy"
+            difficulty="Easy",
+            status='approved',
+            user_id=None
         )
         db.session.add(mojito)
         db.session.flush()
@@ -291,7 +300,9 @@ def seed_database():
                             Garnish with lime wheel""",
             glass_type="Martini",
             garnish="Lime wheel",
-            difficulty="Medium"
+            difficulty="Medium",
+            status='approved',
+            user_id=None
         )
         db.session.add(cosmopolitan)
         db.session.flush()
@@ -313,7 +324,9 @@ def seed_database():
                             Garnish with orange peel""",
             glass_type="Rocks",
             garnish="Orange peel",
-            difficulty="Easy"
+            difficulty="Easy",
+            status="approved",
+            user_id=None
         )
         db.session.add(old_fashioned)
         db.session.flush()
@@ -334,7 +347,9 @@ def seed_database():
                             Garnish with orange peel""",
             glass_type="Rocks",
             garnish="Orange peel",
-            difficulty="Medium"
+            difficulty="Medium",
+            status="approved",
+            user_id=None
         )
         db.session.add(negroni)
         db.session.flush()
@@ -357,7 +372,9 @@ def seed_database():
                             Garnish with cherry""",
             glass_type="Rocks",
             garnish="Cherry",
-            difficulty="Medium"
+            difficulty="Medium",
+            status="approved",
+            user_id=None
         )
         db.session.add(whiskey_sour)
         db.session.flush()
@@ -379,7 +396,9 @@ def seed_database():
                             Garnish with pineapple wedge""",
             glass_type="Hurricane",
             garnish="Pineapple wedge",
-            difficulty="Easy"
+            difficulty="Easy",
+            status="approved",
+            user_id=None
         )
         db.session.add(pina_colada)
         db.session.flush()
@@ -401,7 +420,9 @@ def seed_database():
                             Stir gently""",
             glass_type="Wine",
             garnish="Orange slice",
-            difficulty="Easy"
+            difficulty="Easy",
+            status="approved",
+            user_id=None
         )
         db.session.add(aperol_spritz)
         db.session.flush()
@@ -422,7 +443,9 @@ def seed_database():
                             Stir gently""",
             glass_type="Highball",
             garnish="Lime wedge",
-            difficulty="Easy"
+            difficulty="Easy",
+            status="approved",
+            user_id=None
         )
         db.session.add(rum_and_coke)
         db.session.flush()

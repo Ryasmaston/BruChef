@@ -17,8 +17,17 @@ class Cocktail(db.Model):
     difficulty = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     servings = db.Column(db.Integer, default=1)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    status = db.Column(db.String(20), default='private')
+    submitted_at = db.Column(db.DateTime, nullable=True)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    rejection_reason = db.Column(db.Text, nullable=True)
     ingredients = db.relationship('Ingredient', secondary=cocktail_ingredients,
                                  backref=db.backref('cocktails', lazy='dynamic'))
+    creator = db.relationship('User', foreign_keys=[user_id], backref=db.backref('created_cocktails', lazy='dynamic'))
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by])
+
     def to_dict(self, include_ingredients=False):
         data = {
             'id': self.id,
@@ -29,8 +38,13 @@ class Cocktail(db.Model):
             'garnish': self.garnish,
             'difficulty': self.difficulty,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'servings' : self.servings
+            'servings' : self.servings,
+            'status': self.status,
+            'creator_name': self.creator.username if self.creator else 'BruChef',
+            'is_official': self.user_id is None,
+            'submitted_at': self.submitted_at.isoformat() if self.submitted_at else None
         }
+
         if include_ingredients:
             ingredients_with_quantities = []
             for ingredient in self.ingredients:
