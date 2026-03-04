@@ -1,13 +1,25 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from ..services.cocktail_service import CocktailService
+from app.models import User
 
 
 cocktail_bp = Blueprint("cocktails", __name__, url_prefix="/api/cocktails")
 
+def require_auth():
+    return session.get('user_id')
+
+def require_admin():
+    user_id = session.get('user_id')
+    if not user_id:
+        return None
+    user = User.query.get(user_id)
+    return user if user and user.is_admin else None
+
 @cocktail_bp.route("/", methods=["GET"])
 def get_cocktails():
     try:
-        cocktails = CocktailService.get_all_cocktails()
+        user_id = require_auth()
+        cocktails = CocktailService.get_all_cocktails(user_id=user_id)
         return jsonify(cocktails), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -15,7 +27,8 @@ def get_cocktails():
 @cocktail_bp.route("/<int:cocktail_id>", methods=["GET"])
 def get_cocktail(cocktail_id):
     try:
-        cocktail = CocktailService.get_cocktail_by_id(cocktail_id)
+        user_id = require_auth()
+        cocktail = CocktailService.get_cocktail_by_id(cocktail_id, user_id=user_id)
         if not cocktail:
             return jsonify({"error": "Cocktail not found"}), 404
         return jsonify(cocktail), 200
@@ -24,10 +37,14 @@ def get_cocktail(cocktail_id):
 
 @cocktail_bp.route("/", methods=["POST"])
 def create_cocktail():
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 401
     try:
         data = request.get_json()
         if not data:
             return jsonify({"error": "No data given"}), 400
+        data['user_id'] = user_id
         new_cocktail = CocktailService.create_cocktail(data)
         return jsonify(new_cocktail.to_dict()), 201
     except ValueError as e:
