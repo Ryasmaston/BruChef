@@ -16,6 +16,7 @@ import AdminReview from './src/pages/AdminReview'
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [username, setUsername] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -33,15 +34,18 @@ export default function App() {
         // console.log('User is authenticated')
         setIsAuthenticated(true)
         setUsername(data.user.username)
+        setIsAdmin(data.user.is_admin || false)
       } else {
         // console.log('User is not authenticated')
         setIsAuthenticated(false)
         setUsername(null)
+        setIsAdmin(false)
       }
     } catch (error) {
       setIsAuthenticated(false)
       setUsername(null)
-      console.log('Not authenticated')
+      setIsAdmin(false)
+      // console.log('Not authenticated')
     } finally {
       setLoading(false)
     }
@@ -58,6 +62,7 @@ export default function App() {
     console.log('handleLogout called')
     setIsAuthenticated(false)
     setUsername(null)
+    setIsAdmin(false)
   }
 
   if (loading) {
