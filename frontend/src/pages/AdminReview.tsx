@@ -25,14 +25,12 @@ export default function AdminReview() {
       const response = await fetch('http://localhost:5001/api/cocktails/pending', {
         credentials: 'include'
       })
-
       if (!response.ok) {
         if (response.status === 403) {
           throw new Error('Admin access required')
         }
         throw new Error('Failed to fetch pending cocktails')
       }
-
       const data = await response.json()
       setPendingCocktails(data)
       setLoading(false)
@@ -48,9 +46,7 @@ export default function AdminReview() {
         method: 'POST',
         credentials: 'include'
       })
-
       if (!response.ok) throw new Error('Failed to approve')
-
       alert('✓ Cocktail approved!')
       fetchPending()
     } catch (err: any) {
@@ -61,7 +57,6 @@ export default function AdminReview() {
   const handleReject = async (id: number) => {
     const reason = prompt('Reason for rejection:')
     if (!reason) return
-
     try {
       const response = await fetch(`http://localhost:5001/api/cocktails/reject/${id}`, {
         method: 'POST',
@@ -71,9 +66,7 @@ export default function AdminReview() {
         credentials: 'include',
         body: JSON.stringify({ reason })
       })
-
       if (!response.ok) throw new Error('Failed to reject')
-
       alert('Cocktail rejected')
       fetchPending()
     } catch (err: any) {

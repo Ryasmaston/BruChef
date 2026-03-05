@@ -81,6 +81,7 @@ export default function App() {
       <Layout
         isAuthenticated={isAuthenticated}
         username={username}
+        isAdmin={isAdmin}
         onLogout={handleLogout}
       >
         <Routes>
