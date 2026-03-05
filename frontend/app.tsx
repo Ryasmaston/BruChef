@@ -11,10 +11,12 @@ import Login from './src/pages/Login'
 import Register from './src/pages/Register'
 import Inventory from './src/pages/Inventory'
 import IngredientDetail from './src/pages/IngredientDetail'
+import AdminReview from './src/pages/AdminReview'
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [username, setUsername] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -32,15 +34,18 @@ export default function App() {
         // console.log('User is authenticated')
         setIsAuthenticated(true)
         setUsername(data.user.username)
+        setIsAdmin(data.user.is_admin || false)
       } else {
         // console.log('User is not authenticated')
         setIsAuthenticated(false)
         setUsername(null)
+        setIsAdmin(false)
       }
     } catch (error) {
       setIsAuthenticated(false)
       setUsername(null)
-      console.log('Not authenticated')
+      setIsAdmin(false)
+      // console.log('Not authenticated')
     } finally {
       setLoading(false)
     }
@@ -57,6 +62,7 @@ export default function App() {
     console.log('handleLogout called')
     setIsAuthenticated(false)
     setUsername(null)
+    setIsAdmin(false)
   }
 
   if (loading) {
@@ -75,6 +81,7 @@ export default function App() {
       <Layout
         isAuthenticated={isAuthenticated}
         username={username}
+        isAdmin={isAdmin}
         onLogout={handleLogout}
       >
         <Routes>
@@ -88,6 +95,7 @@ export default function App() {
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/register" element={<Register onRegisterSuccess={handleRegisterSuccess} />} />
           <Route path="/inventory" element={<Inventory isAuthenticated={isAuthenticated} />} />
+          <Route path='/admin/review' element={<AdminReview />} />
         </Routes>
       </Layout>
     </Router>

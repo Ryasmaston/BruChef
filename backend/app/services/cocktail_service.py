@@ -1,25 +1,36 @@
 from app.models import db, Cocktail, Ingredient, cocktail_ingredients
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 class CocktailService:
     @staticmethod
-    def get_all_cocktails() -> List[Cocktail]:
+    def get_all_cocktails(user_id: Optional[int] = None) -> List[Dict[str, Any]]:
         try:
-            cocktails = Cocktail.query.all()
-            return [cocktail.to_dict(include_ingredients=True) for cocktail in cocktails]
+            if user_id:
+                cocktails = Cocktail.query.filter(
+                    db.or_(
+                        Cocktail.status == 'approved',
+                        Cocktail.user_id == user_id
+                    )
+                ).all()
+            else:
+                cocktails = Cocktail.query.filter_by(status='approved').all()
+            return [c.to_dict(include_ingredients=True) for c in cocktails]
         except SQLAlchemyError as e:
-            raise Exception(f'Error fetching cocktails: {str(e)}')
+            raise Exception(f"Error fetching cocktails: {str(e)}")
 
     @staticmethod
-    def get_cocktail_by_id(cocktail_id: int) -> Optional[Cocktail]:
+    def get_cocktail_by_id(cocktail_id: int, user_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
         try:
             cocktail = Cocktail.query.get(cocktail_id)
-            if cocktail:
-                return cocktail.to_dict(include_ingredients=True)
-            return None
+            if not cocktail:
+                return None
+            if cocktail.status != 'approved' and cocktail.user_id != user_id:
+                return None
+            return cocktail.to_dict(include_ingredients=True)
         except SQLAlchemyError as e:
-            raise Exception(f'Error fetching cocktail: {str(e)}')
+            raise Exception(f"Error fetching cocktail: {str(e)}")
 
     @staticmethod
     def create_cocktail(data: Dict[str, Any]) -> Cocktail:
@@ -27,35 +38,40 @@ class CocktailService:
             raise ValueError("Cocktail name is required")
         if not data.get('instructions'):
             raise ValueError("Instructions are required")
+        if not data.get('ingredients'):
+            raise ValueError("At least one ingredient is required")
         try:
             new_cocktail = Cocktail(
-                name = data['name'],
-                description = data.get('description', ''),
-                instructions = data['instructions'],
-                glass_type = data.get('glass_type', ''),
-                garnish = data.get('garnish', ''),
-                difficulty = data.get('difficulty', 'Medium'),
-                servings = data.get('servings', 1)
+                name=data['name'],
+                description=data.get('description', ''),
+                instructions=data['instructions'],
+                glass_type=data.get('glass_type', ''),
+                garnish=data.get('garnish', ''),
+                difficulty=data.get('difficulty', 'Medium'),
+                servings=data.get('servings', 1),
+                user_id=data.get('user_id'),
+                status='private'
             )
             db.session.add(new_cocktail)
             db.session.flush()
-            ingredient_quantities = data.get('ingredient_quantities', [])
-            for item in ingredient_quantities:
-                ingredient_id = item.get('id')
-                quantity = item.get('quantity', '').strip()
-                if ingredient_id:
-                    db.session.execute(
-                        cocktail_ingredients.insert().values(
-                            cocktail_id = new_cocktail.id,
-                            ingredient_id = ingredient_id,
-                            quantity = quantity
-                        )
+            for ing_data in data['ingredients']:
+                ingredient_id = ing_data.get('ingredient_id')
+                quantity = ing_data.get('quantity', '')
+                ingredient = Ingredient.query.get(ingredient_id)
+                if not ingredient:
+                    raise ValueError(f"Ingredient with id {ingredient_id} not found")
+                db.session.execute(
+                    cocktail_ingredients.insert().values(
+                        cocktail_id=new_cocktail.id,
+                        ingredient_id=ingredient_id,
+                        quantity=quantity
                     )
+                )
             db.session.commit()
             return new_cocktail
         except SQLAlchemyError as e:
             db.session.rollback()
-            raise Exception(f'Error creating cocktail: {str(e)}')
+            raise Exception(f"Error creating cocktail: {str(e)}")
 
     @staticmethod
     def update_cocktail(cocktail_id: int, data: Dict[str, Any]) -> Optional[Cocktail]:
@@ -75,64 +91,130 @@ class CocktailService:
                 cocktail.garnish = data['garnish']
             if 'difficulty' in data:
                 cocktail.difficulty = data['difficulty']
-            if 'ingredient_quantities' in data:
-                db.session.execute(
-                    cocktail_ingredients.delete().where(
-                        cocktail_ingredients.c.cocktail_id == cocktail_id
-                    )
-                )
-                for item in data['ingredient_quantities']:
-                    ingredient_id = item.get('id')
-                    quantity = item.get('quantity', '').strip()
-                    if ingredient_id:
-                        db.session.execute(
-                            cocktail_ingredients.insert().values(
-                                cocktail_id=cocktail_id,
-                                ingredient_id=ingredient_id,
-                                quantity=quantity
-                            )
-                        )
+            if 'servings' in data:
+                cocktail.servings = data['servings']
             db.session.commit()
             return cocktail
         except SQLAlchemyError as e:
             db.session.rollback()
-            raise Exception(f'Error updating cocktail: {str(e)}')
+            raise Exception(f"Error updating cocktail: {str(e)}")
 
     @staticmethod
-    def delete_cocktail(cocktail_id: int) -> Optional[Cocktail]:
+    def delete_cocktail(cocktail_id: int) -> bool:
         cocktail = Cocktail.query.get(cocktail_id)
         if not cocktail:
-            return None
+            return False
         try:
             db.session.delete(cocktail)
             db.session.commit()
-            return cocktail
+            return True
         except SQLAlchemyError as e:
             db.session.rollback()
-            raise Exception(f'Error deleting cocktail: {str(e)}')
+            raise Exception(f"Error deleting cocktail: {str(e)}")
 
     @staticmethod
-    def search_cocktails(query: str) -> List[Cocktail]:
+    def search_cocktails(query: str) -> List[Dict[str, Any]]:
         try:
-            return Cocktail.query.filter(
-                Cocktail.name.ilike(f'%{query}%')
+            cocktails = Cocktail.query.filter(
+                Cocktail.name.ilike(f"%{query}%"),
+                Cocktail.status == 'approved'
             ).all()
+            return [c.to_dict() for c in cocktails]
         except SQLAlchemyError as e:
-            raise Exception(f'Error searching cocktails: {str(e)}')
+            raise Exception(f"Error searching cocktails: {str(e)}")
 
     @staticmethod
-    def get_cocktails_by_ingredient(ingredient_id: int) -> List[Cocktail]:
+    def get_cocktails_by_ingredient(ingredient_id: int) -> List[Dict[str, Any]]:
         try:
             ingredient = Ingredient.query.get(ingredient_id)
             if not ingredient:
                 return []
-            return ingredient.cocktails.all()
+            cocktails = ingredient.cocktails.filter_by(status='approved').all()
+            return [c.to_dict() for c in cocktails]
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching cocktails by ingredient: {str(e)}")
 
     @staticmethod
-    def get_cocktails_by_difficulty(difficulty: str) -> List[Cocktail]:
+    def get_cocktails_by_difficulty(difficulty: str) -> List[Dict[str, Any]]:
         try:
-            return Cocktail.query.filter_by(difficulty = difficulty).all()
+            cocktails = Cocktail.query.filter_by(
+                difficulty=difficulty,
+                status='approved'
+            ).all()
+            return [c.to_dict() for c in cocktails]
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching cocktails by difficulty: {str(e)}")
+
+    @staticmethod
+    def get_pending_cocktails() -> List[Dict[str, Any]]:
+        try:
+            cocktails = Cocktail.query.filter_by(status='pending').order_by(Cocktail.submitted_at.desc()).all()
+            return [c.to_dict(include_ingredients=True) for c in cocktails]
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching pending cocktails: {str(e)}")
+
+    @staticmethod
+    def submit_for_review(cocktail_id: int, user_id: int) -> Dict[str, Any]:
+        try:
+            cocktail = Cocktail.query.get(cocktail_id)
+            if not cocktail:
+                raise ValueError("Cocktail not found")
+            if cocktail.user_id != user_id:
+                raise ValueError("You can only submit your own cocktails")
+            if cocktail.status != 'private':
+                raise ValueError(f"Cocktail is already {cocktail.status}")
+            cocktail.status = 'pending'
+            cocktail.submitted_at = datetime.utcnow()
+            db.session.commit()
+            return cocktail.to_dict(include_ingredients=True)
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            raise Exception(f"Error submitting cocktail: {str(e)}")
+
+    @staticmethod
+    def approve_cocktail(cocktail_id: int, admin_id: int) -> Dict[str, Any]:
+        try:
+            cocktail = Cocktail.query.get(cocktail_id)
+            if not cocktail:
+                raise ValueError("Cocktail not found")
+            if cocktail.status != 'pending':
+                raise ValueError("Cocktail is not pending review")
+            cocktail.status = 'approved'
+            cocktail.reviewed_at = datetime.utcnow()
+            cocktail.reviewed_by = admin_id
+            db.session.commit()
+            return cocktail.to_dict(include_ingredients=True)
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            raise Exception(f"Error approving cocktail: {str(e)}")
+
+    @staticmethod
+    def reject_cocktail(cocktail_id: int, admin_id: int, reason: str) -> Dict[str, Any]:
+        try:
+            cocktail = Cocktail.query.get(cocktail_id)
+            if not cocktail:
+                raise ValueError("Cocktail not found")
+            if cocktail.status != 'pending':
+                raise ValueError("Cocktail is not pending review")
+            cocktail.status = 'rejected'
+            cocktail.reviewed_at = datetime.utcnow()
+            cocktail.reviewed_by = admin_id
+            cocktail.rejection_reason = reason
+            db.session.commit()
+            return cocktail.to_dict(include_ingredients=True)
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            raise Exception(f"Error rejecting cocktail: {str(e)}")
+
+    @staticmethod
+    def get_user_cocktails(user_id: int) -> Dict[str, Any]:
+        try:
+            all_cocktails = Cocktail.query.filter_by(user_id=user_id).all()
+            return {
+                'private': [c.to_dict(include_ingredients=True) for c in all_cocktails if c.status == 'private'],
+                'pending': [c.to_dict(include_ingredients=True) for c in all_cocktails if c.status == 'pending'],
+                'approved': [c.to_dict(include_ingredients=True) for c in all_cocktails if c.status == 'approved'],
+                'rejected': [c.to_dict(include_ingredients=True) for c in all_cocktails if c.status == 'rejected']
+            }
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching user cocktails: {str(e)}")

@@ -5,10 +5,11 @@ interface LayoutProps {
   children: ReactNode
   isAuthenticated: boolean
   username: string | null
+  isAdmin: boolean
   onLogout: () => void
 }
 
-export default function Layout({ children, isAuthenticated, username, onLogout }: LayoutProps) {
+export default function Layout({ children, isAuthenticated, username, isAdmin, onLogout }: LayoutProps) {
   const location = useLocation()
   const isActive = (path: string) => location.pathname === path
   const navLinks = [
@@ -31,9 +32,10 @@ export default function Layout({ children, isAuthenticated, username, onLogout }
       onLogout()
     }
   }
+
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
-      <nav className="bg-slate-800 border-b border-slate-700">
+      <nav className="sticky top-0 z-50 bg-slate-800 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-18">
             <div className="flex items-center space-x-8">
@@ -58,6 +60,18 @@ export default function Layout({ children, isAuthenticated, username, onLogout }
                     {link.label}
                   </Link>
                 ))}
+                {isAuthenticated && isAdmin && (
+                  <Link
+                    to="/admin/review"
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                      isActive('/admin/review')
+                        ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
+                        : 'text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300'
+                    }`}
+                  >
+                    <span>Admin Review</span>
+                  </Link>
+                )}
               </div>
             </div>
             <div className="flex items-center space-x-4 pl-4">
@@ -65,6 +79,11 @@ export default function Layout({ children, isAuthenticated, username, onLogout }
                 <>
                   <span className="text-sm text-slate-400">
                     Hello, <span className="text-emerald-400 font-semibold">{username}</span>
+                    {isAdmin && (
+                      <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded border border-yellow-500/50 font-semibold">
+                        ADMIN
+                      </span>
+                    )}
                   </span>
                   <button
                     onClick={handleLogout}

@@ -1,13 +1,25 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from ..services.cocktail_service import CocktailService
+from app.models import User
 
 
 cocktail_bp = Blueprint("cocktails", __name__, url_prefix="/api/cocktails")
 
+def require_auth():
+    return session.get('user_id')
+
+def require_admin():
+    user_id = session.get('user_id')
+    if not user_id:
+        return None
+    user = User.query.get(user_id)
+    return user if user and user.is_admin else None
+
 @cocktail_bp.route("/", methods=["GET"])
 def get_cocktails():
     try:
-        cocktails = CocktailService.get_all_cocktails()
+        user_id = require_auth()
+        cocktails = CocktailService.get_all_cocktails(user_id=user_id)
         return jsonify(cocktails), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -15,7 +27,8 @@ def get_cocktails():
 @cocktail_bp.route("/<int:cocktail_id>", methods=["GET"])
 def get_cocktail(cocktail_id):
     try:
-        cocktail = CocktailService.get_cocktail_by_id(cocktail_id)
+        user_id = require_auth()
+        cocktail = CocktailService.get_cocktail_by_id(cocktail_id, user_id=user_id)
         if not cocktail:
             return jsonify({"error": "Cocktail not found"}), 404
         return jsonify(cocktail), 200
@@ -24,10 +37,14 @@ def get_cocktail(cocktail_id):
 
 @cocktail_bp.route("/", methods=["POST"])
 def create_cocktail():
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 401
     try:
         data = request.get_json()
         if not data:
             return jsonify({"error": "No data given"}), 400
+        data['user_id'] = user_id
         new_cocktail = CocktailService.create_cocktail(data)
         return jsonify(new_cocktail.to_dict()), 201
     except ValueError as e:
@@ -89,6 +106,70 @@ def get_cocktails_by_difficulty(difficulty):
                 "error": f"Invalid difficulty. Must be one of: {', '.join(valid_difficulties)}"
             }), 400
         cocktails = CocktailService.get_cocktails_by_difficulty(difficulty)
+        return jsonify(cocktails), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@cocktail_bp.route("/submit/<int:cocktail_id>", methods=["POST"])
+def submit_cocktail(cocktail_id):
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 401
+    try:
+        cocktail = CocktailService.submit_for_review(cocktail_id, user_id)
+        return jsonify(cocktail), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@cocktail_bp.route("/pending", methods=["GET"])
+def get_pending_cocktails():
+    admin = require_admin()
+    if not admin:
+        return jsonify({"error": "Admin access required"}), 403
+    try:
+        cocktails = CocktailService.get_pending_cocktails()
+        return jsonify(cocktails), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@cocktail_bp.route("/approve/<int:cocktail_id>", methods=["POST"])
+def approve_cocktail(cocktail_id):
+    admin = require_admin()
+    if not admin:
+        return jsonify({"error": "Admin access required"}), 403
+    try:
+        cocktail = CocktailService.approve_cocktail(cocktail_id, admin.id)
+        return jsonify(cocktail), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@cocktail_bp.route("/reject/<int:cocktail_id>", methods=["POST"])
+def reject_cocktail(cocktail_id):
+    admin = require_admin()
+    if not admin:
+        return jsonify({"error": "Admin access required"}), 403
+
+    data = request.get_json()
+    reason = data.get('reason', 'No reason provided')
+    try:
+        cocktail = CocktailService.reject_cocktail(cocktail_id, admin.id, reason)
+        return jsonify(cocktail), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@cocktail_bp.route("/my-cocktails", methods=["GET"])
+def get_my_cocktails():
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 401
+    try:
+        cocktails = CocktailService.get_user_cocktails(user_id)
         return jsonify(cocktails), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

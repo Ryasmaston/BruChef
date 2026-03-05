@@ -48,7 +48,6 @@ def logout():
 
 @auth_bp.route("/me", methods=["GET"])
 def get_current_user():
-    """Get current logged-in user"""
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({"error": "Not authenticated"}), 401
@@ -72,7 +71,6 @@ def check_auth():
 
 @auth_bp.route("/change-password", methods=["PUT"])
 def change_password():
-    """Change user password"""
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({"error": "Not authenticated"}), 401
