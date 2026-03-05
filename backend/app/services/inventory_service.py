@@ -166,12 +166,12 @@ class InventoryService:
             if not cocktail:
                 return {'error': 'Cocktail not found'}
             inventory_items = Inventory.query.filter_by(user_id=user_id).all()
-            user_inventory_ml = {}
+            user_inventory = {}
             inventory_map = {}
             for item in inventory_items:
-                quantity_ml = standardize_quantity(f"{item.quantity} {item.unit}")
-                if quantity_ml > 0:
-                    user_inventory_ml[item.ingredient_id] = quantity_ml
+                standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
+                if standardized_amount > 0:
+                    user_inventory[item.ingredient_id] = (standardized_amount, unit_type)
                     inventory_map[item.ingredient_id] = item
             missing = []
             insufficient = []
@@ -184,24 +184,30 @@ class InventoryService:
                         )
                     )
                 ).scalar()
-                base_required_ml = standardize_quantity(result or '0 ml')
-                required_ml = base_required_ml * servings
-                if ingredient.id not in user_inventory_ml:
+
+                base_required_amount, required_type = standardize_quantity(result or '0 ml')
+                if required_type == 'special':
+                    continue
+                required_amount = base_required_amount * servings
+                if ingredient.id not in user_inventory:
                     missing.append(ingredient.name)
                     continue
-                available_ml = user_inventory_ml[ingredient.id]
-                if available_ml < required_ml:
+                available_amount, available_type = user_inventory[ingredient.id]
+                if available_type != required_type:
+                    missing.append(ingredient.name)
+                    continue
+                if available_amount < required_amount:
                     insufficient.append({
                         'name': ingredient.name,
-                        'required_ml': round(required_ml, 1),
-                        'available_ml': round(available_ml, 1),
-                        'shortage_ml': round(required_ml - available_ml, 1)
+                        'required': round(required_amount, 1),
+                        'available': round(available_amount, 1),
+                        'unit_type': required_type
                     })
             if missing:
                 return {'error': f'Missing ingredients: {", ".join(missing)}'}
             if insufficient:
                 details = "; ".join([
-                    f"{item['name']} (need {item['required_ml']} ml, have {item['available_ml']} ml)"
+                    f"{item['name']} (need {item['required']} {item['unit_type']}, have {item['available']} {item['unit_type']})"
                     for item in insufficient
                 ])
                 return {'error': f'Insufficient quantities: {details}'}
@@ -214,46 +220,21 @@ class InventoryService:
                         )
                     )
                 ).scalar()
-                base_required_ml = standardize_quantity(result or '0 ml')
-                required_ml = base_required_ml * servings
+                base_required_amount, required_type = standardize_quantity(result or '0 ml')
+                if required_type == 'special':
+                    continue
+                required_amount = base_required_amount * servings
                 inventory_item = inventory_map[ingredient.id]
-                current_ml = user_inventory_ml[ingredient.id]
-                remaining_ml = current_ml - required_ml
-                if inventory_item.unit == 'ml':
-                    inventory_item.quantity = round(remaining_ml, 1)
-                elif inventory_item.unit == 'oz':
-                    inventory_item.quantity = round(remaining_ml / 29.5735, 1)
-                elif inventory_item.unit == 'L':
-                    inventory_item.quantity = round(remaining_ml / 1000, 1)
-                elif inventory_item.unit == 'cup':
-                    inventory_item.quantity = round(remaining_ml / 236.588, 1)
-                elif inventory_item.unit == 'cl':
-                    inventory_item.quantity = round(remaining_ml / 10, 1)
-                elif inventory_item.unit == 'tsp':
-                    inventory_item.quantity = round(remaining_ml / 4.92892, 1)
-                elif inventory_item.unit == 'tbsp':
-                    inventory_item.quantity = round(remaining_ml / 14.7868, 1)
-                elif inventory_item.unit in ['dash', 'dashes']:
-                    inventory_item.quantity = round(remaining_ml / 0.616, 1)
-                elif inventory_item.unit in ['splash', 'splashes']:
-                    inventory_item.quantity = round(remaining_ml / 7.5, 1)
-                elif inventory_item.unit in ['pieces', 'piece']:
-                    inventory_item.quantity = round(remaining_ml / 1000, 1)
-                elif inventory_item.unit in ['cubes', 'cube']:
-                    inventory_item.quantity = round(remaining_ml / 1000, 1)
-                elif inventory_item.unit in ['leaves', 'leaf']:
-                    inventory_item.quantity = round(remaining_ml / 1000, 1)
-                elif inventory_item.unit in ['slices', 'slice']:
-                    inventory_item.quantity = round(remaining_ml / 1000, 1)
-                elif inventory_item.unit in ['wedges', 'wedge']:
-                    inventory_item.quantity = round(remaining_ml / 1000, 1)
-                elif inventory_item.unit in ['bottles', 'bottle']:
-                    inventory_item.quantity = round(remaining_ml / 750, 1)
-                elif inventory_item.unit in ['cans', 'can']:
-                    inventory_item.quantity = round(remaining_ml / 355, 1)
-                else:
-                    inventory_item.quantity = round(remaining_ml, 1)
-                    inventory_item.unit = 'ml'
+                current_amount, current_type = user_inventory[ingredient.id]
+                remaining_amount = current_amount - required_amount
+                from app.utilities.unit_conversion import convert_from_base_unit
+                try:
+                    inventory_item.quantity = round(
+                        convert_from_base_unit(remaining_amount, inventory_item.unit, current_type),
+                        1
+                    )
+                except:
+                    inventory_item.quantity = round(remaining_amount, 1)
                 if inventory_item.quantity <= 0.1:
                     db.session.delete(inventory_item)
             db.session.commit()
