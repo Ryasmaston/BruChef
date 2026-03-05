@@ -80,7 +80,7 @@ export default function AdminReview() {
   return (
     <div className="max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-white mb-6">
-        🛡️ Admin Review Queue
+        Admin Review Queue
       </h1>
       {pendingCocktails.length === 0 ? (
         <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
