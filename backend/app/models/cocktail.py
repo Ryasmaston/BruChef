@@ -42,7 +42,8 @@ class Cocktail(db.Model):
             'status': self.status,
             'creator_name': self.creator.username if self.creator else 'BruChef',
             'is_official': self.user_id is None,
-            'submitted_at': self.submitted_at.isoformat() if self.submitted_at else None
+            'submitted_at': self.submitted_at.isoformat() if self.submitted_at else None,
+            'user_id': self.user_id
         }
 
         if include_ingredients:

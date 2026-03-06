@@ -10,6 +10,7 @@ def register():
         if not data:
             return jsonify({"error": "No data provided"}), 400
         new_user = AuthService.register_user(data)
+        session.permanent = True
         session['user_id'] = new_user.id
         session['username'] = new_user.username
         return jsonify({
@@ -30,6 +31,7 @@ def login():
         user = AuthService.login_user(data)
         if not user:
             return jsonify({"error": "Invalid username/email or password"}), 401
+        session.permanent = True
         session['user_id'] = user.id
         session['username'] = user.username
         return jsonify({
@@ -90,3 +92,11 @@ def change_password():
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@auth_bp.route("/debug-session", methods=["GET"])
+def debug_session():
+    return jsonify({
+        "session_data": dict(session),
+        "user_id": session.get('user_id'),
+        "permanent": session.permanent
+    }), 200

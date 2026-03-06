@@ -25,8 +25,10 @@ class CocktailService:
         try:
             cocktail = Cocktail.query.get(cocktail_id)
             if not cocktail:
+                # print(f"Cocktail {cocktail_id} does not exist")
                 return None
             if cocktail.status != 'approved' and cocktail.user_id != user_id:
+                # print(f"Access denied: status={cocktail.status}, owner={cocktail.user_id}, requester={user_id}")
                 return None
             return cocktail.to_dict(include_ingredients=True)
         except SQLAlchemyError as e:

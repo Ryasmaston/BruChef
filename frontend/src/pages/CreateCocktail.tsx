@@ -52,7 +52,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     garnish: '',
     difficulty: 'Medium',
     servings: 1,
-    ingredient_quantities: [] as Array<{id: number, quantity: string}>
+    ingredients: [] as Array<{ingredient_id: number, quantity: string}>
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -75,11 +75,11 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   }, [])
 
   useEffect(() => {
-    const quantities = ingredientInputs.map(input => ({
-      id: input.id,
+    const ingredients = ingredientInputs.map(input => ({
+      ingredient_id: input.id,
       quantity: input.amount && input.unit ? `${input.amount} ${input.unit}` : ''
     }))
-    setFormData(prev => ({ ...prev, ingredient_quantities: quantities }))
+    setFormData(prev => ({ ...prev, ingredients }))
   }, [ingredientInputs])
 
   const fetchIngredients = async () => {
@@ -96,6 +96,15 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    if (ingredientInputs.length === 0) {
+      setError('Please add at least one ingredient')
+      return
+    }
+    const missingAmounts = ingredientInputs.filter(input => !input.amount || !input.unit)
+    if (missingAmounts.length > 0) {
+      setError('Please enter amounts for all ingredients')
+      return
+    }
     setLoading(true)
     try {
       const response = await fetch('http://localhost:5001/api/cocktails/', {
@@ -107,6 +116,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
         body: JSON.stringify(formData)
       })
       const data = await response.json()
+      console.log("API response:", data)
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create cocktail')
       }
@@ -222,7 +232,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
 
   const filteredIngredients = ingredients.filter(ing =>
     ing.name.toLowerCase().includes(ingredientSearchQuery.toLowerCase()) &&
-    !formData.ingredient_quantities.some(iq => iq.id === ing.id)
+    !formData.ingredients.some(iq => iq.ingredient_id === ing.id)
   )
 
   if (!isAuthenticated) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import MakeCocktailConfirm from '../components/MakeCocktailConfirm'
 import AlertDialog from '../components/AlertDialog'
+import SubmitForReviewDialog from '../components/SubmitForReviewDialog'
 
 interface Cocktail {
   id: number
@@ -14,14 +15,14 @@ interface Cocktail {
   created_at: string
   ingredients: Ingredient[]
   servings: number
-  user_id: string
+  user_id: number
   status: string
-  submitted_at: string
+  submitted_at: string | null
   reviewed_at: string
   reviewed_by: string
   rejection_reason: string
   creator_name: string
-  is_official: string
+  is_official: boolean
 }
 
 interface Ingredient {
@@ -60,6 +61,8 @@ export default function CocktailDetail() {
   const [alertTitle, setAlertTitle] = useState('')
   const [alertMessage, setAlertMessage] = useState('')
   const [isCreator, setIsCreator] = useState(false)
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     fetchCocktail()
@@ -84,6 +87,7 @@ export default function CocktailDetail() {
         credentials: 'include'
       })
       const data = await response.json()
+      console.log('Auth check:', data.user?.id, 'Cocktail user_id:', cocktail?.user_id)
       if (data.authenticated && data.user && cocktail) {
         setIsCreator(data.user.id === cocktail.user_id)
       }
@@ -188,7 +192,9 @@ export default function CocktailDetail() {
 
   const fetchCocktail = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/cocktails/${id}`)
+      const response = await fetch(`http://localhost:5001/api/cocktails/${id}`, {
+        credentials: 'include'
+      })
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Cocktail not found')
@@ -220,23 +226,33 @@ export default function CocktailDetail() {
 
 
   const handleSubmitForReview = async () => {
-    const confirmed = window.confirm(
-      `Submit "${cocktail?.name}" for admin review?\n\nOnce approved, it will be visible to all users in the community recipes.`
-    )
-    if (!confirmed) return
+    setSubmitting(true)
     try {
       const response = await fetch(`http://localhost:5001/api/cocktails/submit/${id}`, {
         method: 'POST',
         credentials: 'include'
       })
       const data = await response.json()
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to submit cocktail')
       }
-      alert("✓ Cocktail submitted for review! You'll be notified once it's been reviewed.")
-      fetchCocktail() // Refresh to show new status
+
+      setShowSubmitDialog(false)
+      setAlertType('success')
+      setAlertTitle('Submitted for Review!')
+      setAlertMessage("Your cocktail has been submitted. You'll be notified once it's been reviewed by an admin.")
+      setShowAlertDialog(true)
+
+      await fetchCocktail()
     } catch (err: any) {
-      alert(err.message || 'Failed to submit cocktail')
+      setShowSubmitDialog(false)
+      setAlertType('error')
+      setAlertTitle('Submission Failed')
+      setAlertMessage(err.message || 'Failed to submit cocktail')
+      setShowAlertDialog(true)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -497,22 +513,64 @@ export default function CocktailDetail() {
         )}
         {isCreator && cocktail.status === 'private' && (
           <button
-            onClick={handleSubmitForReview}
+            onClick={() => setShowSubmitDialog(true)}
             className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-center transition-colors flex items-center justify-center gap-2"
           >
             <span>📤</span>
             <span>Submit for Review</span>
           </button>
         )}
-        {cocktail.status === 'rejected' && cocktail.rejection_reason && (
+
+        {/* Pending Status Display */}
+        {isCreator && cocktail.status === 'pending' && (
+          <div className="flex-1 px-6 py-3 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
+            <div className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
+              <span>⏳</span>
+              <span>Pending Review</span>
+            </div>
+            <div className="text-slate-300 text-sm">
+              Your cocktail is waiting for admin approval.
+              {cocktail.submitted_at && (
+                <span className="block text-slate-500 text-xs mt-1">
+                  Submitted {new Date(cocktail.submitted_at).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Rejection Reason Display */}
+        {isCreator && cocktail.status === 'rejected' && cocktail.rejection_reason && (
           <div className="flex-1 px-6 py-3 bg-red-900/20 border border-red-700/50 rounded-lg">
-            <div className="text-red-400 font-semibold mb-2">Rejection Reason:</div>
-            <div className="text-slate-300 text-sm">{cocktail.rejection_reason}</div>
+            <div className="text-red-400 font-semibold mb-2 flex items-center gap-2">
+              <span>✗</span>
+              <span>Rejected</span>
+            </div>
+            <div className="text-slate-300 text-sm mb-3">
+              <span className="font-semibold">Reason:</span> {cocktail.rejection_reason}
+            </div>
+            <button
+              onClick={() => setShowSubmitDialog(true)}
+              className="text-sm text-blue-400 hover:text-blue-300 underline"
+            >
+              Resubmit for Review
+            </button>
+          </div>
+        )}
+        {isCreator && cocktail.status === 'approved' && !cocktail.is_official && (
+          <div className="flex-1 px-6 py-3 bg-emerald-900/20 border border-emerald-700/50 rounded-lg">
+            <div className="text-emerald-400 font-semibold mb-2 flex items-center gap-2">
+              <span>✓</span>
+              <span>Approved!</span>
+            </div>
+            <div className="text-slate-300 text-sm">
+              Your cocktail is now visible to the community.
+            </div>
           </div>
         )}
         <Link
           to="/cocktails"
-          className={`${canMake && isAuthenticated ? '' : 'flex-1'} px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold text-center transition-colors`}
+          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold text-center transition-colors"
         >
           Browse More Cocktails
         </Link>
@@ -531,6 +589,15 @@ export default function CocktailDetail() {
         cancelText="Cancel"
         isLoading={makingCocktail}
       />
+
+      <SubmitForReviewDialog
+        isOpen={showSubmitDialog}
+        onClose={() => setShowSubmitDialog(false)}
+        onConfirm={handleSubmitForReview}
+        cocktailName={cocktail?.name || ''}
+        isLoading={submitting}
+      />
+
       <AlertDialog
         isOpen={showAlertDialog}
         onClose={() => setShowAlertDialog(false)}
