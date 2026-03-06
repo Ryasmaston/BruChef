@@ -28,14 +28,14 @@ def get_cocktails():
 def get_cocktail(cocktail_id):
     try:
         user_id = require_auth()
-        print(f"User ID: {user_id}, Cocktail ID: {cocktail_id}")
+        # print(f"User ID: {user_id}, Cocktail ID: {cocktail_id}")
         cocktail = CocktailService.get_cocktail_by_id(cocktail_id, user_id=user_id)
         if not cocktail:
-            print("Cocktail not found or access denied")
+            # print("Cocktail not found or access denied")
             return jsonify({"error": "Cocktail not found"}), 404
         return jsonify(cocktail), 200
     except Exception as e:
-        print(f"Error: {str(e)}")
+        # print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @cocktail_bp.route("/", methods=["POST"])
