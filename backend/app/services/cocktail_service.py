@@ -1,4 +1,4 @@
-from app.models import db, Cocktail, Ingredient, cocktail_ingredients
+from app.models import db,User, Cocktail, Ingredient, cocktail_ingredients
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional, Dict, Any
 from datetime import datetime
@@ -25,12 +25,17 @@ class CocktailService:
         try:
             cocktail = Cocktail.query.get(cocktail_id)
             if not cocktail:
-                # print(f"Cocktail {cocktail_id} does not exist")
                 return None
-            if cocktail.status != 'approved' and cocktail.user_id != user_id:
-                # print(f"Access denied: status={cocktail.status}, owner={cocktail.user_id}, requester={user_id}")
-                return None
-            return cocktail.to_dict(include_ingredients=True)
+            is_admin = False
+            if user_id:
+                user = User.query.get(user_id)
+                is_admin = user and user.is_admin
+            if cocktail.status == 'approved':
+                return cocktail.to_dict(include_ingredients=True)
+            if is_admin:
+                return cocktail.to_dict(include_ingredients=True)
+            if user_id and cocktail.user_id == user_id:
+                return cocktail.to_dict(include_ingredients=True)
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching cocktail: {str(e)}")
 
