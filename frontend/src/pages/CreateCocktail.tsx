@@ -532,7 +532,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
             <div>
               <div className="flex justify-between items-center mb-3">
                 <label className="block text-sm font-medium text-slate-300">
-                  Ingredients ({ingredientInputs.length} selected)
+                  Ingredients * ({ingredientInputs.length} selected)
                 </label>
                 <button
                   type="button"
