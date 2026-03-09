@@ -98,12 +98,26 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [alertType, setAlertType] = useState<'success' | 'error'>('success')
   const [alertTitle, setAlertTitle] = useState('')
   const [alertMessage, setAlertMessage] = useState('')
+  const [activeTab, setActiveTab] = useState<'inventory' | 'recipes'>('inventory')
+  const [userCocktails, setUserCocktails] = useState<{
+    private: any[]
+    pending: any[]
+    approved: any[]
+    rejected: any[]
+  }>({
+    private: [],
+    pending: [],
+    approved: [],
+    rejected: []
+  })
+  const [loadingRecipes, setLoadingRecipes] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchInventory()
       fetchIngredients()
       fetchAvailableCocktails()
+      fetchUserCocktails()
     }
   }, [isAuthenticated])
 
@@ -124,6 +138,24 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
       setError('Failed to load inventory')
       setLoading(false)
       console.error(err)
+    }
+  }
+
+  const fetchUserCocktails = async () => {
+    setLoadingRecipes(true)
+    try {
+      const response = await fetch('http://localhost:5001/api/cocktails/my-cocktails', {
+        credentials: 'include'
+      })
+      if (!response.ok) {
+        throw new Error('Failed to fetch your cocktails')
+      }
+      const data = await response.json()
+      setUserCocktails(data)
+    } catch (err) {
+      console.error('Error fetching user cocktails:', err)
+    } finally {
+      setLoadingRecipes(false)
     }
   }
 
@@ -274,6 +306,21 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
     }
   }
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'private':
+        return <span className="px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-300 border-slate-600">🔒 Private</span>
+      case 'pending':
+        return <span className="px-2 py-1 text-xs rounded border bg-yellow-500/20 text-yellow-400 border-yellow-500/50">⏳ Pending</span>
+      case 'approved':
+        return <span className="px-2 py-1 text-xs rounded border bg-emerald-500/20 text-emerald-400 border-emerald-500/50">✓ Approved</span>
+      case 'rejected':
+        return <span className="px-2 py-1 text-xs rounded border bg-red-500/20 text-red-400 border-red-500/50">✗ Rejected</span>
+      default:
+        return null
+    }
+  }
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Easy': return 'bg-green-500/20 text-green-400 border-green-500/50'
@@ -333,139 +380,357 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-white">My Inventory</h1>
-            <p className="text-slate-400 mt-1">
-              Manage your ingredients and discover what you can make
-            </p>
-          </div>
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="mb-6 flex gap-4 border-b border-slate-700">
           <button
-            onClick={() => setShowAddModal(true)}
-            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2"
+            onClick={() => setActiveTab('inventory')}
+            className={`px-6 py-3 font-semibold transition-colors border-b-2 ${
+              activeTab === 'inventory'
+                ? 'text-emerald-400 border-emerald-400'
+                : 'text-slate-400 border-transparent hover:text-white'
+            }`}
           >
-            <span>+</span>
-            <span>Add Ingredient</span>
+            Inventory
+          </button>
+          <button
+            onClick={() => setActiveTab('recipes')}
+            className={`px-6 py-3 font-semibold transition-colors border-b-2 ${
+              activeTab === 'recipes'
+                ? 'text-emerald-400 border-emerald-400'
+                : 'text-slate-400 border-transparent hover:text-white'
+            }`}
+          >
+            My Recipes
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-            <div className="text-3xl mb-2">📦</div>
-            <div className="text-2xl font-bold text-white">{inventory.length}</div>
-            <div className="text-slate-400 text-sm">Ingredients in Stock</div>
-          </div>
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-            <div className="text-3xl mb-2">🍸</div>
-            <div className="text-2xl font-bold text-emerald-400">{availableCocktails.length}</div>
-            <div className="text-slate-400 text-sm">Cocktails You Can Make</div>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
-            <button
-              onClick={() => setViewMode('inventory')}
-              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                viewMode === 'inventory' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              📦 My Inventory
-            </button>
-            <button
-              onClick={() => setViewMode('available')}
-              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                viewMode === 'available' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              🍸 Available Cocktails
-            </button>
-          </div>
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder={viewMode === 'inventory' ? "Search ingredients..." : "Search cocktails..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-        </div>
-        {viewMode === 'inventory' ? (
-          <>
-            {filteredInventory.length === 0 ? (
-              <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
-                <div className="text-4xl mb-4">📦</div>
-                <p className="text-slate-400 mb-4">
-                  {searchQuery ? 'No ingredients found' : 'Your inventory is empty'}
+        {activeTab === 'inventory' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-white">My Inventory</h1>
+                <p className="text-slate-400 mt-1">
+                  Manage your ingredients and discover what you can make
                 </p>
-                <button onClick={() => setShowAddModal(true)} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors">
-                  Add Ingredient
+              </div>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2"
+              >
+                <span>+</span>
+                <span>Add Ingredient</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+                <div className="text-3xl mb-2">📦</div>
+                <div className="text-2xl font-bold text-white">{inventory.length}</div>
+                <div className="text-slate-400 text-sm">Ingredients in Stock</div>
+              </div>
+              <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+                <div className="text-3xl mb-2">🍸</div>
+                <div className="text-2xl font-bold text-emerald-400">{availableCocktails.length}</div>
+                <div className="text-slate-400 text-sm">Cocktails You Can Make</div>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                <button
+                  onClick={() => setViewMode('inventory')}
+                  className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                    viewMode === 'inventory' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  📦 My Inventory
+                </button>
+                <button
+                  onClick={() => setViewMode('available')}
+                  className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                    viewMode === 'available' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  🍸 Available Cocktails
                 </button>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredInventory.map((item) => (
-                  <div key={item.id} className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-3xl">{getCategoryIcon(item.ingredient.category)}</span>
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">{item.ingredient.name}</h3>
-                          <div className="text-xs text-slate-500">
-                            {item.ingredient.category}
-                            {item.ingredient.subcategory && ` • ${item.ingredient.subcategory}`}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-slate-700 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-slate-400">Quantity:</span>
-                        <span className="text-sm font-semibold text-emerald-400">
-                          {item.quantity} {item.unit}
-                        </span>
-                      </div>
-                      {item.notes && (
-                        <div className="text-xs text-slate-500 italic">"{item.notes}"</div>
-                      )}
-                    </div>
-                    <button onClick={() => handleRemoveFromInventory(item)} className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors">
-                      Remove
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder={viewMode === 'inventory' ? "Search ingredients..." : "Search cocktails..."}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+            {viewMode === 'inventory' ? (
+              <>
+                {filteredInventory.length === 0 ? (
+                  <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
+                    <div className="text-4xl mb-4">📦</div>
+                    <p className="text-slate-400 mb-4">
+                      {searchQuery ? 'No ingredients found' : 'Your inventory is empty'}
+                    </p>
+                    <button onClick={() => setShowAddModal(true)} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors">
+                      Add Ingredient
                     </button>
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredInventory.map((item) => (
+                      <div key={item.id} className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-3xl">{getCategoryIcon(item.ingredient.category)}</span>
+                            <div>
+                              <h3 className="text-lg font-semibold text-white">{item.ingredient.name}</h3>
+                              <div className="text-xs text-slate-500">
+                                {item.ingredient.category}
+                                {item.ingredient.subcategory && ` • ${item.ingredient.subcategory}`}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-slate-700 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-slate-400">Quantity:</span>
+                            <span className="text-sm font-semibold text-emerald-400">
+                              {item.quantity} {item.unit}
+                            </span>
+                          </div>
+                          {item.notes && (
+                            <div className="text-xs text-slate-500 italic">"{item.notes}"</div>
+                          )}
+                        </div>
+                        <button onClick={() => handleRemoveFromInventory(item)} className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors">
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {filteredCocktails.length === 0 ? (
+                  <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
+                    <div className="text-4xl mb-4">🍸</div>
+                    <p className="text-slate-400 mb-4">
+                      {searchQuery ? 'No cocktails found' : 'Add more ingredients to discover cocktails you can make!'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredCocktails.map((cocktail) => (
+                      <Link key={cocktail.id} to={`/cocktails/${cocktail.id}`} className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group">
+                        <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
+                          <span className="text-6xl">🍹</span>
+                        </div>
+                        <div className="p-5">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">{cocktail.name}</h3>
+                            <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>{cocktail.difficulty}</span>
+                          </div>
+                          <p className="text-slate-400 text-sm mb-4 line-clamp-2">{cocktail.description || 'No description available'}</p>
+                          <div className="flex items-center text-emerald-400 text-sm">
+                            <span className="mr-2">✓</span>
+                            <span>You have all ingredients!</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        ) : (
+          </div>
+        )}
+        {activeTab === 'recipes' && (
           <>
-            {filteredCocktails.length === 0 ? (
-              <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
-                <div className="text-4xl mb-4">🍸</div>
-                <p className="text-slate-400 mb-4">
-                  {searchQuery ? 'No cocktails found' : 'Add more ingredients to discover cocktails you can make!'}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-white">My Recipes</h1>
+                <p className="text-slate-400 mt-1">
+                  View and manage all your cocktail creations
                 </p>
               </div>
+              <Link
+                to="/cocktails/new"
+                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+              >
+                <span>+</span>
+                <span>Create Recipe</span>
+              </Link>
+            </div>
+            {loadingRecipes ? (
+              <div className="flex justify-center items-center min-h-[400px]">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">🍸</div>
+                  <p className="text-slate-400">Loading recipes...</p>
+                </div>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCocktails.map((cocktail) => (
-                  <Link key={cocktail.id} to={`/cocktails/${cocktail.id}`} className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group">
-                    <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
-                      <span className="text-6xl">🍹</span>
+              <div className="space-y-6">
+                {userCocktails.private.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                      <span>🔒</span>
+                      <span>Private Recipes ({userCocktails.private.length})</span>
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {userCocktails.private.map((cocktail: any) => (
+                        <Link
+                          key={cocktail.id}
+                          to={`/cocktails/${cocktail.id}`}
+                          className="bg-slate-800 rounded-lg border border-slate-700 p-4 hover:border-emerald-500 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-white font-semibold flex-1">{cocktail.name}</h3>
+                            <span className="text-2xl ml-2">🍹</span>
+                          </div>
+                          {cocktail.description && (
+                            <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                              {cocktail.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {getStatusBadge(cocktail.status)}
+                            <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
+                              {cocktail.difficulty}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                    <div className="p-5">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">{cocktail.name}</h3>
-                        <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>{cocktail.difficulty}</span>
-                      </div>
-                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">{cocktail.description || 'No description available'}</p>
-                      <div className="flex items-center text-emerald-400 text-sm">
-                        <span className="mr-2">✓</span>
-                        <span>You have all ingredients!</span>
-                      </div>
+                  </div>
+                )}
+                {userCocktails.pending.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                      <span>⏳</span>
+                      <span>Pending Review ({userCocktails.pending.length})</span>
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {userCocktails.pending.map((cocktail: any) => (
+                        <Link
+                          key={cocktail.id}
+                          to={`/cocktails/${cocktail.id}`}
+                          className="bg-slate-800 rounded-lg border border-yellow-700/50 p-4 hover:border-yellow-500 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-white font-semibold flex-1">{cocktail.name}</h3>
+                            <span className="text-2xl ml-2">🍹</span>
+                          </div>
+                          {cocktail.description && (
+                            <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                              {cocktail.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {getStatusBadge(cocktail.status)}
+                            <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
+                              {cocktail.difficulty}
+                            </span>
+                            {cocktail.submitted_at && (
+                              <span className="text-xs text-slate-500">
+                                {new Date(cocktail.submitted_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                  </Link>
-                ))}
+                  </div>
+                )}
+                {userCocktails.approved.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                      <span>✓</span>
+                      <span>Approved Recipes ({userCocktails.approved.length})</span>
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {userCocktails.approved.map((cocktail: any) => (
+                        <Link
+                          key={cocktail.id}
+                          to={`/cocktails/${cocktail.id}`}
+                          className="bg-slate-800 rounded-lg border border-emerald-700/50 p-4 hover:border-emerald-500 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-white font-semibold flex-1">{cocktail.name}</h3>
+                            <span className="text-2xl ml-2">🍹</span>
+                          </div>
+                          {cocktail.description && (
+                            <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                              {cocktail.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {getStatusBadge(cocktail.status)}
+                            <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
+                              {cocktail.difficulty}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {userCocktails.rejected.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                      <span>✗</span>
+                      <span>Rejected Recipes ({userCocktails.rejected.length})</span>
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {userCocktails.rejected.map((cocktail: any) => (
+                        <Link
+                          key={cocktail.id}
+                          to={`/cocktails/${cocktail.id}`}
+                          className="bg-slate-800 rounded-lg border border-red-700/50 p-4 hover:border-red-500 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-white font-semibold flex-1">{cocktail.name}</h3>
+                            <span className="text-2xl ml-2">🍹</span>
+                          </div>
+                          {cocktail.description && (
+                            <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                              {cocktail.description}
+                            </p>
+                          )}
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {getStatusBadge(cocktail.status)}
+                              <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
+                                {cocktail.difficulty}
+                              </span>
+                            </div>
+                            {cocktail.rejection_reason && (
+                              <p className="text-xs text-red-400">
+                                Reason: "{cocktail.rejection_reason}"
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {userCocktails.private.length === 0 &&
+                 userCocktails.pending.length === 0 &&
+                 userCocktails.approved.length === 0 &&
+                 userCocktails.rejected.length === 0 && (
+                  <div className="bg-slate-800 rounded-lg border border-slate-700 p-12 text-center">
+                    <div className="text-6xl mb-4">📝</div>
+                    <h2 className="text-2xl font-bold text-white mb-3">No recipes yet</h2>
+                    <p className="text-slate-400 mb-6">
+                      Start creating your own cocktail recipes and share them with the community!
+                    </p>
+                    <Link
+                      to="/cocktails/new"
+                      className="inline-block px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
+                    >
+                      Create Your First Recipe
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </>
