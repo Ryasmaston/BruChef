@@ -12,7 +12,7 @@ interface Ingredient {
 interface IngredientQuantity {
   id: number
   amount: string
-  unitType: 'volume'|'mass'|'count'
+  unitType: 'volume'|'mass'|'count'|'approximate'
   unit: string
 }
 
@@ -38,7 +38,8 @@ const CATEGORIES: Record<string, string[]> = {
 const UNIT_OPTIONS = {
   volume: ['ml', 'oz'],
   mass: ['g', 'lb'],
-  count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'bottles', 'cans']
+  count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'bottles', 'cans'],
+  approximate: ['dash', 'splash', 'drop', 'top with']
 }
 
 export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps) {
@@ -153,7 +154,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     ))
   }
 
-  const updateIngredientUnitType = (ingredientId: number, unitType: 'volume' | 'mass' | 'count') => {
+  const updateIngredientUnitType = (ingredientId: number, unitType: 'volume' | 'mass' | 'count' | 'approximate') => {
     setIngredientInputs(prev => prev.map(input =>
       input.id === ingredientId ? { ...input, unitType, unit: UNIT_OPTIONS[unitType][0] } : input
     ))
@@ -430,7 +431,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                           <label className="block text-xs font-medium text-slate-400 mb-2">
                             Measurement Type
                           </label>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-4 gap-2">
                             <button
                               type="button"
                               onClick={() => updateIngredientUnitType(input.id, 'volume')}
@@ -464,6 +465,17 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                             >
                               Count
                             </button>
+                            <button
+                              type="button"
+                              onClick={() => updateIngredientUnitType(input.id, 'approximate')}
+                              className={`px-3 py-2 text-sm rounded transition-colors ${
+                                input.unitType === 'approximate'
+                                  ? 'bg-blue-500 text-white'
+                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                              }`}
+                            >
+                              Approx
+                            </button>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -476,7 +488,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                               value={input.amount}
                               onChange={(e) => updateIngredientAmount(input.id, e.target.value)}
                               min="0"
-                              step="0.1"
+                              step={input.unitType === 'approximate' ? '1' : '0.1'}
                               placeholder="0"
                               className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                             />
@@ -496,6 +508,11 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                             </select>
                           </div>
                         </div>
+                        {input.unitType === 'approximate' && (
+                          <p className="mt-1 text-xs text-blue-400">
+                            Approximate: dash ≈ 0.6ml, splash ≈ 7.5ml, drop ≈ 0.05ml
+                          </p>
+                        )}
                       </div>
                     )
                   })}
