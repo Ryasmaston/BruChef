@@ -70,6 +70,9 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   })
   const [modalLoading, setModalLoading] = useState(false)
   const [modalError, setModalError] = useState('')
+  const [instructionInputs, setInstructionInputs] = useState<string[]>([])
+  const [currentInstruction, setCurrentInstruction] = useState('')
+  const [editingInstructionIndex, setEditingInstructionIndex] = useState<number|null>(null)
 
   useEffect(() => {
     fetchIngredients()
@@ -82,6 +85,12 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     }))
     setFormData(prev => ({ ...prev, ingredients }))
   }, [ingredientInputs])
+
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev, instructions: instructionInputs.join('\n')
+    }))
+  }, [instructionInputs])
 
   const fetchIngredients = async () => {
     try {
@@ -214,6 +223,51 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     }
   }
 
+  const addInstruction = () => {
+    if (!currentInstruction.trim()) return
+    if (editingInstructionIndex !== null) {
+      setInstructionInputs(prev => prev.map((inst, idx) =>
+        idx === editingInstructionIndex ? currentInstruction.trim() : inst
+      ))
+      setEditingInstructionIndex(null)
+    } else {
+      setInstructionInputs(prev => [...prev, currentInstruction.trim()])
+    }
+    setCurrentInstruction('')
+  }
+
+  const editInstruction = (index: number) => {
+    setCurrentInstruction(instructionInputs[index])
+    setEditingInstructionIndex(index)
+  }
+
+  const deleteInstruction = (index: number) => {
+    setInstructionInputs(prev => prev.filter((_, idx) => idx !== index))
+  }
+
+  const moveInstructionUp = (index: number) => {
+    if (index === 0) return
+    setInstructionInputs(prev => {
+      const newInstructions = [...prev]
+      ;[newInstructions[index - 1], newInstructions[index]] = [newInstructions[index], newInstructions[index - 1]]
+      return newInstructions
+    })
+  }
+
+  const moveInstructionDown = (index: number) => {
+    if (index === instructionInputs.length - 1) return
+    setInstructionInputs(prev => {
+      const newInstructions = [...prev]
+      ;[newInstructions[index], newInstructions[index + 1]] = [newInstructions[index + 1], newInstructions[index]]
+      return newInstructions
+    })
+  }
+
+  const cancelEdit = () => {
+    setCurrentInstruction('')
+    setEditingInstructionIndex(null)
+  }
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'Spirit': return '🥃'
@@ -305,20 +359,115 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
               />
             </div>
             <div>
-              <label htmlFor="instructions" className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 Instructions *
               </label>
-              <textarea
-                id="instructions"
-                name="instructions"
-                value={formData.instructions}
-                onChange={handleChange}
-                required
-                rows={6}
-                className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                placeholder="1. Muddle mint leaves with sugar and lime juice&#10;2. Add rum and ice&#10;3. Top with soda water"
-              />
-              <p className="mt-1 text-xs text-slate-500">Separate steps with new lines</p>
+              <div className="mb-4">
+                <div className="flex gap-2">
+                  <textarea
+                    value={currentInstruction}
+                    onChange={(e) => setCurrentInstruction(e.target.value)}
+                    placeholder="Enter instruction step..."
+                    rows={3}
+                    className="flex-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault()
+                        addInstruction()
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={addInstruction}
+                    disabled={!currentInstruction.trim()}
+                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition-colors"
+                  >
+                    {editingInstructionIndex !== null ? '💾 Update Step' : 'Add Step'}
+                  </button>
+                  {editingInstructionIndex !== null && (
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-semibold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <p className="text-xs text-slate-500 self-center ml-2">
+                    Press Ctrl+Enter to add
+                  </p>
+                </div>
+              </div>
+              {instructionInputs.length === 0 ? (
+                <div className="text-center py-8 bg-slate-900 border border-slate-700 rounded-lg">
+                  <p className="text-slate-500 text-sm mb-3">No instructions added yet</p>
+                  <p className="text-slate-600 text-xs">Add step-by-step instructions above</p>
+                </div>
+              ) : (
+                <div className="space-y-2 bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                  {instructionInputs.map((instruction, index) => (
+                    <div
+                      key={index}
+                      className={`flex gap-3 p-3 rounded-lg transition-colors ${
+                        editingInstructionIndex === index
+                          ? 'bg-emerald-900/20 border border-emerald-700/50'
+                          : 'bg-slate-800/50 hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <div className="flex-shrink-0 w-6 h-6 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center text-sm font-semibold border border-emerald-500/50">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 text-slate-300 text-sm self-center">
+                        {instruction}
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => moveInstructionUp(index)}
+                          disabled={index === 0}
+                          className="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded transition-colors"
+                          title="Move up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveInstructionDown(index)}
+                          disabled={index === instructionInputs.length - 1}
+                          className="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded transition-colors"
+                          title="Move down"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => editInstruction(index)}
+                          className="px-2 py-1 text-xs bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 rounded border border-blue-900/50 transition-colors"
+                          title="Edit"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteInstruction(index)}
+                          className="px-2 py-1 text-xs bg-red-900/20 text-red-400 hover:bg-red-900/40 rounded border border-red-900/50 transition-colors"
+                          title="Delete"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {instructionInputs.length > 0 && (
+                <p className="mt-2 text-xs text-slate-500">
+                  {instructionInputs.length} step{instructionInputs.length !== 1 ? 's' : ''} added
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
