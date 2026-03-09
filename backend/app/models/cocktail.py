@@ -43,6 +43,9 @@ class Cocktail(db.Model):
             'creator_name': self.creator.username if self.creator else 'BruChef',
             'is_official': self.user_id is None,
             'submitted_at': self.submitted_at.isoformat() if self.submitted_at else None,
+            'reviewed_at': self.reviewed_at.isoformat() if self.reviewed_at else None,  # ✅ ADD THIS
+            'reviewed_by': self.reviewed_by,
+            'rejection_reason': self.rejection_reason,
             'user_id': self.user_id
         }
 

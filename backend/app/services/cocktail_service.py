@@ -209,10 +209,11 @@ class CocktailService:
                 raise ValueError("Cocktail not found")
             if cocktail.user_id != user_id:
                 raise ValueError("You can only submit your own cocktails")
-            if cocktail.status != 'private':
-                raise ValueError(f"Cocktail is already {cocktail.status}")
+            if cocktail.status not in ['private', 'rejected']:
+                raise ValueError(f"Cannot submit cocktail with status '{cocktail.status}'")
             cocktail.status = 'pending'
             cocktail.submitted_at = datetime.utcnow()
+            cocktail.rejection_reason = None
             db.session.commit()
             return cocktail.to_dict(include_ingredients=True)
         except SQLAlchemyError as e:
