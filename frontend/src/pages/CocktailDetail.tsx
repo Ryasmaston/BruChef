@@ -82,10 +82,23 @@ export default function CocktailDetail() {
   }, [cocktail])
 
   useEffect(() => {
+    if (cocktail) {
+      console.log('Cocktail data:', {
+        status: cocktail.status,
+        rejection_reason: cocktail.rejection_reason,
+        isCreator,
+        currentUserId,
+        cocktail_user_id: cocktail.user_id
+      })
+    }
+  }, [cocktail, isCreator, currentUserId])
+
+  useEffect(() => {
     if (cocktail && isAuthenticated) {
       checkCanMakeCocktail()
     }
   }, [currentServings])
+
   const checkIfCreator = async () => {
     try {
       const response = await fetch('http://localhost:5001/api/auth/check', {
@@ -94,12 +107,15 @@ export default function CocktailDetail() {
       const data = await response.json()
       console.log('Auth check:', data.user?.id, 'Cocktail user_id:', cocktail?.user_id)
       if (data.authenticated && data.user && cocktail) {
-        setIsCreator(data.user.id === cocktail.user_id)
+        const userIdMatch = Number(data.user.id) === Number(cocktail.user_id)
+        setCurrentUserId(data.user.id)
         setIsAdmin(data.user.is_admin || false)
-        setIsCreator(Number(data.user.id) === Number(cocktail.user_id))
+        setIsCreator(userIdMatch)
+        console.log('Is creator?', userIdMatch, 'Is admin?', data.user.is_admin)
       }
     } catch (err) {
       setIsCreator(false)
+      setIsAdmin(false)
     }
   }
 
@@ -279,9 +295,6 @@ export default function CocktailDetail() {
       setAlertTitle('Cocktail Deleted')
       setAlertMessage('The cocktail has been successfully deleted')
       setShowAlertDialog(true)
-      setTimeout(() => {
-        navigate('/cocktails')
-      }, 2000)
     } catch (err: any) {
       setShowDeleteDialog(false)
       setAlertType('error')
@@ -578,7 +591,6 @@ export default function CocktailDetail() {
             onClick={() => setShowSubmitDialog(true)}
             className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-center transition-colors flex items-center justify-center gap-2"
           >
-            <span>📤</span>
             <span>Submit for Review</span>
           </button>
         )}
@@ -598,21 +610,38 @@ export default function CocktailDetail() {
             </div>
           </div>
         )}
-        {isCreator && cocktail.status === 'rejected' && cocktail.rejection_reason && (
+        {isCreator && cocktail.status === 'rejected' && (
           <div className="flex-1 px-6 py-3 bg-red-900/20 border border-red-700/50 rounded-lg">
             <div className="text-red-400 font-semibold mb-2 flex items-center gap-2">
               <span>✗</span>
               <span>Rejected</span>
             </div>
-            <div className="text-slate-300 text-sm mb-3">
-              <span className="font-semibold">Reason:</span> {cocktail.rejection_reason}
-            </div>
-            <button
-              onClick={() => setShowSubmitDialog(true)}
-              className="text-sm text-blue-400 hover:text-blue-300 underline"
-            >
-              Resubmit for Review
-            </button>
+            {cocktail.rejection_reason ? (
+              <>
+                <div className="text-slate-300 text-sm mb-4">
+                  <span className="font-semibold">Reason:</span> {cocktail.rejection_reason}
+                </div>
+                <button
+                  onClick={() => setShowSubmitDialog(true)}
+                  className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>Resubmit for Review</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="text-slate-300 text-sm mb-4">
+                  Your cocktail was rejected. Please edit and resubmit.
+                </div>
+                <button
+                  onClick={() => setShowSubmitDialog(true)}
+                  className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>📤</span>
+                  <span>Resubmit for Review</span>
+                </button>
+              </>
+            )}
           </div>
         )}
         {isCreator && cocktail.status === 'approved' && !cocktail.is_official && (
@@ -657,11 +686,16 @@ export default function CocktailDetail() {
       />
 
       <AlertDialog
-        isOpen={showAlertDialog}
-        onClose={() => setShowAlertDialog(false)}
-        type={alertType}
-        title={alertTitle}
-        message={alertMessage}
+      isOpen={showAlertDialog}
+      onClose={() => {
+        setShowAlertDialog(false)
+        if (alertType === 'success' && alertTitle === 'Cocktail Deleted') {
+          navigate('/cocktails')
+        }
+      }}
+      type={alertType}
+      title={alertTitle}
+      message={alertMessage}
       />
 
       <ConfirmDeleteDialog

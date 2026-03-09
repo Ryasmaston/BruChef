@@ -39,7 +39,7 @@ const UNIT_OPTIONS = {
   volume: ['ml', 'oz'],
   mass: ['g', 'lb'],
   count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'bottles', 'cans'],
-  approximate: ['dash', 'splash', 'drop', 'top with']
+  approximate: ['dash', 'splash', 'drop']
 }
 
 export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps) {

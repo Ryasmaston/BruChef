@@ -63,7 +63,6 @@ export default function SubmitForReviewDialog({
               </>
             ) : (
               <>
-                <span>📤</span>
                 <span>Submit</span>
               </>
             )}
