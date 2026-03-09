@@ -471,7 +471,7 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
                     disabled={!currentInstruction.trim()}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition-colors"
                   >
-                    {editingInstructionIndex !== null ? '💾 Update Step' : '➕ Add Step'}
+                    {editingInstructionIndex !== null ? '💾 Update Step' : 'Add Step'}
                   </button>
                   {editingInstructionIndex !== null && (
                     <button
