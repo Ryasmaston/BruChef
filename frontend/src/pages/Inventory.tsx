@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog'
+import ConfirmInventoryDeleteDialog from '../components/ConfirmInventoryDeleteDialog'
 import AlertDialog from '../components/AlertDialog'
 
 interface InventoryItem {
@@ -761,7 +761,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           </div>
         </div>
       )}
-      <ConfirmDeleteDialog
+      <ConfirmInventoryDeleteDialog
         isOpen={showDeleteDialog}
         onClose={() => {
           setShowDeleteDialog(false)

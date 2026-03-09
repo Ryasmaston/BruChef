@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 
 interface Ingredient {
   id: number
@@ -9,6 +9,15 @@ interface Ingredient {
   abv: number
 }
 
+interface CocktailIngredient {
+  id: number
+  name: string
+  category: string
+  subcategory: string | null
+  abv: number
+  quantity: string
+}
+
 interface IngredientQuantity {
   id: number
   amount: string
@@ -16,7 +25,7 @@ interface IngredientQuantity {
   unit: string
 }
 
-interface CreateCocktailProps {
+interface EditCocktailProps {
   isAuthenticated: boolean
 }
 
@@ -42,7 +51,8 @@ const UNIT_OPTIONS = {
   approximate: ['dash', 'splash', 'drop', 'top with']
 }
 
-export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps) {
+export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
+  const { id } = useParams()
   const navigate = useNavigate()
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [formData, setFormData] = useState({
@@ -55,7 +65,8 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     servings: 1,
     ingredients: [] as Array<{ingredient_id: number, quantity: string}>
   })
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [showIngredientSearch, setShowIngredientSearch] = useState(false)
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState('')
@@ -73,7 +84,8 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
 
   useEffect(() => {
     fetchIngredients()
-  }, [])
+    fetchCocktail()
+  }, [id])
 
   useEffect(() => {
     const ingredients = ingredientInputs.map(input => ({
@@ -83,6 +95,68 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     setFormData(prev => ({ ...prev, ingredients }))
   }, [ingredientInputs])
 
+  const fetchCocktail = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/cocktails/${id}`, {
+        credentials: 'include'
+      })
+      if (!response.ok) {
+        throw new Error('Failed to fetch cocktail')
+      }
+      const data = await response.json()
+      setFormData({
+        name: data.name,
+        description: data.description || '',
+        instructions: data.instructions,
+        glass_type: data.glass_type || '',
+        garnish: data.garnish || '',
+        difficulty: data.difficulty,
+        servings: data.servings || 1,
+        ingredients: []
+      })
+      const parsedIngredients: IngredientQuantity[] = data.ingredients.map((ing: CocktailIngredient) => {
+        const parsed = parseQuantity(ing.quantity)
+        return {
+          id: ing.id,
+          amount: parsed?.amount.toString() || '',
+          unitType: parsed?.unitType || 'volume',
+          unit: parsed?.unit || 'oz'
+        }
+      })
+      setIngredientInputs(parsedIngredients)
+      setLoading(false)
+    } catch (err) {
+      console.error('Error fetching cocktail:', err)
+      setError('Failed to load cocktail')
+      setLoading(false)
+    }
+  }
+
+  const parseQuantity = (quantityStr: string) => {
+    if (!quantityStr) return null
+    const lowerQuantity = quantityStr.toLowerCase().trim()
+    const approximateUnits = ['dash', 'dashes', 'splash', 'splashes', 'drop', 'drops']
+    const match = quantityStr.match(/^([\d.]+)\s*(.+)$/)
+    if (match) {
+      const amount = parseFloat(match[1])
+      const unit = match[2].trim().toLowerCase()
+      if (approximateUnits.includes(unit)) {
+        return {
+          amount,
+          unit,
+          unitType: 'approximate' as const
+        }
+      }
+      let unitType: 'volume' | 'mass' | 'count' = 'volume'
+      if (UNIT_OPTIONS.mass.includes(unit)) {
+        unitType = 'mass'
+      } else if (UNIT_OPTIONS.count.includes(unit)) {
+        unitType = 'count'
+      }
+      return { amount, unit, unitType }
+    }
+    return null
+  }
   const fetchIngredients = async () => {
     try {
       const response = await fetch('http://localhost:5001/api/ingredients/')
@@ -106,10 +180,10 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
       setError('Please enter amounts for all ingredients')
       return
     }
-    setLoading(true)
+    setSaving(true)
     try {
-      const response = await fetch('http://localhost:5001/api/cocktails/', {
-        method: 'POST',
+      const response = await fetch(`http://localhost:5001/api/cocktails/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -117,14 +191,13 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
         body: JSON.stringify(formData)
       })
       const data = await response.json()
-      console.log("API response:", data)
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create cocktail')
+        throw new Error(data.error || 'Failed to update cocktail')
       }
-      navigate(`/cocktails/${data.id}`)
+      navigate(`/cocktails/${id}`)
     } catch (err: any) {
-      setError(err.message || 'Failed to create cocktail')
-      setLoading(false)
+      setError(err.message || 'Failed to update cocktail')
+      setSaving(false)
     }
   }
 
@@ -233,7 +306,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
 
   const filteredIngredients = ingredients.filter(ing =>
     ing.name.toLowerCase().includes(ingredientSearchQuery.toLowerCase()) &&
-    !formData.ingredients.some(iq => iq.ingredient_id === ing.id)
+    !ingredientInputs.some(input => input.id === ing.id)
   )
 
   if (!isAuthenticated) {
@@ -243,7 +316,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
           <div className="text-6xl mb-4">🔒</div>
           <h2 className="text-2xl font-bold text-white mb-4">Sign In Required</h2>
           <p className="text-slate-400 mb-6">
-            You need to be signed in to create cocktails.
+            You need to be signed in to edit cocktails.
           </p>
           <div className="flex gap-4 justify-center">
             <Link to="/login" className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors">
@@ -258,17 +331,28 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     )
   }
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🍸</div>
+          <p className="text-slate-400">Loading cocktail...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <Link to="/cocktails" className="text-slate-400 hover:text-white flex items-center space-x-2">
+          <Link to={`/cocktails/${id}`} className="text-slate-400 hover:text-white flex items-center space-x-2">
             <span>←</span>
-            <span>Back to Cocktails</span>
+            <span>Back to Cocktail</span>
           </Link>
         </div>
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-8">
-          <h1 className="text-3xl font-bold text-white mb-6">Create New Cocktail</h1>
+          <h1 className="text-3xl font-bold text-white mb-6">Edit Cocktail</h1>
           {error && (
             <div className="mb-6 p-4 bg-red-900/50 border border-red-700 rounded text-red-400">
               {error}
@@ -352,7 +436,9 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                 </select>
               </div>
               <div>
-                <label htmlFor="servings">Serves: </label>
+                <label htmlFor="servings" className="block text-sm font-medium text-slate-300 mb-2">
+                  Servings
+                </label>
                 <input
                   type="number"
                   id="servings"
@@ -362,6 +448,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                   min="1"
                   max="20"
                   required
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                   placeholder="1"
                 />
               </div>
@@ -522,13 +609,13 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={saving}
                 className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
               >
-                {loading ? 'Creating...' : 'Create Cocktail'}
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
               <Link
-                to="/cocktails"
+                to={`/cocktails/${id}`}
                 className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
               >
                 Cancel
@@ -616,7 +703,6 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                 {modalError}
               </div>
             )}
-
             <form onSubmit={handleCreateCustomIngredient} className="space-y-4">
               <div>
                 <label htmlFor="custom-name" className="block text-sm font-medium text-slate-300 mb-2">

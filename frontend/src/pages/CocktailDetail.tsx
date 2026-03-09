@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import MakeCocktailConfirm from '../components/MakeCocktailConfirm'
 import AlertDialog from '../components/AlertDialog'
 import SubmitForReviewDialog from '../components/SubmitForReviewDialog'
+import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog'
 
 interface Cocktail {
   id: number
@@ -63,6 +64,10 @@ export default function CocktailDetail() {
   const [isCreator, setIsCreator] = useState(false)
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchCocktail()
@@ -90,6 +95,8 @@ export default function CocktailDetail() {
       console.log('Auth check:', data.user?.id, 'Cocktail user_id:', cocktail?.user_id)
       if (data.authenticated && data.user && cocktail) {
         setIsCreator(data.user.id === cocktail.user_id)
+        setIsAdmin(data.user.is_admin || false)
+        setIsCreator(Number(data.user.id) === Number(cocktail.user_id))
       }
     } catch (err) {
       setIsCreator(false)
@@ -256,6 +263,38 @@ export default function CocktailDetail() {
     }
   }
 
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      const response = await fetch(`http://localhost:5001/api/cocktails/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to delete cocktail')
+      }
+      setShowDeleteDialog(false)
+      setAlertType('success')
+      setAlertTitle('Cocktail Deleted')
+      setAlertMessage('The cocktail has been successfully deleted')
+      setShowAlertDialog(true)
+      setTimeout(() => {
+        navigate('/cocktails')
+      }, 2000)
+    } catch (err: any) {
+      setShowDeleteDialog(false)
+      setAlertType('error')
+      setAlertTitle('Delete Failed')
+      setAlertMessage(err.message || 'Failed to delete cocktail')
+      setShowAlertDialog(true)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const canEdit = isCreator || isAdmin
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'Spirit':
@@ -314,13 +353,29 @@ export default function CocktailDetail() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <button
-        onClick={() => navigate('/cocktails')}
-        className="mb-6 text-slate-400 hover:text-white flex items-center space-x-2"
-      >
-        <span>←</span>
-        <span>Back to Cocktails</span>
-      </button>
+    {canEdit && cocktail && (
+      <div className="mb-6 flex gap-3">
+        <Link
+          to={`/cocktails/${id}/edit`}
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+        >
+          <span>Edit Cocktail</span>
+        </Link>
+        <button
+          onClick={() => setShowDeleteDialog(true)}
+          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+        >
+          <span>Delete Cocktail</span>
+        </button>
+      </div>
+    )}
+    <button
+      onClick={() => navigate('/cocktails')}
+      className="mb-6 text-slate-400 hover:text-white flex items-center space-x-2"
+    >
+      <span>←</span>
+      <span>Back to Cocktails</span>
+    </button>
       <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
         <div className="bg-gradient-to-br from-emerald-900/50 to-slate-800 p-8">
           <div className="flex items-start justify-between">
@@ -409,36 +464,43 @@ export default function CocktailDetail() {
               </h2>
               <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
                 <div className="space-y-3">
-                  {scaledIngredients.map((ingredient) => (
-                    <div key={ingredient.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors">
-                      <div className="flex items-center space-x-3 flex-1">
-                        <span className="text-2xl">{getCategoryIcon(ingredient.category)}</span>
-                        <div className="flex-1">
-                          <div className="text-white font-medium">{ingredient.name}</div>
-                          <div className="text-xs text-slate-500 flex items-center gap-1">
-                            <span className="text-emerald-600">{ingredient.category}</span>
-                            {ingredient.subcategory && (
-                              <>
-                                <span className="text-slate-600">•</span>
-                                <span>{ingredient.subcategory}</span>
-                              </>
-                            )}
-                            {ingredient.abv > 0 && (
-                              <>
-                                <span className="text-slate-600">•</span>
-                                <span>{ingredient.abv}% ABV</span>
-                              </>
-                            )}
+                  {scaledIngredients.map((ingredient) => {
+                    const quantityLower = (ingredient.scaledQuantity || '').toLowerCase()
+                    const isApproximate = ['dash', 'splash', 'drop'].some(u => quantityLower.includes(u))
+                    return (
+                      <div key={ingredient.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <span className="text-2xl">{getCategoryIcon(ingredient.category)}</span>
+                          <div className="flex-1">
+                            <div className="text-white font-medium">{ingredient.name}</div>
+                            <div className="text-xs text-slate-500 flex items-center gap-1">
+                              <span className="text-emerald-600">{ingredient.category}</span>
+                              {ingredient.subcategory && (
+                                <>
+                                  <span className="text-slate-600">•</span>
+                                  <span>{ingredient.subcategory}</span>
+                                </>
+                              )}
+                              {ingredient.abv > 0 && (
+                                <>
+                                  <span className="text-slate-600">•</span>
+                                  <span>{ingredient.abv}% ABV</span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        {ingredient.scaledQuantity && (
+                          <div className={`font-semibold text-sm ml-4 flex items-center gap-1 ${
+                            isApproximate ? 'text-blue-400' : 'text-emerald-400'
+                          }`}>
+                            {isApproximate && <span className="text-xs">≈</span>}
+                            {ingredient.scaledQuantity}
+                          </div>
+                        )}
                       </div>
-                      {ingredient.scaledQuantity && (
-                        <div className="text-emerald-400 font-semibold text-sm ml-4">
-                          {ingredient.scaledQuantity}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -520,8 +582,6 @@ export default function CocktailDetail() {
             <span>Submit for Review</span>
           </button>
         )}
-
-        {/* Pending Status Display */}
         {isCreator && cocktail.status === 'pending' && (
           <div className="flex-1 px-6 py-3 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
             <div className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
@@ -538,8 +598,6 @@ export default function CocktailDetail() {
             </div>
           </div>
         )}
-
-        {/* Rejection Reason Display */}
         {isCreator && cocktail.status === 'rejected' && cocktail.rejection_reason && (
           <div className="flex-1 px-6 py-3 bg-red-900/20 border border-red-700/50 rounded-lg">
             <div className="text-red-400 font-semibold mb-2 flex items-center gap-2">
@@ -604,6 +662,16 @@ export default function CocktailDetail() {
         type={alertType}
         title={alertTitle}
         message={alertMessage}
+      />
+
+      <ConfirmDeleteDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDelete}
+        title="Delete Cocktail?"
+        message={`Are you sure you want to delete "${cocktail?.name}"? This action cannot be undone.`}
+        itemName={cocktail?.name || ''}
+        isLoading={deleting}
       />
     </div>
   )

@@ -81,11 +81,30 @@ class CocktailService:
             raise Exception(f"Error creating cocktail: {str(e)}")
 
     @staticmethod
-    def update_cocktail(cocktail_id: int, data: Dict[str, Any]) -> Optional[Cocktail]:
-        cocktail = Cocktail.query.get(cocktail_id)
-        if not cocktail:
-            return None
+    def can_user_edit_cocktail(cocktail_id: int, user_id: int) -> bool:
         try:
+            cocktail = Cocktail.query.get(cocktail_id)
+            if not cocktail:
+                return False
+            user = User.query.get(user_id)
+            if not user:
+                return False
+            if user.is_admin:
+                return True
+            if cocktail.user_id == user_id:
+                return True
+            return False
+        except SQLAlchemyError:
+            return False
+
+    @staticmethod
+    def update_cocktail(cocktail_id: int, data: Dict[str, Any], user_id: int) -> Optional[Cocktail]:
+        try:
+            if not CocktailService.can_user_edit_cocktail(cocktail_id, user_id):
+                raise ValueError("You don't have permission to edit this cocktail")
+            cocktail = Cocktail.query.get(cocktail_id)
+            if not cocktail:
+                return None
             if 'name' in data:
                 cocktail.name = data['name']
             if 'description' in data:
@@ -100,6 +119,25 @@ class CocktailService:
                 cocktail.difficulty = data['difficulty']
             if 'servings' in data:
                 cocktail.servings = data['servings']
+            if 'ingredients' in data:
+                db.session.execute(
+                    cocktail_ingredients.delete().where(
+                        cocktail_ingredients.c.cocktail_id == cocktail_id
+                    )
+                )
+                for ing_data in data['ingredients']:
+                    ingredient_id = ing_data.get('ingredient_id')
+                    quantity = ing_data.get('quantity', '')
+                    ingredient = Ingredient.query.get(ingredient_id)
+                    if not ingredient:
+                        raise ValueError(f"Ingredient with id {ingredient_id} not found")
+                    db.session.execute(
+                        cocktail_ingredients.insert().values(
+                            cocktail_id=cocktail_id,
+                            ingredient_id=ingredient_id,
+                            quantity=quantity
+                        )
+                    )
             db.session.commit()
             return cocktail
         except SQLAlchemyError as e:
@@ -107,11 +145,14 @@ class CocktailService:
             raise Exception(f"Error updating cocktail: {str(e)}")
 
     @staticmethod
-    def delete_cocktail(cocktail_id: int) -> bool:
-        cocktail = Cocktail.query.get(cocktail_id)
-        if not cocktail:
-            return False
+    def delete_cocktail(cocktail_id: int, user_id: int) -> bool:
         try:
+            if not CocktailService.can_user_edit_cocktail(cocktail_id, user_id):
+                raise ValueError("You don't have permission to delete this cocktail")
+
+            cocktail = Cocktail.query.get(cocktail_id)
+            if not cocktail:
+                return False
             db.session.delete(cocktail)
             db.session.commit()
             return True
