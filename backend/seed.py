@@ -14,7 +14,7 @@ def seed_database():
                 "username": "admin",
                 "email": "admin@example.com",
                 "password": "admin123",
-                "is_admin": False
+                "is_admin": True
             },
             {
                 "username": "Alice",
@@ -27,12 +27,6 @@ def seed_database():
                 "email": "john@email.com",
                 "password": "Password123",
                 "is_admin": False
-            },
-            {
-                "username": "Ryan",
-                "email": "ryan@email.com",
-                "password": "Password123",
-                "is_admin": True
             }
         ]
         users = []
