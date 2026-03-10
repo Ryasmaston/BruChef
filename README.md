@@ -21,7 +21,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ---
 
-## ✨ Features
+## -- Features --
 
 ### Cocktail Management
 - Browse and search through a comprehensive cocktail database
@@ -665,7 +665,7 @@ The `seed.py` script creates these test accounts:
 ### **Admin Account**
 ```
 Username: admin
-Password: admin123
+Password: Password123
 ```
 
 ### **Regular User Accounts**
