@@ -87,7 +87,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ---
 
-## 📦 Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
