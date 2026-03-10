@@ -6,18 +6,18 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ## -- Table of Contents --
 
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Prerequisites](#-prerequisites)
-- [Installation](#-installation)
-- [Database Setup](#-database-setup)
-- [Running the Application](#-running-the-application)
-- [User Roles & Permissions](#-user-roles--permissions)
-- [API Documentation](#-api-documentation)
-- [Key Features Deep Dive](#-key-features-deep-dive)
-- [Troubleshooting](#-troubleshooting)
-- [Future Enhancements](#-future-enhancements)
-- [Support](#-support)
+- [Features](#---features---)
+- [Tech Stack](#---tech-stack---)
+- [Prerequisites](#---prerequisites---)
+- [Installation](#---installation---)
+- [Database Setup](#---database-setup---)
+- [Running the Application](#---running-the-application---)
+- [User Roles & Permissions](#---user-roles--permissions---)
+- [API Documentation](#---api-documentation---)
+- [Key Features Deep Dive](#---key-features-deep-dive---)
+- [Troubleshooting](#---troubleshooting---)
+- [Future Enhancements](#---future-enhancements---)
+- [Support](#---support---)
 
 ---
 
