@@ -4,7 +4,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ---
 
-## Table of Contents
+## -- Table of Contents --
 
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
@@ -21,7 +21,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ---
 
-## Features 
+## -- Features -- 
 
 ### Cocktail Management
 - Browse and search through a comprehensive cocktail database
