@@ -1,4 +1,4 @@
-# 🍸 BruChef - Cocktail Management Platform
+# 🍸 BruChef - Bartender Companion Application
 
 A full-stack web application for managing cocktails, tracking bar inventory, and discovering what drinks you can make with the ingredients you have on hand.
 
@@ -12,19 +12,18 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 - [Installation](#-installation)
 - [Database Setup](#-database-setup)
 - [Running the Application](#-running-the-application)
-- [Project Structure](#-project-structure)
 - [User Roles & Permissions](#-user-roles--permissions)
 - [API Documentation](#-api-documentation)
 - [Key Features Deep Dive](#-key-features-deep-dive)
 - [Troubleshooting](#-troubleshooting)
 - [Future Enhancements](#-future-enhancements)
-- [License](#-license)
+- [Support](#-support)
 
 ---
 
 ## ✨ Features
 
-### 🍹 Cocktail Management
+### Cocktail Management
 - Browse and search through a comprehensive cocktail database
 - Create and share your own cocktail recipes
 - Advanced filtering by spirit type, difficulty, and ingredients
@@ -33,7 +32,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 - Support for standard and approximate measurements (oz, ml, dash, splash, drop)
 - Community submission and admin approval system
 
-### 📦 Inventory Tracking
+### Inventory Tracking
 - Manage your personal bar inventory
 - Add ingredients with volume, mass, or count measurements
 - Multi-unit conversion system (ml, oz, g, lb, pieces, etc.)
@@ -41,20 +40,20 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 - See which cocktails you can make with current inventory
 - One-click "Make Cocktail" feature with automatic inventory deduction
 
-### 👤 User Features
+### User Features
 - User registration and authentication
 - Personal cocktail creation and management
 - Recipe submission workflow (Private → Pending → Approved/Rejected)
 - "My Recipes" dashboard showing all user cocktails by status
 - Edit and delete own cocktails and ingredients
 
-### 🔐 Admin Features
+### Admin Features
 - Review pending cocktail submissions
 - Approve or reject recipes with feedback
 - Full edit/delete permissions on all content
 - Manage ingredients and categories
 
-### 🎨 Modern UI/UX
+### Modern UI/UX
 - Responsive design (mobile, tablet, desktop)
 - Dark theme with emerald accents
 - Interactive ingredient search and filtering
@@ -220,67 +219,6 @@ Open your browser and navigate to: `http://localhost:5173`
 
 ---
 
-## 📁 Project Structure
-
-```
-bruchef/
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py           # Flask app factory
-│   │   ├── models/               # Database models
-│   │   │   ├── cocktail.py
-│   │   │   ├── ingredient.py
-│   │   │   ├── inventory.py
-│   │   │   └── user.py
-│   │   ├── routes/               # API routes
-│   │   │   ├── auth_routes.py
-│   │   │   ├── cocktail_routes.py
-│   │   │   ├── ingredient_routes.py
-│   │   │   └── inventory_routes.py
-│   │   ├── services/             # Business logic
-│   │   │   ├── cocktail_service.py
-│   │   │   ├── ingredient_service.py
-│   │   │   └── inventory_service.py
-│   │   ├── middleware/           # Authentication middleware
-│   │   │   └── auth.py
-│   │   └── utilities/            # Helper functions
-│   │       └── unit_conversion.py
-│   ├── migrations/               # Database migrations
-│   ├── seed.py                   # Database seeding script
-│   ├── run.py                    # Application entry point
-│   └── requirements.txt          # Python dependencies
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/           # Reusable React components
-│   │   │   ├── AlertDialog.tsx
-│   │   │   ├── ConfirmDeleteDialog.tsx
-│   │   │   ├── Layout.tsx
-│   │   │   └── ...
-│   │   ├── pages/                # Route pages
-│   │   │   ├── Cocktails.tsx
-│   │   │   ├── CocktailDetail.tsx
-│   │   │   ├── CreateCocktail.tsx
-│   │   │   ├── EditCocktail.tsx
-│   │   │   ├── Ingredients.tsx
-│   │   │   ├── IngredientDetail.tsx
-│   │   │   ├── EditIngredient.tsx
-│   │   │   ├── Inventory.tsx
-│   │   │   ├── AdminReview.tsx
-│   │   │   ├── Login.tsx
-│   │   │   ├── Register.tsx
-│   │   │   └── Home.tsx
-│   │   ├── App.tsx               # Main app component
-│   │   ├── main.tsx              # Entry point
-│   │   └── index.css             # Global styles
-│   ├── package.json              # Node dependencies
-│   └── vite.config.ts            # Vite configuration
-│
-└── README.md                     # This file
-```
-
----
-
 ## 👥 User Roles & Permissions
 
 ### **Regular Users**
@@ -303,21 +241,22 @@ bruchef/
 
 ### **Permission Matrix**
 
-| Action | Creator | Admin | Public |
+| Action | Public | Logged in | Admin |
 |--------|---------|-------|--------|
 | View approved cocktails | ✅ | ✅ | ✅ |
-| View own private cocktails | ✅ | ✅ | ❌ |
-| View all private cocktails | ❌ | ✅ | ❌ |
-| Create cocktail | ✅ | ✅ | ❌ |
-| Edit own cocktail | ✅ | ✅ | ❌ |
-| Edit any cocktail | ❌ | ✅ | ❌ |
-| Delete own cocktail | ✅ | ✅ | ❌ |
-| Delete any cocktail | ❌ | ✅ | ❌ |
-| Submit for review | ✅ | ✅ | ❌ |
-| Approve/reject | ❌ | ✅ | ❌ |
-| Create ingredient | ✅ | ✅ | ❌ |
-| Edit own ingredient | ✅ | ✅ | ❌ |
-| Edit any ingredient | ❌ | ✅ | ❌ |
+| View approved ingredients | ✅ | ✅ | ✅ |
+| View own private cocktails | ❌ | ✅ | ✅ |
+| View all private cocktails | ❌ | ❌ | ✅ |
+| Create cocktail | ❌ | ✅ | ✅ |
+| Edit own cocktail | ❌ | ✅ | ✅ |
+| Edit any cocktail | ❌ | ❌ | ✅ |
+| Delete own cocktail | ❌ | ✅ | ✅ |
+| Delete any cocktail | ❌ | ❌ | ✅ |
+| Submit for review | ❌ | ✅ | ✅ |
+| Approve/reject | ❌ | ❌ | ✅ |
+| Create ingredient | ❌ | ✅ | ✅ |
+| Edit own ingredient | ❌ | ✅ | ✅ |
+| Edit any ingredient | ❌ | ❌ | ✅ |
 
 ---
 
@@ -814,25 +753,10 @@ taskkill /PID <PID> /F
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- Icons and emojis for visual category representation
-- Tailwind CSS for rapid UI development
-- Flask and React communities for excellent documentation
-- All contributors and testers
-
----
-
 ## 📞 Support
 
-For support, email your.email@example.com or open an issue on GitHub.
+For support, email ryan@osmaston.me or open an issue on GitHub.
 
 ---
 
-**Made with ❤️ and 🍸 by BruChef Team**
+**Made with ❤️ and 🍸 by Ryan Osmaston**
