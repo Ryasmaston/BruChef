@@ -63,7 +63,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ---
 
-## Tech Stack
+## -- Tech Stack --
 
 ### **Frontend**
 - **React 18** - UI library
@@ -87,7 +87,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ---
 
-## Prerequisites
+## -- Prerequisites --
 
 Before you begin, ensure you have the following installed:
 
@@ -98,7 +98,7 @@ Before you begin, ensure you have the following installed:
 
 ---
 
-## Installation
+## -- Installation --
 
 ### **1. Clone the Repository**
 
@@ -138,7 +138,7 @@ npm install
 
 ---
 
-## Database Setup
+## -- Database Setup --
 
 ### **1. Create PostgreSQL Database**
 
@@ -191,7 +191,7 @@ python seed.py
 
 ---
 
-## Running the Application
+## -- Running the Application --
 
 ### **1. Start Backend Server**
 
@@ -219,7 +219,7 @@ Open your browser and navigate to: `http://localhost:5173`
 
 ---
 
-## User Roles & Permissions
+## -- User Roles & Permissions --
 
 ### **Regular Users**
 - ✅ Create and manage personal cocktails
@@ -260,7 +260,7 @@ Open your browser and navigate to: `http://localhost:5173`
 
 ---
 
-## API Documentation
+## -- API Documentation --
 
 ### **Authentication**
 
@@ -500,7 +500,7 @@ Content-Type: application/json
 
 ---
 
-## Key Features Deep Dive
+## -- Key Features Deep Dive --
 
 ### **Multi-Unit Conversion System**
 
@@ -658,7 +658,7 @@ When creating/editing cocktails:
 
 ---
 
-## Test Accounts
+## -- Test Accounts --
 
 The `seed.py` script creates these test accounts:
 
@@ -679,7 +679,7 @@ Password: Password123
 
 ---
 
-## Troubleshooting
+## -- Troubleshooting --
 
 ### **Database Connection Issues**
 
@@ -735,7 +735,7 @@ taskkill /PID <PID> /F
 
 ---
 
-## Future Enhancements
+## -- Future Enhancements --
 
 - [ ] Image uploads for cocktails
 - [ ] User profiles with avatars
@@ -753,7 +753,7 @@ taskkill /PID <PID> /F
 
 ---
 
-## Support
+## -- Support --
 
 For support, email ryan@osmaston.me or open an issue on GitHub.
 
