@@ -4,7 +4,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
@@ -21,7 +21,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ---
 
-## ✨ Features 
+## Features 
 
 ### Cocktail Management
 - Browse and search through a comprehensive cocktail database
@@ -63,7 +63,7 @@ A full-stack web application for managing cocktails, tracking bar inventory, and
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### **Frontend**
 - **React 18** - UI library
@@ -98,7 +98,7 @@ Before you begin, ensure you have the following installed:
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### **1. Clone the Repository**
 
@@ -138,7 +138,7 @@ npm install
 
 ---
 
-## 🗄 Database Setup
+## Database Setup
 
 ### **1. Create PostgreSQL Database**
 
@@ -191,7 +191,7 @@ python seed.py
 
 ---
 
-## ▶️ Running the Application
+## Running the Application
 
 ### **1. Start Backend Server**
 
@@ -219,7 +219,7 @@ Open your browser and navigate to: `http://localhost:5173`
 
 ---
 
-## 👥 User Roles & Permissions
+## User Roles & Permissions
 
 ### **Regular Users**
 - ✅ Create and manage personal cocktails
@@ -260,7 +260,7 @@ Open your browser and navigate to: `http://localhost:5173`
 
 ---
 
-## 🔌 API Documentation
+## API Documentation
 
 ### **Authentication**
 
@@ -500,7 +500,7 @@ Content-Type: application/json
 
 ---
 
-## 🔑 Key Features Deep Dive
+## Key Features Deep Dive
 
 ### **Multi-Unit Conversion System**
 
@@ -632,16 +632,16 @@ Mojito (4 servings):
 ### **Advanced Filtering System**
 
 **Cocktails Page Filters:**
-- 🔍 **Search by name or ingredient** - Real-time text search
-- 🥃 **Spirit filter** - Filter by base spirit (Vodka, Gin, Rum, etc.)
-- 📊 **Difficulty filter** - Easy, Medium, Advanced
-- 🏷️ **Active filter tags** - Visual indicator of applied filters
-- ↕️ **Sort options** - Alphabetical, difficulty, newest
+- **Search by name or ingredient** - Real-time text search
+- **Spirit filter** - Filter by base spirit (Vodka, Gin, Rum, etc.)
+- **Difficulty filter** - Easy, Medium, Advanced
+- **Active filter tags** - Visual indicator of applied filters
+- **Sort options** - Alphabetical, difficulty, newest
 
 **Ingredients Page Filters:**
-- 🔍 **Search by name** - Real-time text search
-- 📂 **Category filter** - Spirit, Liqueur, Juice, etc.
-- 🏷️ **Subcategory filter** - Dynamic based on category selection
+- **Search by name** - Real-time text search
+- **Category filter** - Spirit, Liqueur, Juice, etc.
+- **Subcategory filter** - Dynamic based on category selection
 
 ---
 
@@ -658,7 +658,7 @@ When creating/editing cocktails:
 
 ---
 
-## 🧪 Test Accounts
+## Test Accounts
 
 The `seed.py` script creates these test accounts:
 
@@ -679,7 +679,7 @@ Password: Password123
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### **Database Connection Issues**
 
@@ -735,7 +735,7 @@ taskkill /PID <PID> /F
 
 ---
 
-## 🔜 Future Enhancements
+## Future Enhancements
 
 - [ ] Image uploads for cocktails
 - [ ] User profiles with avatars
@@ -753,7 +753,7 @@ taskkill /PID <PID> /F
 
 ---
 
-## 📞 Support
+## Support
 
 For support, email ryan@osmaston.me or open an issue on GitHub.
 
