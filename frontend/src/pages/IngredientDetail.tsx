@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog'
+import AlertDialog from '../components/AlertDialog'
 
 interface Ingredient {
   id: number
@@ -8,6 +10,8 @@ interface Ingredient {
   subcategory: string | null
   description: string
   abv: number
+  user_id: number | null
+  creator_name: string
 }
 
 interface Cocktail {
@@ -26,11 +30,35 @@ export default function IngredientDetail() {
   const [cocktails, setCocktails] = useState<Cocktail[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showAlertDialog, setShowAlertDialog] = useState(false)
+  const [alertType, setAlertType] = useState<'success' | 'error'>('success')
+  const [alertTitle, setAlertTitle] = useState('')
+  const [alertMessage, setAlertMessage] = useState('')
 
   useEffect(() => {
     fetchIngredient()
     fetchCocktailsUsingIngredient()
+    checkAuth()
   }, [id])
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/auth/check', {
+        credentials: 'include'
+      })
+      const data = await response.json()
+      if (data.authenticated && data.user) {
+        setCurrentUserId(data.user.id)
+        setIsAdmin(data.user.is_admin || false)
+      }
+    } catch (err) {
+      console.error('Auth check failed:', err)
+    }
+  }
 
   const fetchIngredient = async () => {
     try {
@@ -59,6 +87,35 @@ export default function IngredientDetail() {
       setCocktails(data)
     } catch (err) {
       console.error('Error fetching cocktails:', err)
+    }
+  }
+
+  const canEdit = isAdmin || (currentUserId && ingredient.user_id === currentUserId)
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      const response = await fetch(`http://localhost:5001/api/ingredients/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to delete ingredient')
+      }
+      setShowDeleteDialog(false)
+      setAlertType('success')
+      setAlertTitle('Ingredient Deleted')
+      setAlertMessage('The ingredient has been successfully deleted')
+      setShowAlertDialog(true)
+    } catch (err: any) {
+      setShowDeleteDialog(false)
+      setAlertType('error')
+      setAlertTitle('Delete Failed')
+      setAlertMessage(err.message || 'Failed to delete ingredient')
+      setShowAlertDialog(true)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -135,6 +192,24 @@ export default function IngredientDetail() {
 
   return (
     <div className="max-w-6xl mx-auto">
+      {canEdit && (
+        <div className="mb-6 flex gap-3">
+          <Link
+            to={`/ingredients/${id}/edit`}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+          >
+            <span>✏️</span>
+            <span>Edit Ingredient</span>
+          </Link>
+          <button
+            onClick={() => setShowDeleteDialog(true)}
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+          >
+            <span>🗑️</span>
+            <span>Delete Ingredient</span>
+          </button>
+        </div>
+      )}
       <button
         onClick={() => navigate('/ingredients')}
         className="mb-6 text-slate-400 hover:text-white flex items-center space-x-2"
@@ -168,6 +243,9 @@ export default function IngredientDetail() {
                     {ingredient.abv}% ABV
                   </span>
                 )}
+                <span className="px-3 py-1 text-sm rounded border bg-slate-700/50 text-slate-300 border-slate-600">
+                  👤 by {ingredient.creator_name}
+                </span>
               </div>
             </div>
             <div className="text-8xl ml-4">
@@ -177,9 +255,9 @@ export default function IngredientDetail() {
         </div>
         <div className="p-8">
           {ingredient.description ? (
-              <p className="text-slate-400 leading-relaxed italic text-base">
-                {ingredient.description}
-              </p>
+            <p className="text-slate-400 leading-relaxed italic text-base">
+              {ingredient.description}
+            </p>
           ) : (
             <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700 text-center">
               <p className="text-slate-500">No description available</p>
@@ -197,7 +275,6 @@ export default function IngredientDetail() {
             {cocktails.length} {cocktails.length === 1 ? 'cocktail' : 'cocktails'}
           </span>
         </div>
-
         {cocktails.length === 0 ? (
           <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
             <div className="text-4xl mb-4">🔍</div>
@@ -260,6 +337,29 @@ export default function IngredientDetail() {
           </div>
         )}
       </div>
+
+      <ConfirmDeleteDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDelete}
+        title="Delete Ingredient?"
+        message={`Are you sure you want to delete "${ingredient.name}"? This action cannot be undone.`}
+        itemName={ingredient.name}
+        isLoading={deleting}
+      />
+
+      <AlertDialog
+        isOpen={showAlertDialog}
+        onClose={() => {
+          setShowAlertDialog(false)
+          if (alertType === 'success' && alertTitle === 'Ingredient Deleted') {
+            navigate('/ingredients')
+          }
+        }}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+      />
     </div>
   )
 }
