@@ -13,6 +13,7 @@ import Inventory from './src/pages/Inventory'
 import IngredientDetail from './src/pages/IngredientDetail'
 import AdminReview from './src/pages/AdminReview'
 import EditCocktail from './src/pages/EditCocktail'
+import EditIngredient from './src/pages/EditIngredient'
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -98,6 +99,7 @@ export default function App() {
           <Route path="/inventory" element={<Inventory isAuthenticated={isAuthenticated} />} />
           <Route path='/admin/review' element={<AdminReview />} />
           <Route path="/cocktails/:id/edit" element={<EditCocktail isAuthenticated={isAuthenticated} />} />
+          <Route path="/ingredients/:id/edit" element={<EditIngredient isAuthenticated={isAuthenticated} />} />
         </Routes>
       </Layout>
     </Router>
