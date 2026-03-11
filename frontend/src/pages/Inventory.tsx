@@ -475,7 +475,8 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredInventory.map((item) => (
+                      {filteredInventory.map((item) => (
+                      <Link to={`/ingredients/${item.ingredient_id}`}>
                       <div key={item.id} className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center space-x-3">
@@ -485,7 +486,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                               <div className="text-xs text-slate-500">
                                 {item.ingredient.category}
                                 {item.ingredient.subcategory && ` • ${item.ingredient.subcategory}`}
-                              </div>
+                                </div>
                             </div>
                           </div>
                         </div>
@@ -500,10 +501,17 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                             <div className="text-xs text-slate-500 italic">"{item.notes}"</div>
                           )}
                         </div>
-                        <button onClick={() => handleRemoveFromInventory(item)} className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleRemoveFromInventory(item)
+                          }}
+                            className="mt-4 w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded border border-red-900/50 text-sm font-medium transition-colors">
                           Remove
                         </button>
-                      </div>
+                          </div>
+                      </Link>
                     ))}
                   </div>
                 )}
