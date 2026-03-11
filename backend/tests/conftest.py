@@ -197,3 +197,17 @@ def admin_auth_headers(client, admin_user):
         'password': 'Password123'
     })
     return {'Content-Type': 'application/json'}
+
+@pytest.fixture
+def inventory_item(session, regular_user, sample_ingredient):
+    """Create inventory item for tests"""
+    item = Inventory(
+        user_id=regular_user.id,
+        ingredient_id=sample_ingredient.id,
+        quantity=750,
+        unit='ml',
+        notes='Test inventory item'
+    )
+    session.add(item)
+    session.commit()
+    return item

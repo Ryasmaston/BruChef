@@ -28,6 +28,10 @@ class Cocktail(db.Model):
     creator = db.relationship('User', foreign_keys=[user_id], backref=db.backref('created_cocktails', lazy='dynamic'))
     reviewer = db.relationship('User', foreign_keys=[reviewed_by])
 
+    @property
+    def is_official(self):
+        return self.user_id is None
+
     def to_dict(self, include_ingredients=False):
         data = {
             'id': self.id,
