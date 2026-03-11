@@ -12,7 +12,7 @@ def seed_database():
         users_data = [
             {
                 "username": "admin",
-                "email": "admin@example.com",
+                "email": "admin@email.com",
                 "password": "Password123",
                 "is_admin": True
             },
