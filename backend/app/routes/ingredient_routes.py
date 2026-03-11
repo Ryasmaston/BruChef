@@ -44,30 +44,36 @@ def create_ingredient():
 
 @ingredient_bp.route("/<int:ingredient_id>", methods=["PUT"])
 def update_ingredient(ingredient_id):
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 401
     try:
         data = request.get_json()
         if not data:
             return jsonify({"error": "No data given"}), 400
-        updated_ingredient = IngredientService.update_ingredient(ingredient_id, data)
+        updated_ingredient = IngredientService.update_ingredient(ingredient_id, data, user_id)
         if not updated_ingredient:
             return jsonify({"error": "Ingredient not found"}), 404
         return jsonify(updated_ingredient.to_dict()), 200
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": str(e)}), 403
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @ingredient_bp.route("/<int:ingredient_id>", methods=["DELETE"])
 def delete_ingredient(ingredient_id):
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 401
     try:
-        deleted = IngredientService.delete_ingredient(ingredient_id)
-
+        deleted = IngredientService.delete_ingredient(ingredient_id, user_id)
         if not deleted:
             return jsonify({"error": "Ingredient not found"}), 404
-
         return jsonify({"message": "Ingredient deleted successfully"}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 403
     except Exception as e:
-            return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 @ingredient_bp.route("/categories", methods=["GET"])
 def get_categories():
