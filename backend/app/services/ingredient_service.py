@@ -1,4 +1,6 @@
-from app.models import db, Ingredient, Cocktail
+from app.models import db, Ingredient, Cocktail, User
+from app.models.cocktail import cocktail_ingredients
+from app.models.inventory import Inventory
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from typing import List, Optional, Dict, Any
 
@@ -36,7 +38,8 @@ class IngredientService:
                 category = data.get('category', ''),
                 subcategory = data.get('subcategory', ''),
                 description = data.get('description', ''),
-                abv = data.get('abv', 0.0)
+                abv = data.get('abv', 0.0),
+                user_id=data.get('user_id')
             )
             db.session.add(new_ingredient)
             db.session.commit()
@@ -48,11 +51,30 @@ class IngredientService:
             raise Exception(f"Error creating ingredient: {str(e)}")
 
     @staticmethod
-    def update_ingredient(ingredient_id: int, data: Dict[str, Any]) -> Optional[Ingredient]:
-        ingredient = Ingredient.query.get(ingredient_id)
-        if not ingredient:
-            return None
+    def can_user_edit_ingredient(ingredient_id: int, user_id: int) -> bool:
         try:
+            ingredient = Ingredient.query.get(ingredient_id)
+            if not ingredient:
+                return False
+            user = User.query.get(user_id)
+            if not user:
+                return False
+            if user.is_admin:
+                return True
+            if ingredient.user_id == user_id:
+                return True
+            return False
+        except SQLAlchemyError:
+            return False
+
+    @staticmethod
+    def update_ingredient(ingredient_id: int, data: Dict[str, Any], user_id: int) -> Optional[Ingredient]:
+        try:
+            if not IngredientService.can_user_edit_ingredient(ingredient_id, user_id):
+                raise ValueError("You don't have permission to edit this ingredient")
+            ingredient = Ingredient.query.get(ingredient_id)
+            if not ingredient:
+                return None
             if 'name' in data and data['name'] != ingredient.name:
                 if IngredientService.get_ingredient_by_name(data['name']):
                     raise ValueError(f"Ingredient '{data['name']}' already exists")
@@ -71,21 +93,34 @@ class IngredientService:
             db.session.rollback()
             raise ValueError(f"Ingredient '{data.get('name')}' already exists")
         except SQLAlchemyError as e:
-            raise Exception (f"Error updating ingredient: {str(e)}")
+            db.session.rollback()
+            raise Exception(f"Error updating ingredient: {str(e)}")
 
 
     @staticmethod
-    def delete_ingredient(ingredient_id: int) -> bool:
-        ingredient = Ingredient.query.get(ingredient_id)
-        if not ingredient:
-            return False
-        try:
-            db.session.delete(ingredient)
-            db.session.commit()
-            return True
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            raise Exception(f"Error deleting ingredient: {str(e)}")
+    def delete_ingredient(ingredient_id: int, user_id: int) -> bool:
+            try:
+                if not IngredientService.can_user_edit_ingredient(ingredient_id, user_id):
+                    raise ValueError("You don't have permission to delete this ingredient")
+                ingredient = Ingredient.query.get(ingredient_id)
+                if not ingredient:
+                    return False
+                usage_count = db.session.execute(
+                    db.select(db.func.count()).select_from(cocktail_ingredients).where(
+                        cocktail_ingredients.c.ingredient_id == ingredient_id
+                    )
+                ).scalar()
+                if usage_count > 0:
+                    raise ValueError(f"Cannot delete ingredient - it's used in {usage_count} cocktail(s)")
+                inventory_count = Inventory.query.filter_by(ingredient_id=ingredient_id).count()
+                if inventory_count > 0:
+                    raise ValueError(f"Cannot delete ingredient - it's in {inventory_count} user inventory/inventories")
+                db.session.delete(ingredient)
+                db.session.commit()
+                return True
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                raise Exception(f"Error deleting ingredient: {str(e)}")
 
     @staticmethod
     def get_ingredients_by_category(category: str) -> List[Ingredient]:
