@@ -2,7 +2,6 @@ from .db import db
 from datetime import datetime
 
 class Inventory(db.Model):
-    """User's ingredient inventory"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ingredient_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'), nullable=False)
@@ -11,7 +10,6 @@ class Inventory(db.Model):
     notes = db.Column(db.String(200))
     added_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
     user = db.relationship('User', backref=db.backref('inventory_items', lazy='dynamic'))
     ingredient = db.relationship('Ingredient', backref=db.backref('inventory_items', lazy='dynamic'))
 
