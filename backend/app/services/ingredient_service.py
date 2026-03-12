@@ -75,11 +75,11 @@ class IngredientService:
     @staticmethod
     def update_ingredient(ingredient_id: int, data: Dict[str, Any], user_id: int) -> Optional[Ingredient]:
         try:
-            if not IngredientService.can_user_edit_ingredient(ingredient_id, user_id):
-                raise ValueError("You don't have permission to edit this ingredient")
             ingredient = db.session.get(Ingredient, ingredient_id)
             if not ingredient:
                 return None
+            if not IngredientService.can_user_edit_ingredient(ingredient_id, user_id):
+                raise ValueError("You don't have permission to edit this ingredient")
             if 'name' in data and data['name'] != ingredient.name:
                 if IngredientService.get_ingredient_by_name(data['name']):
                     raise ValueError(f"Ingredient '{data['name']}' already exists")
@@ -104,11 +104,11 @@ class IngredientService:
     @staticmethod
     def delete_ingredient(ingredient_id: int, user_id: int) -> bool:
         try:
-            if not IngredientService.can_user_edit_ingredient(ingredient_id, user_id):
-                raise ValueError("You don't have permission to delete this ingredient")
             ingredient = db.session.get(Ingredient, ingredient_id)
             if not ingredient:
                 return False
+            if not IngredientService.can_user_edit_ingredient(ingredient_id, user_id):
+                raise ValueError("You don't have permission to delete this ingredient")
             usage_count = db.session.execute(
                 select(func.count()).select_from(cocktail_ingredients).where(
                     cocktail_ingredients.c.ingredient_id == ingredient_id
