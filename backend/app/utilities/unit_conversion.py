@@ -132,7 +132,7 @@ def parse_quantity(quantity_str: str) -> Tuple[float, str, UnitType]:
     unit = unit_mappings.get(unit, unit)
     unit_type_value = UNIT_TYPE_MAP.get(unit, 'unknown')
     if unit_type_value in ('volume', 'mass', 'count', 'special', 'unknown'):
-        unit_type: UnitType = unit_type_value  # type: ignore
+        unit_type: UnitType = unit_type_value
     else:
         unit_type = 'unknown'
     return (amount, unit, unit_type)

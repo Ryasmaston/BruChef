@@ -146,7 +146,7 @@ class TestIngredientService:
             )
 
     def test_update_ingredient_duplicate_name(self, session, user_ingredient, sample_ingredient, regular_user):
-        data = {'name': 'Test Vodka'}  # Already exists
+        data = {'name': 'Test Vodka'}
         with pytest.raises(ValueError, match="already exists"):
             IngredientService.update_ingredient(
                 user_ingredient.id,
