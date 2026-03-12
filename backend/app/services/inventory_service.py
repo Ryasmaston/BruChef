@@ -1,14 +1,17 @@
 from app.models import db, Inventory, Ingredient, User, Cocktail, cocktail_ingredients
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import select, and_
 from typing import List, Optional, Dict, Any
 from app.utilities.unit_conversion import standardize_quantity, can_make_cocktail
+
 
 class InventoryService:
 
     @staticmethod
     def get_user_inventory(user_id: int) -> List[Dict[str, Any]]:
         try:
-            items = Inventory.query.filter_by(user_id=user_id).all()
+            stmt = select(Inventory).where(Inventory.user_id == user_id)
+            items = db.session.execute(stmt).scalars().all()
             return [item.to_dict() for item in items]
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching inventory: {str(e)}")
@@ -21,14 +24,17 @@ class InventoryService:
         notes = data.get('notes', '')
         if not ingredient_id:
             raise ValueError("Ingredient ID is required")
-        ingredient = Ingredient.query.get(ingredient_id)
+        ingredient = db.session.get(Ingredient, ingredient_id)
         if not ingredient:
             raise ValueError("Ingredient not found")
         try:
-            existing = Inventory.query.filter_by(
-                user_id=user_id,
-                ingredient_id=ingredient_id
-            ).first()
+            stmt = select(Inventory).where(
+                and_(
+                    Inventory.user_id == user_id,
+                    Inventory.ingredient_id == ingredient_id
+                )
+            )
+            existing = db.session.execute(stmt).scalar_one_or_none()
             if existing:
                 existing.quantity = quantity
                 existing.unit = unit
@@ -53,7 +59,13 @@ class InventoryService:
     @staticmethod
     def update_inventory_item(user_id: int, item_id: int, data: Dict[str, Any]) -> Optional[Inventory]:
         try:
-            item = Inventory.query.filter_by(id=item_id, user_id=user_id).first()
+            stmt = select(Inventory).where(
+                and_(
+                    Inventory.id == item_id,
+                    Inventory.user_id == user_id
+                )
+            )
+            item = db.session.execute(stmt).scalar_one_or_none()
             if not item:
                 return None
             if 'quantity' in data:
@@ -71,7 +83,13 @@ class InventoryService:
     @staticmethod
     def remove_from_inventory(user_id: int, item_id: int) -> bool:
         try:
-            item = Inventory.query.filter_by(id=item_id, user_id=user_id).first()
+            stmt = select(Inventory).where(
+                and_(
+                    Inventory.id == item_id,
+                    Inventory.user_id == user_id
+                )
+            )
+            item = db.session.execute(stmt).scalar_one_or_none()
             if not item:
                 return False
             db.session.delete(item)
@@ -84,7 +102,8 @@ class InventoryService:
     @staticmethod
     def get_available_cocktails(user_id: int) -> List[Dict[str, Any]]:
         try:
-            inventory_items = Inventory.query.filter_by(user_id=user_id).all()
+            stmt = select(Inventory).where(Inventory.user_id == user_id)
+            inventory_items = db.session.execute(stmt).scalars().all()
             user_inventory = {}
             for item in inventory_items:
                 standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
@@ -92,14 +111,15 @@ class InventoryService:
                     user_inventory[item.ingredient_id] = (standardized_amount, unit_type)
             if not user_inventory:
                 return []
-            cocktails = Cocktail.query.all()
+            stmt = select(Cocktail)
+            cocktails = db.session.execute(stmt).scalars().all()
             available_cocktails = []
             for cocktail in cocktails:
                 cocktail_ingredients_data = []
                 for ingredient in cocktail.ingredients:
                     result = db.session.execute(
-                        db.select(cocktail_ingredients.c.quantity).where(
-                            db.and_(
+                        select(cocktail_ingredients.c.quantity).where(
+                            and_(
                                 cocktail_ingredients.c.cocktail_id == cocktail.id,
                                 cocktail_ingredients.c.ingredient_id == ingredient.id
                             )
@@ -119,10 +139,11 @@ class InventoryService:
     @staticmethod
     def get_missing_ingredients(user_id: int, cocktail_id: int) -> List[Dict[str, Any]]:
         try:
-            cocktail = Cocktail.query.get(cocktail_id)
+            cocktail = db.session.get(Cocktail, cocktail_id)
             if not cocktail:
                 return []
-            inventory_items = Inventory.query.filter_by(user_id=user_id).all()
+            stmt = select(Inventory).where(Inventory.user_id == user_id)
+            inventory_items = db.session.execute(stmt).scalars().all()
             user_inventory = {}
             for item in inventory_items:
                 standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
@@ -131,8 +152,8 @@ class InventoryService:
             missing = []
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
-                    db.select(cocktail_ingredients.c.quantity).where(
-                        db.and_(
+                    select(cocktail_ingredients.c.quantity).where(
+                        and_(
                             cocktail_ingredients.c.cocktail_id == cocktail_id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
@@ -162,10 +183,11 @@ class InventoryService:
     @staticmethod
     def make_cocktail(user_id: int, cocktail_id: int, servings: int = 1) -> Dict[str, Any]:
         try:
-            cocktail = Cocktail.query.get(cocktail_id)
+            cocktail = db.session.get(Cocktail, cocktail_id)
             if not cocktail:
                 return {'error': 'Cocktail not found'}
-            inventory_items = Inventory.query.filter_by(user_id=user_id).all()
+            stmt = select(Inventory).where(Inventory.user_id == user_id)
+            inventory_items = db.session.execute(stmt).scalars().all()
             user_inventory = {}
             inventory_map = {}
             for item in inventory_items:
@@ -177,14 +199,13 @@ class InventoryService:
             insufficient = []
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
-                    db.select(cocktail_ingredients.c.quantity).where(
-                        db.and_(
+                    select(cocktail_ingredients.c.quantity).where(
+                        and_(
                             cocktail_ingredients.c.cocktail_id == cocktail_id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
                     )
                 ).scalar()
-
                 base_required_amount, required_type = standardize_quantity(result or '0 ml')
                 if required_type == 'special':
                     continue
@@ -211,10 +232,11 @@ class InventoryService:
                     for item in insufficient
                 ])
                 return {'error': f'Insufficient quantities: {details}'}
+
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
-                    db.select(cocktail_ingredients.c.quantity).where(
-                        db.and_(
+                    select(cocktail_ingredients.c.quantity).where(
+                        and_(
                             cocktail_ingredients.c.cocktail_id == cocktail_id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
