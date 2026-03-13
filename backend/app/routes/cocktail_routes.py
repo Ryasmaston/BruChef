@@ -185,11 +185,33 @@ def get_my_cocktails():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@cocktail_bp.route("/<int:cocktail_id>/favourite", methods=['POST'])
+def add_cocktail_to_favourites(cocktail_id):
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 401
+    try:
+        added = CocktailService.add_cocktail_to_favourites(user_id, cocktail_id)
+        return jsonify(added), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@cocktail_bp.route("/<int:cocktail_id>/favourite", methods=['DELETE'])
+def remove_cocktail_from_favourites(cocktail_id):
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 401
+    try:
+        removed = CocktailService.remove_cocktail_from_favourites(user_id, cocktail_id)
+        return jsonify(removed), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @cocktail_bp.route("/favourite-cocktails", methods=["GET"])
 def get_favourite_cocktails():
     user_id = require_auth()
     if not user_id:
-        return jsonify({"error": "Authentication required"}), 400
+        return jsonify({"error": "Authentication required"}), 401
     try:
         cocktails = CocktailService.get_user_favourite_cocktails(user_id)
         return jsonify(cocktails), 200
