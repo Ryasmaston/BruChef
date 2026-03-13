@@ -1,6 +1,5 @@
 from app.models import db, User
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from sqlalchemy import select, or_
 from typing import Optional, Dict, Any
 import re
 
@@ -52,11 +51,9 @@ class AuthService:
         is_valid, error = AuthService.validate_password(password)
         if not is_valid:
             raise ValueError(error)
-        stmt = select(User).where(User.username == username)
-        if db.session.execute(stmt).scalar_one_or_none():
+        if User.query.filter_by(username=username).first():
             raise ValueError("Username already exists")
-        stmt = select(User).where(User.email == email)
-        if db.session.execute(stmt).scalar_one_or_none():
+        if User.query.filter_by(email=email).first():
             raise ValueError("Email already registered")
         try:
             new_user = User(
@@ -82,34 +79,28 @@ class AuthService:
             raise ValueError("Username or email is required")
         if not password:
             raise ValueError("Password is required")
-        stmt = select(User).where(
-            or_(
-                User.username == username_or_email,
-                User.email == username_or_email
-            )
-        )
-        user = db.session.execute(stmt).scalar_one_or_none()
+        user = User.query.filter(
+            (User.username == username_or_email) | (User.email == username_or_email)
+        ).first()
         if user and user.check_password(password):
             return user
         return None
 
     @staticmethod
     def get_user_by_id(user_id: int) -> Optional[User]:
-        return db.session.get(User, user_id)
+        return User.query.get(user_id)
 
     @staticmethod
     def get_user_by_username(username: str) -> Optional[User]:
-        stmt = select(User).where(User.username == username)
-        return db.session.execute(stmt).scalar_one_or_none()
+        return User.query.filter_by(username=username).first()
 
     @staticmethod
     def get_user_by_email(email: str) -> Optional[User]:
-        stmt = select(User).where(User.email == email.lower())
-        return db.session.execute(stmt).scalar_one_or_none()
+        return User.query.filter_by(email=email.lower()).first()
 
     @staticmethod
     def update_password(user_id: int, old_password: str, new_password: str) -> bool:
-        user = db.session.get(User, user_id)
+        user = User.query.get(user_id)
         if not user:
             raise ValueError("User not found")
         if not user.check_password(old_password):
