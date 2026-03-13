@@ -1,4 +1,4 @@
-from app.models import db, User, Cocktail, Ingredient, cocktail_ingredients
+from app.models import db, User, Cocktail, Ingredient, cocktail_ingredients, favourites
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select, or_
 from typing import List, Optional, Dict, Any
@@ -276,3 +276,62 @@ class CocktailService:
             }
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching user cocktails: {str(e)}")
+
+    @staticmethod
+    def add_cocktail_to_favourites(user_id: int, cocktail_id: int) -> Dict[str, Any]:
+        try:
+            cocktail = db.session.get(Cocktail, cocktail_id)
+            if not cocktail:
+                raise ValueError('Cocktail not found')
+            existing = db.session.execute(
+                select(favourites.c.user_id).where(
+                    favourites.c.user_id == user_id,
+                    favourites.c.cocktail_id == cocktail_id
+                )
+            ).first()
+            if existing:
+                raise ValueError('Cocktail already in favourites')
+            db.session.execute(
+                favourites.insert().values(
+                    user_id = user_id,
+                    cocktail_id = cocktail_id
+                )
+            )
+            db.session.commit()
+            return cocktail.to_dict(include_ingredients=True)
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            raise Exception(f'Error adding to favourites: {str(e)}')
+
+    @staticmethod
+    def remove_cocktail_from_favourites(user_id: int, cocktail_id: int) -> bool:
+        try:
+            cocktail = db.session.get(Cocktail, cocktail_id)
+            if not cocktail:
+                raise ValueError('Cocktail not found')
+            result = db.session.execute(
+                favourites.delete().where(
+                    favourites.c.user_id == user_id,
+                    favourites.c.cocktail_id == cocktail_id
+                )
+            )
+            db.session.commit()
+            return result.rowcount > 0
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            raise Exception(f'Error removing cocktail from favourites: {str(e)}')
+
+
+    @staticmethod
+    def get_user_favourite_cocktails(user_id: int) -> List[Dict[str, Any]]:
+        try:
+            stmt = (
+                select(Cocktail)
+                .join(favourites, favourites.c.cocktail_id == Cocktail.id)
+                .where(favourites.c.user_id == user_id)
+                .order_by(Cocktail.created_at.desc())
+            )
+            cocktails = db.session.execute(stmt).scalars().all()
+            return [c.to_dict(include_ingredients=True) for c in cocktails]
+        except SQLAlchemyError as e:
+            raise Exception(f'Error fetching favourite cocktails: {str(e)}')

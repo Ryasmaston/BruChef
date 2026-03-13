@@ -24,6 +24,7 @@ interface Cocktail {
   rejection_reason: string
   creator_name: string
   is_official: boolean
+  favourited_by: string
 }
 
 interface Ingredient {
@@ -68,6 +69,7 @@ export default function CocktailDetail() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [favouriting, setFavouriting] = useState(false)
 
   useEffect(() => {
     fetchCocktail()
@@ -260,13 +262,11 @@ export default function CocktailDetail() {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to submit cocktail')
       }
-
       setShowSubmitDialog(false)
       setAlertType('success')
       setAlertTitle('Submitted for Review!')
       setAlertMessage("Your cocktail has been submitted. You'll be notified once it's been reviewed by an admin.")
       setShowAlertDialog(true)
-
       await fetchCocktail()
     } catch (err: any) {
       setShowSubmitDialog(false)
@@ -276,6 +276,59 @@ export default function CocktailDetail() {
       setShowAlertDialog(true)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleAddToFavourites = async () => {
+    if (!cocktail) return
+    setFavouriting(true)
+    try {
+      const response = await fetch(`http://localhost:5001/api/cocktails/${id}/favourite`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add cocktail to favourites')
+      }
+      setAlertType('success')
+      setAlertTitle('Added to favourites')
+      setAlertMessage(`${cocktail.name} has been added to favourites`)
+      setShowAlertDialog(true)
+    } catch (err: any) {
+      setAlertType('error')
+      setAlertTitle('Error')
+      setAlertMessage(err.message || 'Failed to add to favourites')
+      setShowAlertDialog(true)
+      await fetchCocktail()
+    } finally {
+      setFavouriting(false)
+    }
+  }
+
+  const handleRemoveFromFavourites = async () => {
+    setFavouriting(true)
+    try {
+      const response = await fetch(`http://localhost:5001/api/cocktails/${id}/favourite`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to remove cocktail from favourites')
+      }
+      setAlertType('success')
+      setAlertTitle('Removed from Favourites')
+      setAlertMessage(`${cocktail?.name} has been removed from your favourites.`)
+      setShowAlertDialog(true)
+      await fetchCocktail()
+    } catch (err: any) {
+      setAlertType('error')
+      setAlertTitle('Error')
+      setAlertMessage(err.message || 'Failed to remove from favourites')
+      setShowAlertDialog(true)
+    } finally {
+      setFavouriting(false)
     }
   }
 

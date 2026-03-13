@@ -7,6 +7,13 @@ cocktail_ingredients = db.Table('cocktail_ingredients',
     db.Column('quantity', db.String(50))
 )
 
+favourites=db.Table(
+    'favourites',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('cocktail_id', db.Integer, db.ForeignKey('cocktail.id'), primary_key=True),
+    db.Column('created_at', db.DateTime, default=datetime.utcnow)
+)
+
 class Cocktail(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -26,7 +33,13 @@ class Cocktail(db.Model):
     ingredients = db.relationship('Ingredient', secondary=cocktail_ingredients,
                                  backref=db.backref('cocktails', lazy='dynamic'))
     creator = db.relationship('User', foreign_keys=[user_id], backref=db.backref('created_cocktails', lazy='dynamic'))
-    reviewer = db.relationship('User', foreign_keys=[reviewed_by])
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by]),
+    favourited_by = db.relationship(
+        'User',
+        secondary=favourites,
+        backref=db.backref('favourite_cocktails', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
     @property
     def is_official(self):
@@ -50,7 +63,8 @@ class Cocktail(db.Model):
             'reviewed_at': self.reviewed_at.isoformat() if self.reviewed_at else None,
             'reviewed_by': self.reviewed_by,
             'rejection_reason': self.rejection_reason,
-            'user_id': self.user_id
+            'user_id': self.user_id,
+            'favourited_by': [u.id for u in self.favourited_by]
         }
 
         if include_ingredients:
