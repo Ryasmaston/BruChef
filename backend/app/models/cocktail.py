@@ -64,7 +64,7 @@ class Cocktail(db.Model):
             'reviewed_by': self.reviewed_by,
             'rejection_reason': self.rejection_reason,
             'user_id': self.user_id,
-            'favourited_by': self.favourited_by
+            'favourited_by': [u.id for u in self.favourited_by]
         }
 
         if include_ingredients:

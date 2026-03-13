@@ -280,11 +280,11 @@ class CocktailService:
     @staticmethod
     def add_cocktail_to_favourites(user_id: int, cocktail_id: int) -> Dict[str, Any]:
         try:
-            cocktail = db.Session.get(Cocktail, cocktail_id)
+            cocktail = db.session.get(Cocktail, cocktail_id)
             if not cocktail:
                 raise ValueError('Cocktail not found')
-            existing = db.Session.execute(
-                select(favourites.c.user).where(
+            existing = db.session.execute(
+                select(favourites.c.user_id).where(
                     favourites.c.user_id == user_id,
                     favourites.c.cocktail_id == cocktail_id
                 )
@@ -318,7 +318,7 @@ class CocktailService:
             db.session.commit()
             return result.rowcount > 0
         except SQLAlchemyError as e:
-            db.sesion.rollback()
+            db.session.rollback()
             raise Exception(f'Error removing cocktail from favourites: {str(e)}')
 
 
