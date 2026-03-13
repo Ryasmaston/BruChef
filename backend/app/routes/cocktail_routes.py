@@ -184,3 +184,14 @@ def get_my_cocktails():
         return jsonify(cocktails), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@cocktail_bp.route("/favourite-cocktails", methods=["GET"])
+def get_favourite_cocktails():
+    user_id = require_auth()
+    if not user_id:
+        return jsonify({"error": "Authentication required"}), 400
+    try:
+        cocktails = CocktailService.get_user_favourite_cocktails(user_id)
+        return jsonify(cocktails), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
