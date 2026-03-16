@@ -45,6 +45,8 @@ export default function IngredientDetail() {
     checkAuth()
   }, [id])
 
+  const canEdit = ingredient !== null && (isAdmin || (currentUserId !== null && ingredient.user_id === currentUserId))
+
   const checkAuth = async () => {
     try {
       const response = await fetch('http://localhost:5001/api/auth/check', {
@@ -89,8 +91,6 @@ export default function IngredientDetail() {
       console.error('Error fetching cocktails:', err)
     }
   }
-
-  const canEdit = isAdmin || (currentUserId && ingredient.user_id === currentUserId)
 
   const handleDelete = async () => {
     setDeleting(true)
