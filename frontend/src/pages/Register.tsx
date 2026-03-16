@@ -37,11 +37,11 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
         })
       })
       const data = await response.json()
-      console.log('Register response:', data)
+      // console.log('Register response:', data)
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed')
       }
-      console.log('Registration successful')
+      // console.log('Registration successful')
       onRegisterSuccess()
       navigate('/')
     } catch (err: any) {

@@ -80,21 +80,12 @@ export default function CocktailDetail() {
   useEffect(() => {
     if (cocktail) {
       setCurrentServings(cocktail.servings || 1)
-      checkIfCreator()
     }
   }, [cocktail])
 
   useEffect(() => {
-    if (cocktail) {
-      console.log('Cocktail data:', {
-        status: cocktail.status,
-        rejection_reason: cocktail.rejection_reason,
-        isCreator,
-        currentUserId,
-        cocktail_user_id: cocktail.user_id
-      })
-    }
-  }, [cocktail, isCreator, currentUserId])
+    checkIfCreator()
+  }, [id])
 
   useEffect(() => {
     if (cocktail && isAuthenticated) {
@@ -108,13 +99,11 @@ export default function CocktailDetail() {
         credentials: 'include'
       })
       const data = await response.json()
-      console.log('Auth check:', data.user?.id, 'Cocktail user_id:', cocktail?.user_id)
       if (data.authenticated && data.user && cocktail) {
         const userIdMatch = Number(data.user.id) === Number(cocktail.user_id)
         setCurrentUserId(data.user.id)
         setIsAdmin(data.user.is_admin || false)
         setIsCreator(userIdMatch)
-        console.log('Is creator?', userIdMatch, 'Is admin?', data.user.is_admin)
       }
     } catch (err) {
       setIsCreator(false)

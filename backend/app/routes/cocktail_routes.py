@@ -95,7 +95,8 @@ def search_cocktails():
         query = request.args.get('q', '')
         if not query:
             return jsonify({"error": "Search query is required"}), 400
-        cocktails = CocktailService.search_cocktails(query)
+        user_id = require_auth()
+        cocktails = CocktailService.search_cocktails(query, user_id=user_id)
         return jsonify(cocktails), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

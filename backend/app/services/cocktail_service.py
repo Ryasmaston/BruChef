@@ -164,12 +164,21 @@ class CocktailService:
             raise Exception(f"Error deleting cocktail: {str(e)}")
 
     @staticmethod
-    def search_cocktails(query: str) -> List[Dict[str, Any]]:
+    def search_cocktails(query: str, user_id: Optional[int] = None) -> List[Dict[str, Any]]:
         try:
-            stmt = select(Cocktail).where(
-                Cocktail.name.ilike(f"%{query}%"),
-                Cocktail.status == 'approved'
-            )
+            if user_id:
+                stmt = select(Cocktail).where(
+                    Cocktail.name.ilike(f"%{query}%"),
+                    or_(
+                        Cocktail.status == 'approved',
+                        Cocktail.user_id == user_id
+                    )
+                )
+            else:
+                stmt = select(Cocktail).where(
+                    Cocktail.name.ilike(f"%{query}%"),
+                    Cocktail.status == 'approved'
+                )
             cocktails = db.session.execute(stmt).scalars().all()
             return [c.to_dict() for c in cocktails]
         except SQLAlchemyError as e:

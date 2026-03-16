@@ -26,11 +26,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         body: JSON.stringify(formData)
       })
       const data = await response.json()
-      console.log('Login response:', data)
+      // console.log('Login response:', data)
       if (!response.ok) {
         throw new Error(data.error || 'Login failed')
       }
-      console.log('Login successfull')
+      // console.log('Login successfull')
       onLoginSuccess()
       navigate('/')
     } catch (err: any) {
