@@ -193,6 +193,8 @@ def add_cocktail_to_favourites(cocktail_id):
     try:
         added = CocktailService.add_cocktail_to_favourites(user_id, cocktail_id)
         return jsonify(added), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
