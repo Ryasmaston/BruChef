@@ -51,7 +51,9 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
 
   const fetchCocktails = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/cocktails/')
+      const response = await fetch('http://localhost:5001/api/cocktails/', {
+        credentials: 'include'
+      })
       if (!response.ok) throw new Error('Failed to fetch cocktails')
       const data = await response.json()
       setCocktails(data)
