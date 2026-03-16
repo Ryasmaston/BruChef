@@ -24,7 +24,7 @@ interface Cocktail {
   rejection_reason: string
   creator_name: string
   is_official: boolean
-  favourited_by: string
+  favourited_by: number[]
 }
 
 interface Ingredient {
@@ -70,6 +70,7 @@ export default function CocktailDetail() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [favouriting, setFavouriting] = useState(false)
+  const isFavourited = cocktail !== null && currentUserId !== null && cocktail.favourited_by.includes(currentUserId)
 
   useEffect(() => {
     fetchCocktail()
@@ -291,6 +292,7 @@ export default function CocktailDetail() {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to add cocktail to favourites')
       }
+      await fetchCocktail()
       setAlertType('success')
       setAlertTitle('Added to favourites')
       setAlertMessage(`${cocktail.name} has been added to favourites`)
@@ -446,9 +448,32 @@ export default function CocktailDetail() {
         <div className="bg-gradient-to-br from-emerald-900/50 to-slate-800 p-8">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-white mb-3">
-                {cocktail.name}
-              </h1>
+              <div className="flex items-center gap-3 mb-3">
+                <h1 className="text-4xl font-bold text-white">
+                  {cocktail.name}
+                </h1>
+                {isAuthenticated && (
+                  <button
+                    onClick={isFavourited ? handleRemoveFromFavourites : handleAddToFavourites}
+                    disabled={favouriting}
+                    className="text-yellow-400 hover:text-yellow-300 disabled:opacity-50 transition-colors flex-shrink-0"
+                    title={isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+                  >
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill={isFavourited ? 'currentColor' : 'none'}
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </button>
+                )}
+              </div>
               {cocktail.description && (
                 <p className="text-xl text-slate-300 mb-4">
                   {cocktail.description}
@@ -607,7 +632,7 @@ export default function CocktailDetail() {
           </div>
         </div>
       </div>
-      <div className="mt-6 flex gap-4">
+      <div className="mt-6 flex gap-4 flex-wrap">
         {canMake && isAuthenticated && (
           <button
             onClick={handleMakeCocktail}
