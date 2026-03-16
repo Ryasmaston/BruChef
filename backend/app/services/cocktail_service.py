@@ -316,7 +316,9 @@ class CocktailService:
                 )
             )
             db.session.commit()
-            return result.rowcount > 0
+            if result.rowcount == 0:
+                raise ValueError('Cocktail was not in favourites')
+            return cocktail.to_dict(include_ingredients=True)
         except SQLAlchemyError as e:
             db.session.rollback()
             raise Exception(f'Error removing cocktail from favourites: {str(e)}')
