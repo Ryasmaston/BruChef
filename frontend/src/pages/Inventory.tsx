@@ -98,7 +98,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [alertType, setAlertType] = useState<'success' | 'error'>('success')
   const [alertTitle, setAlertTitle] = useState('')
   const [alertMessage, setAlertMessage] = useState('')
-  const [activeTab, setActiveTab] = useState<'inventory' | 'recipes'>('inventory')
+  const [activeTab, setActiveTab] = useState<'inventory' | 'recipes' | 'favourites'>('inventory')
   const [userCocktails, setUserCocktails] = useState<{
     private: any[]
     pending: any[]
@@ -111,6 +111,8 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
     rejected: []
   })
   const [loadingRecipes, setLoadingRecipes] = useState(false)
+  const [favouriteCocktails, setFavouriteCocktails] = useState<Cocktail[]>([])
+  const [loadingFavourites, setLoadingFavourites] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -118,6 +120,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
       fetchIngredients()
       fetchAvailableCocktails()
       fetchUserCocktails()
+      fetchFavouriteCocktails()
     }
   }, [isAuthenticated])
 
@@ -289,6 +292,22 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
     }
   }
 
+  const fetchFavouriteCocktails = async () => {
+    setLoadingFavourites(true)
+    try {
+      const response = await fetch('http://localhost:5001/api/cocktails/favourite-cocktails', {
+        credentials: 'include'
+      })
+      if (!response.ok) throw new Error('Failed to fetch favourite cocktails')
+      const data = await response.json()
+      setFavouriteCocktails(data)
+    } catch (err) {
+      console.error('Error fetching favourite cocktails:', err)
+    } finally {
+      setLoadingFavourites(false)
+    }
+  }
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'Spirit': return '🥃'
@@ -401,6 +420,16 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
             }`}
           >
             My Recipes
+          </button>
+          <button
+            onClick={() => setActiveTab('favourites')}
+            className={`px-6 py-3 font-semibold transition-colors border-b-2 ${
+              activeTab === 'favourites'
+                ? 'text-emerald-400 border-emerald-400'
+                : 'text-slate-400 border-transparent hover:text-white'
+            }`}
+          >
+            Favourite Cocktails
           </button>
         </div>
         {activeTab === 'inventory' && (
@@ -739,6 +768,74 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     </Link>
                   </div>
                 )}
+              </div>
+            )}
+          </>
+        )}
+        {activeTab === 'favourites' && (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-white">Favourite Cocktails</h1>
+                <p className="text-slate-400 mt-1">
+                  Cocktails you've saved to your favourites
+                </p>
+              </div>
+            </div>
+            {loadingFavourites ? (
+              <div className="flex justify-center items-center min-h-[400px]">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">⭐</div>
+                  <p className="text-slate-400">Loading favourites...</p>
+                </div>
+              </div>
+            ) : favouriteCocktails.length === 0 ? (
+              <div className="text-center py-12 bg-slate-800 rounded-lg border border-slate-700">
+                <div className="text-4xl mb-4">☆</div>
+                <p className="text-slate-400 mb-4">No favourite cocktails yet</p>
+                <p className="text-slate-500 text-sm mb-6">
+                  Browse cocktails and hit the star to save them here
+                </p>
+                <Link
+                  to="/cocktails"
+                  className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Browse Cocktails
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {favouriteCocktails.map((cocktail) => (
+                  <Link
+                    key={cocktail.id}
+                    to={`/cocktails/${cocktail.id}`}
+                    className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
+                  >
+                    <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
+                      <span className="text-6xl">🍹</span>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                          {cocktail.name}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <span className="text-yellow-400 text-sm">★</span>
+                          <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
+                            {cocktail.difficulty}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+                        {cocktail.description || 'No description available'}
+                      </p>
+                      <div className="flex items-center text-emerald-400 text-sm">
+                        <span className="mr-2">→</span>
+                        <span>View Recipe</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
             )}
           </>
