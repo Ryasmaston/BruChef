@@ -53,15 +53,15 @@ export default function App() {
     }
   }
   const handleLoginSuccess = () => {
-    console.log('handleLoginSuccess called')
+    // console.log('handleLoginSuccess called')
     checkAuth()
   }
   const handleRegisterSuccess = () => {
-    console.log('handleRegisterSuccess called')
+    // console.log('handleRegisterSuccess called')
     checkAuth()
   }
   const handleLogout = () => {
-    console.log('handleLogout called')
+    // console.log('handleLogout called')
     setIsAuthenticated(false)
     setUsername(null)
     setIsAdmin(false)
