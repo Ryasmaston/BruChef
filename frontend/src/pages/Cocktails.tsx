@@ -13,6 +13,7 @@ interface Cocktail {
     name: string
     category: string
   }>
+  favourited_by: number[]
 }
 
 interface CocktailProps {
@@ -26,10 +27,27 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all')
   const [spiritFilter, setSpiritFilter] = useState<string>('all')
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+  const [favouriting, setFavouriting] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     fetchCocktails()
+    checkAuth()
   }, [])
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/auth/check', {
+        credentials: 'include'
+      })
+      const data = await response.json()
+      if (data.authenticated && data.user) {
+        setCurrentUserId(data.user.id)
+      }
+    } catch {
+      setCurrentUserId(null)
+    }
+  }
 
   const fetchCocktails = async () => {
     try {
@@ -69,6 +87,61 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
       )
     )
   ).sort()
+
+  const handleToggleFavourite = async (e: React.MouseEvent, cocktailId: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!currentUserId) return
+    const cocktail = cocktails.find(c => c.id === cocktailId)
+    if (!cocktail) return
+    const isFavourited = cocktail.favourited_by.includes(currentUserId)
+    setFavouriting(prev => new Set(prev).add(cocktailId))
+    setCocktails(prev => prev.map(c =>
+      c.id === cocktailId
+        ? {
+            ...c,
+            favourited_by: isFavourited
+              ? c.favourited_by.filter(id => id !== currentUserId)
+              : [...c.favourited_by, currentUserId]
+          }
+        : c
+    ))
+    try {
+      const response = await fetch(`http://localhost:5001/api/cocktails/${cocktailId}/favourite`, {
+        method: isFavourited ? 'DELETE' : 'POST',
+        credentials: 'include'
+      })
+      if (!response.ok) {
+        setCocktails(prev => prev.map(c =>
+          c.id === cocktailId
+            ? {
+                ...c,
+                favourited_by: isFavourited
+                  ? [...c.favourited_by, currentUserId]
+                  : c.favourited_by.filter(id => id !== currentUserId)
+              }
+            : c
+        ))
+      }
+    } catch {
+      setCocktails(prev => prev.map(c =>
+        c.id === cocktailId
+          ? {
+              ...c,
+              favourited_by: isFavourited
+                ? [...c.favourited_by, currentUserId]
+                : c.favourited_by.filter(id => id !== currentUserId)
+            }
+          : c
+      ))
+    } finally {
+      setFavouriting(prev => {
+        const next = new Set(prev)
+        next.delete(cocktailId)
+        return next
+      })
+    }
+  }
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -261,8 +334,29 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
               to={`/cocktails/${cocktail.id}`}
               className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
             >
-              <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
+              <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center relative">
                 <span className="text-6xl">🍹</span>
+                {currentUserId && (
+                  <button
+                    onClick={(e) => handleToggleFavourite(e, cocktail.id)}
+                    disabled={favouriting.has(cocktail.id)}
+                    className="absolute top-3 right-3 text-yellow-400 hover:text-yellow-300 disabled:opacity-50 transition-colors"
+                    title={cocktail.favourited_by.includes(currentUserId) ? 'Remove from favourites' : 'Add to favourites'}
+                  >
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill={cocktail.favourited_by.includes(currentUserId) ? 'currentColor' : 'none'}
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </button>
+                )}
               </div>
               <div className="p-5">
                 <div className="flex justify-between items-start mb-2">
