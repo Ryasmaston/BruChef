@@ -504,9 +504,9 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredInventory.map((item) => (
-                      <Link to={`/ingredients/${item.ingredient_id}`}>
-                      <div key={item.id} className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors">
+                    {filteredInventory.map((item) => (
+                      <Link key={item.id} to={`/ingredients/${item.ingredient_id}`}>
+                      <div className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center space-x-3">
                             <span className="text-3xl">{getCategoryIcon(item.ingredient.category)}</span>
