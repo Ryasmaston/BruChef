@@ -138,3 +138,11 @@ def get_similar_ingredients():
         return jsonify(similar), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@ingredient_bp.route("/<int:ingredient_id>/variants", methods=["GET"])
+def get_ingredient_variants(ingredient_id):
+    try:
+        variants = IngredientService.get_ingredient_variants(ingredient_id)
+        return jsonify([v.to_dict() for v in variants]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

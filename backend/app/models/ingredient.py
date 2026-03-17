@@ -37,5 +37,5 @@ class Ingredient(db.Model):
             'parent_id': self.parent_id,
             'parent_name': self.parent.name if self.parent else None,
             'is_base': self.is_base,
-            'children_count': self.children.count()
+            'children_count': len(self.children.all()) if self.children else 0
         }

@@ -203,3 +203,11 @@ class IngredientService:
             return results[:limit]
         except SQLAlchemyError as e:
             raise Exception(f"Error finding similar ingredients: {str(e)}")
+
+    @staticmethod
+    def get_ingredient_variants(ingredient_id: int) -> List[Ingredient]:
+        try:
+            stmt = select(Ingredient).where(Ingredient.parent_id == ingredient_id)
+            return db.session.execute(stmt).scalars().all()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching variants: {str(e)}")
