@@ -4,8 +4,29 @@ from sqlalchemy import select, and_
 from typing import List, Optional, Dict, Any
 from app.utilities.unit_conversion import standardize_quantity, can_make_cocktail
 
-
 class InventoryService:
+
+    @staticmethod
+    def _build_inventory_map(user_id: int) -> tuple[dict, dict]:
+        stmt = select(Inventory).where(Inventory.user_id == user_id)
+        inventory_items = db.session.execute(stmt).scalars().all()
+        direct_map = {}
+        for item in inventory_items:
+            standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
+            if standardized_amount > 0:
+                direct_map[item.ingredient_id] = (standardized_amount, unit_type)
+        expanded_map = dict(direct_map)
+        for ingredient_id, amounts in direct_map.items():
+            ingredient = db.session.get(Ingredient, ingredient_id)
+            if not ingredient:
+                continue
+            if ingredient.parent_id and ingredient.parent_id not in expanded_map:
+                expanded_map[ingredient.parent_id] = amounts
+            if ingredient.is_base:
+                for child in ingredient.children.all():
+                    if child.id not in expanded_map:
+                        expanded_map[child.id] = amounts
+        return expanded_map, direct_map
 
     @staticmethod
     def get_user_inventory(user_id: int) -> List[Dict[str, Any]]:
@@ -102,16 +123,10 @@ class InventoryService:
     @staticmethod
     def get_available_cocktails(user_id: int) -> List[Dict[str, Any]]:
         try:
-            stmt = select(Inventory).where(Inventory.user_id == user_id)
-            inventory_items = db.session.execute(stmt).scalars().all()
-            user_inventory = {}
-            for item in inventory_items:
-                standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
-                if standardized_amount > 0:
-                    user_inventory[item.ingredient_id] = (standardized_amount, unit_type)
-            if not user_inventory:
+            expanded_map, _ = InventoryService._build_inventory_map(user_id)
+            if not expanded_map:
                 return []
-            stmt = select(Cocktail)
+            stmt = select(Cocktail).where(Cocktail.status == 'approved')
             cocktails = db.session.execute(stmt).scalars().all()
             available_cocktails = []
             for cocktail in cocktails:
@@ -119,7 +134,7 @@ class InventoryService:
                 for ingredient in cocktail.ingredients:
                     result = db.session.execute(
                         select(cocktail_ingredients.c.quantity).where(
-                            and_(
+                            db.and_(
                                 cocktail_ingredients.c.cocktail_id == cocktail.id,
                                 cocktail_ingredients.c.ingredient_id == ingredient.id
                             )
@@ -129,7 +144,7 @@ class InventoryService:
                         'ingredient_id': ingredient.id,
                         'quantity': result or ''
                     })
-                can_make, missing = can_make_cocktail(cocktail_ingredients_data, user_inventory)
+                can_make, _ = can_make_cocktail(cocktail_ingredients_data, expanded_map)
                 if can_make:
                     available_cocktails.append(cocktail.to_dict())
             return available_cocktails
@@ -142,18 +157,12 @@ class InventoryService:
             cocktail = db.session.get(Cocktail, cocktail_id)
             if not cocktail:
                 return []
-            stmt = select(Inventory).where(Inventory.user_id == user_id)
-            inventory_items = db.session.execute(stmt).scalars().all()
-            user_inventory = {}
-            for item in inventory_items:
-                standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
-                if standardized_amount > 0:
-                    user_inventory[item.ingredient_id] = (standardized_amount, unit_type)
+            expanded_map, _ = InventoryService._build_inventory_map(user_id)
             missing = []
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
                     select(cocktail_ingredients.c.quantity).where(
-                        and_(
+                        db.and_(
                             cocktail_ingredients.c.cocktail_id == cocktail_id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
@@ -162,7 +171,7 @@ class InventoryService:
                 required_amount, required_type = standardize_quantity(result or '')
                 if required_type == 'special':
                     continue
-                available_info = user_inventory.get(ingredient.id, (0, required_type))
+                available_info = expanded_map.get(ingredient.id, (0, required_type))
                 available_amount, available_type = available_info
                 if available_type != required_type or available_amount < required_amount:
                     missing.append({
@@ -174,7 +183,9 @@ class InventoryService:
                         'required': result,
                         'required_standardized': required_amount,
                         'available_standardized': available_amount if available_type == required_type else 0,
-                        'unit_type': required_type
+                        'unit_type': required_type,
+                        'parent_id': ingredient.parent_id,
+                        'parent_name': ingredient.parent.name if ingredient.parent else None
                     })
             return missing
         except SQLAlchemyError as e:
@@ -186,21 +197,16 @@ class InventoryService:
             cocktail = db.session.get(Cocktail, cocktail_id)
             if not cocktail:
                 return {'error': 'Cocktail not found'}
+            expanded_map, direct_map = InventoryService._build_inventory_map(user_id)
             stmt = select(Inventory).where(Inventory.user_id == user_id)
             inventory_items = db.session.execute(stmt).scalars().all()
-            user_inventory = {}
-            inventory_map = {}
-            for item in inventory_items:
-                standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
-                if standardized_amount > 0:
-                    user_inventory[item.ingredient_id] = (standardized_amount, unit_type)
-                    inventory_map[item.ingredient_id] = item
+            inventory_item_map = {item.ingredient_id: item for item in inventory_items}
             missing = []
             insufficient = []
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
                     select(cocktail_ingredients.c.quantity).where(
-                        and_(
+                        db.and_(
                             cocktail_ingredients.c.cocktail_id == cocktail_id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
@@ -210,10 +216,20 @@ class InventoryService:
                 if required_type == 'special':
                     continue
                 required_amount = base_required_amount * servings
-                if ingredient.id not in user_inventory:
+                covering_id = None
+                if ingredient.id in direct_map:
+                    covering_id = ingredient.id
+                elif ingredient.parent_id and ingredient.parent_id in direct_map:
+                    covering_id = ingredient.parent_id
+                elif ingredient.is_base:
+                    for child in ingredient.children.all():
+                        if child.id in direct_map:
+                            covering_id = child.id
+                            break
+                if covering_id is None:
                     missing.append(ingredient.name)
                     continue
-                available_amount, available_type = user_inventory[ingredient.id]
+                available_amount, available_type = direct_map[covering_id]
                 if available_type != required_type:
                     missing.append(ingredient.name)
                     continue
@@ -232,11 +248,10 @@ class InventoryService:
                     for item in insufficient
                 ])
                 return {'error': f'Insufficient quantities: {details}'}
-
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
                     select(cocktail_ingredients.c.quantity).where(
-                        and_(
+                        db.and_(
                             cocktail_ingredients.c.cocktail_id == cocktail_id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
@@ -246,19 +261,31 @@ class InventoryService:
                 if required_type == 'special':
                     continue
                 required_amount = base_required_amount * servings
-                inventory_item = inventory_map[ingredient.id]
-                current_amount, current_type = user_inventory[ingredient.id]
+                covering_id = None
+                if ingredient.id in direct_map:
+                    covering_id = ingredient.id
+                elif ingredient.parent_id and ingredient.parent_id in direct_map:
+                    covering_id = ingredient.parent_id
+                elif ingredient.is_base:
+                    for child in ingredient.children.all():
+                        if child.id in direct_map:
+                            covering_id = child.id
+                            break
+                if covering_id is None:
+                    continue
+                inventory_item = inventory_item_map[covering_id]
+                current_amount, current_type = direct_map[covering_id]
                 remaining_amount = current_amount - required_amount
                 from app.utilities.unit_conversion import convert_from_base_unit
                 try:
                     inventory_item.quantity = round(
-                        convert_from_base_unit(remaining_amount, inventory_item.unit, current_type),
-                        1
+                        convert_from_base_unit(remaining_amount, inventory_item.unit, current_type), 1
                     )
                 except:
                     inventory_item.quantity = round(remaining_amount, 1)
                 if inventory_item.quantity <= 0.1:
                     db.session.delete(inventory_item)
+
             db.session.commit()
             return {
                 'message': f'Made {cocktail.name}! Ingredients deducted from inventory.',
