@@ -34,7 +34,7 @@ class Cocktail(db.Model):
     rejection_reason = db.Column(db.Text, nullable=True)
     ingredients = db.relationship('Ingredient', secondary=cocktail_ingredients, backref=db.backref('cocktails', lazy='dynamic'))
     creator = db.relationship('User', foreign_keys=[user_id], backref=db.backref('created_cocktails', lazy='dynamic'))
-    reviewer = db.relationship('User', foreign_keys=[reviewed_by]),
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by])
     favourited_by = db.relationship('User', secondary=favourites, backref=db.backref('favourite_cocktails', lazy='dynamic'), lazy='dynamic')
 
     @property

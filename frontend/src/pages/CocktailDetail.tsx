@@ -87,8 +87,10 @@ export default function CocktailDetail() {
   }, [cocktail])
 
   useEffect(() => {
-    checkIfCreator()
-  }, [id])
+    if(cocktail) {
+      checkIfCreator()
+    }
+  }, [id, cocktail])
 
   useEffect(() => {
     if (cocktail && isAuthenticated) {

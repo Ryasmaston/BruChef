@@ -152,7 +152,7 @@ class InventoryService:
                     if result and not result.quantity_note and result.quantity and result.unit:
                         unit_type = get_unit_type(result.unit)
                         if unit_type != 'unknown':
-                            standardized = convert_to_base_unit(result.quantity, result.unit, unit_type)
+                            standardized = convert_to_base_unit(float(result.quantity), result.unit, unit_type)
                             cocktail_ingredients_data.append({
                                 'ingredient_id': ingredient.id,
                                 'amount': standardized,
@@ -200,7 +200,7 @@ class InventoryService:
                 unit_type = get_unit_type(result.unit)
                 if unit_type == 'unknown':
                     continue
-                required_amount = convert_to_base_unit(result.quantity, result.unit, unit_type)
+                required_amount = convert_to_base_unit(float(result.quantity), result.unit, unit_type)
                 available_info = expanded_map.get(ingredient.id, (0, unit_type))
                 available_amount, available_type = available_info
                 if available_type != unit_type or available_amount < required_amount:
@@ -253,7 +253,7 @@ class InventoryService:
                 unit_type = get_unit_type(result.unit)
                 if unit_type == 'unknown':
                     continue
-                base_required = convert_to_base_unit(result.quantity, result.unit, unit_type)
+                base_required = convert_to_base_unit(float(result.quantity), result.unit, unit_type)
                 required_amount = base_required * servings
                 covering_id = None
                 if ingredient.id in direct_map:
@@ -307,7 +307,7 @@ class InventoryService:
                 unit_type = get_unit_type(result.unit)
                 if unit_type == 'unknown':
                     continue
-                base_required = convert_to_base_unit(result.quantity, result.unit, unit_type)
+                base_required = convert_to_base_unit(float(result.quantity), result.unit, unit_type)
                 required_amount = base_required * servings
                 covering_id = None
                 if ingredient.id in direct_map:
