@@ -8,6 +8,10 @@ interface Ingredient {
   subcategory: string | null
   description: string
   abv: number
+  parent_id: number | null
+  parent_name: string | null
+  is_base: boolean
+  children_count: number
 }
 
 export default function Ingredients() {
@@ -17,6 +21,8 @@ export default function Ingredients() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [categories, setCategories] = useState<string[]>([])
+  const [showBaseOnly, setShowBaseOnly] = useState(false)
+
   useEffect(() => {
     fetchIngredients()
     fetchCategories()
@@ -46,10 +52,12 @@ export default function Ingredients() {
       console.error('Failed to load categories:', err)
     }
   }
+
   const filteredIngredients = ingredients.filter(ingredient => {
     const matchesSearch = ingredient.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = categoryFilter === 'all' || ingredient.category === categoryFilter
-    return matchesSearch && matchesCategory
+    const matchesBase = !showBaseOnly || ingredient.is_base
+    return matchesSearch && matchesCategory && matchesBase
   })
 
   const getCategoryIcon = (category: string) => {
@@ -158,11 +166,11 @@ export default function Ingredients() {
             className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
           />
         </div>
-        <div>
+        <div className="flex gap-3">
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-2 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-left focus:outline-none focus:border-emerald-500"
+            className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
           >
             <option value="all">All Categories</option>
             {(() => {
@@ -186,6 +194,16 @@ export default function Ingredients() {
               ))
             })()}
           </select>
+          <button
+            onClick={() => setShowBaseOnly(prev => !prev)}
+            className={`px-4 py-2 text-sm rounded-lg border transition-colors whitespace-nowrap ${
+              showBaseOnly
+                ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+            }`}
+          >
+            {showBaseOnly ? 'Base only' : 'All ingredients'}
+          </button>
         </div>
       </div>
       {filteredIngredients.length === 0 ? (
@@ -217,16 +235,27 @@ export default function Ingredients() {
                       {ingredient.name}
                     </h3>
                     <div className="mt-1 flex items-center gap-2 flex-wrap">
-                      <span
-                        className={`inline-block px-2 py-1 text-xs rounded border ${getCategoryColor(
-                          ingredient.category
-                        )}`}
-                      >
+                      <span className={`inline-block px-2 py-1 text-xs rounded border ${getCategoryColor(ingredient.category)}`}>
                         {ingredient.category}
                       </span>
                       {ingredient.subcategory && (
                         <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-300 border-slate-600">
                           {ingredient.subcategory}
+                        </span>
+                      )}
+                      {ingredient.is_base && (
+                        <span className="inline-block px-2 py-1 text-xs rounded border bg-blue-500/20 text-blue-400 border-blue-500/30">
+                          Base
+                        </span>
+                      )}
+                      {ingredient.parent_name && (
+                        <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-400 border-slate-600">
+                          ↑ {ingredient.parent_name}
+                        </span>
+                      )}
+                      {ingredient.children_count > 0 && (
+                        <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-400 border-slate-600">
+                          {ingredient.children_count} variant{ingredient.children_count !== 1 ? 's' : ''}
                         </span>
                       )}
                     </div>

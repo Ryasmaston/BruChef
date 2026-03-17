@@ -4,6 +4,7 @@ from app.models.inventory import Inventory
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy import select, func
 from typing import List, Optional, Dict, Any
+from app.utilities.similarity import find_similar
 
 
 class IngredientService:
@@ -43,7 +44,8 @@ class IngredientService:
                 subcategory=data.get('subcategory', ''),
                 description=data.get('description', ''),
                 abv=data.get('abv', 0.0),
-                user_id=data.get('user_id')
+                user_id=data.get('user_id'),
+                parent_id=data.get('parent_id')
             )
             db.session.add(new_ingredient)
             db.session.commit()
@@ -177,3 +179,35 @@ class IngredientService:
             return db.session.execute(stmt).scalars().all()
         except SQLAlchemyError as e:
             raise Exception(f"Error fetching non-alcoholic ingredients: {str(e)}")
+
+    @staticmethod
+    def get_similar_ingredients(name: str, limit: int = 5) -> List[dict]:
+        try:
+            all_ingredients = db.session.execute(select(Ingredient)).scalars().all()
+            candidate_names = [ing.name for ing in all_ingredients]
+            similar_names = find_similar(name, candidate_names, threshold=65, limit=limit * 2)
+            if not similar_names:
+                return []
+            results = []
+            for match in similar_names:
+                ingredient = next((i for i in all_ingredients if i.name == match['name']), None)
+                if ingredient:
+                    results.append({
+                        **ingredient.to_dict(),
+                        'similarity_score': round(match['score'], 2)
+                    })
+            if results and results[0]['similarity_score'] >= 0.85:
+                top_category = results[0]['category']
+                results = [r for r in results if r['category'] == top_category]
+
+            return results[:limit]
+        except SQLAlchemyError as e:
+            raise Exception(f"Error finding similar ingredients: {str(e)}")
+
+    @staticmethod
+    def get_ingredient_variants(ingredient_id: int) -> List[Ingredient]:
+        try:
+            stmt = select(Ingredient).where(Ingredient.parent_id == ingredient_id)
+            return db.session.execute(stmt).scalars().all()
+        except SQLAlchemyError as e:
+            raise Exception(f"Error fetching variants: {str(e)}")

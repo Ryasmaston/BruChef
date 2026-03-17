@@ -125,3 +125,24 @@ def get_non_alcoholic_ingredients():
         return jsonify([ingredient.to_dict() for ingredient in ingredients]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@ingredient_bp.route("/similar", methods=["GET"])
+def get_similar_ingredients():
+    try:
+        name = request.args.get('name', '').strip()
+        if not name:
+            return jsonify({"error": "Name query is required"}), 400
+        if len(name) < 2:
+            return jsonify([]), 200
+        similar = IngredientService.get_similar_ingredients(name)
+        return jsonify(similar), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@ingredient_bp.route("/<int:ingredient_id>/variants", methods=["GET"])
+def get_ingredient_variants(ingredient_id):
+    try:
+        variants = IngredientService.get_ingredient_variants(ingredient_id)
+        return jsonify([v.to_dict() for v in variants]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
