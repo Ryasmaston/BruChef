@@ -8,13 +8,16 @@ interface Ingredient {
   category: string
   subcategory: string | null
   abv: number
+  preferred_unit: string | null
+  preferred_mode: 'measured' | 'instructional'
 }
 
 interface IngredientQuantity {
   id: number
+  mode: 'measured' | 'instructional'
   amount: string
-  unitType: 'volume'|'mass'|'count'|'approximate'
   unit: string
+  quantity_note: string
 }
 
 interface CreateCocktailProps {
@@ -37,11 +40,23 @@ const CATEGORIES: Record<string, string[]> = {
 }
 
 const UNIT_OPTIONS = {
-  volume: ['ml', 'oz'],
-  mass: ['g', 'lb'],
-  count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'bottles', 'cans'],
-  approximate: ['dash', 'splash', 'drop']
+  volume: ['ml', 'oz', 'cl', 'tsp', 'tbsp', 'cup'],
+  mass: ['g', 'kg', 'lb'],
+  count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'eggs', 'bottles', 'cans'],
+  approximate: ['dashes', 'splashes', 'drops']
 }
+
+const INSTRUCTIONAL_OPTIONS = [
+  'top with',
+  'fill',
+  'splash',
+  'to taste',
+  'muddle',
+  'garnish with',
+  'other'
+]
+
+
 
 export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps) {
   const navigate = useNavigate()
@@ -54,7 +69,12 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     garnish: '',
     difficulty: 'Medium',
     servings: 1,
-    ingredients: [] as Array<{ingredient_id: number, quantity: string}>
+    ingredients: [] as Array<{
+      ingredient_id: number
+      quantity: number | null
+      unit: string | null
+      quantity_note: string | null
+    }>
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -71,11 +91,13 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   }, [])
 
   useEffect(() => {
-    const ingredients = ingredientInputs.map(input => ({
+    const mapped = ingredientInputs.map(input => ({
       ingredient_id: input.id,
-      quantity: input.amount && input.unit ? `${input.amount} ${input.unit}` : ''
+      quantity: input.mode === 'measured' ? parseFloat(input.amount) || null : null,
+      unit: input.mode === 'measured' ? input.unit : null,
+      quantity_note: input.mode === 'instructional' ? input.quantity_note : null
     }))
-    setFormData(prev => ({ ...prev, ingredients }))
+    setFormData(prev => ({ ...prev, ingredients: mapped }))
   }, [ingredientInputs])
 
   useEffect(() => {
@@ -102,9 +124,11 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
       setError('Please add at least one ingredient')
       return
     }
-    const missingAmounts = ingredientInputs.filter(input => !input.amount || !input.unit)
+    const missingAmounts = ingredientInputs.filter(input =>
+      input.mode === 'measured' && (!input.amount || !input.unit)
+    )
     if (missingAmounts.length > 0) {
-      setError('Please enter amounts for all ingredients')
+      setError('Please enter amounts for all measured ingredients')
       return
     }
     setLoading(true)
@@ -137,11 +161,14 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   }
 
   const addIngredient = (ingredientId: number) => {
+    const ing = ingredients.find(i => i.id === ingredientId)
+    if (!ing) return
     setIngredientInputs(prev => [...prev, {
       id: ingredientId,
+      mode: ing.preferred_mode,
       amount: '',
-      unitType: 'volume',
-      unit: 'oz'
+      unit: ing.preferred_unit || 'oz',
+      quantity_note: ing.preferred_mode === 'instructional' ? 'top with' : ''
     }])
   }
 
@@ -152,12 +179,6 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   const updateIngredientAmount = (ingredientId: number, amount: string) => {
     setIngredientInputs(prev => prev.map(input =>
       input.id === ingredientId ? { ...input, amount } : input
-    ))
-  }
-
-  const updateIngredientUnitType = (ingredientId: number, unitType: 'volume' | 'mass' | 'count' | 'approximate') => {
-    setIngredientInputs(prev => prev.map(input =>
-      input.id === ingredientId ? { ...input, unitType, unit: UNIT_OPTIONS[unitType][0] } : input
     ))
   }
 
@@ -210,6 +231,32 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   const cancelEdit = () => {
     setCurrentInstruction('')
     setEditingInstructionIndex(null)
+  }
+
+  const updateIngredientMode = (ingredientId: number, mode: 'measured' | 'instructional') => {
+    const ing = ingredients.find(i => i.id === ingredientId)
+    setIngredientInputs(prev => prev.map(input =>
+      input.id === ingredientId
+        ? {
+            ...input,
+            mode,
+            quantity_note: mode === 'instructional' ? 'top with' : '',
+            unit: mode === 'measured' ? (ing?.preferred_unit || 'oz') : input.unit
+          }
+        : input
+    ))
+  }
+
+  const updateIngredientNote = (ingredientId: number, note: string) => {
+    setIngredientInputs(prev => prev.map(input =>
+      input.id === ingredientId ? { ...input, quantity_note: note } : input
+    ))
+  }
+
+  const updateIngredientCustomNote = (ingredientId: number, note: string) => {
+    setIngredientInputs(prev => prev.map(input =>
+      input.id === ingredientId ? { ...input, quantity_note: note } : input
+    ))
   }
 
   const getCategoryIcon = (category: string) => {
@@ -445,7 +492,9 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                 </select>
               </div>
               <div>
-                <label htmlFor="servings">Serves: </label>
+                <label htmlFor="servings" className="block text-sm font-medium text-slate-300 mb-2">
+                  Servings
+                </label>
                 <input
                   type="number"
                   id="servings"
@@ -456,6 +505,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                   max="20"
                   required
                   placeholder="1"
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
@@ -522,89 +572,108 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                         </div>
                         <div className="mb-3">
                           <label className="block text-xs font-medium text-slate-400 mb-2">
-                            Measurement Type
+                            Quantity Type
                           </label>
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <button
                               type="button"
-                              onClick={() => updateIngredientUnitType(input.id, 'volume')}
+                              onClick={() => updateIngredientMode(input.id, 'measured')}
                               className={`px-3 py-2 text-sm rounded transition-colors ${
-                                input.unitType === 'volume'
+                                input.mode === 'measured'
                                   ? 'bg-emerald-500 text-white'
                                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                               }`}
                             >
-                              Volume
+                              Measured
                             </button>
                             <button
                               type="button"
-                              onClick={() => updateIngredientUnitType(input.id, 'mass')}
+                              onClick={() => updateIngredientMode(input.id, 'instructional')}
                               className={`px-3 py-2 text-sm rounded transition-colors ${
-                                input.unitType === 'mass'
-                                  ? 'bg-emerald-500 text-white'
-                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                              }`}
-                            >
-                              Mass
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => updateIngredientUnitType(input.id, 'count')}
-                              className={`px-3 py-2 text-sm rounded transition-colors ${
-                                input.unitType === 'count'
-                                  ? 'bg-emerald-500 text-white'
-                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                              }`}
-                            >
-                              Count
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => updateIngredientUnitType(input.id, 'approximate')}
-                              className={`px-3 py-2 text-sm rounded transition-colors ${
-                                input.unitType === 'approximate'
+                                input.mode === 'instructional'
                                   ? 'bg-blue-500 text-white'
                                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                               }`}
                             >
-                              Approx
+                              Instructional
                             </button>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">
-                              Amount
-                            </label>
-                            <input
-                              type="number"
-                              value={input.amount}
-                              onChange={(e) => updateIngredientAmount(input.id, e.target.value)}
-                              min="0"
-                              step={input.unitType === 'approximate' ? '1' : '0.1'}
-                              placeholder="0"
-                              className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                            />
+                        {input.mode === 'measured' ? (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1">
+                                  Amount
+                                </label>
+                                <input
+                                  type="number"
+                                  value={input.amount}
+                                  onChange={(e) => updateIngredientAmount(input.id, e.target.value)}
+                                  min="0"
+                                  step="0.25"
+                                  placeholder="0"
+                                  className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1">
+                                  Unit
+                                </label>
+                                <select
+                                  value={input.unit}
+                                  onChange={(e) => updateIngredientUnit(input.id, e.target.value)}
+                                  className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-emerald-500"
+                                >
+                                  <optgroup label="Volume">
+                                    {UNIT_OPTIONS.volume.map(u => <option key={u} value={u}>{u}</option>)}
+                                  </optgroup>
+                                  <optgroup label="Mass">
+                                    {UNIT_OPTIONS.mass.map(u => <option key={u} value={u}>{u}</option>)}
+                                  </optgroup>
+                                  <optgroup label="Count">
+                                    {UNIT_OPTIONS.count.map(u => <option key={u} value={u}>{u}</option>)}
+                                  </optgroup>
+                                  <optgroup label="Approximate">
+                                    {UNIT_OPTIONS.approximate.map(u => <option key={u} value={u}>{u}</option>)}
+                                  </optgroup>
+                                </select>
+                              </div>
+                            </div>
                           </div>
+                        ) : (
                           <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">
-                              Unit
+                            <label className="block text-xs font-medium text-slate-400 mb-2">
+                              Instruction
                             </label>
                             <select
-                              value={input.unit}
-                              onChange={(e) => updateIngredientUnit(input.id, e.target.value)}
-                              className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-emerald-500"
+                              value={INSTRUCTIONAL_OPTIONS.includes(input.quantity_note) ? input.quantity_note : 'other'}
+                              onChange={(e) => {
+                                if (e.target.value !== 'other') {
+                                  updateIngredientNote(input.id, e.target.value)
+                                } else {
+                                  updateIngredientNote(input.id, '')
+                                }
+                              }}
+                              className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-blue-500 mb-2"
                             >
-                              {UNIT_OPTIONS[input.unitType].map(u => (
-                                <option key={u} value={u}>{u}</option>
+                              {INSTRUCTIONAL_OPTIONS.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
                               ))}
                             </select>
+                            {(!INSTRUCTIONAL_OPTIONS.includes(input.quantity_note) || input.quantity_note === 'other' || input.quantity_note === '') && (
+                              <input
+                                type="text"
+                                value={input.quantity_note}
+                                onChange={(e) => updateIngredientCustomNote(input.id, e.target.value)}
+                                placeholder="e.g. a pinch of, float on top..."
+                                className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                              />
+                            )}
+                            <p className="mt-1 text-xs text-blue-400">
+                              Instructional quantities are displayed but not tracked in inventory
+                            </p>
                           </div>
-                        </div>
-                        {input.unitType === 'approximate' && (
-                          <p className="mt-1 text-xs text-blue-400">
-                            Approximate: dash ≈ 0.6ml, splash ≈ 7.5ml, drop ≈ 0.05ml
-                          </p>
                         )}
                       </div>
                     )

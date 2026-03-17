@@ -67,17 +67,32 @@ class CocktailService:
             db.session.flush()
             for ing_data in data['ingredients']:
                 ingredient_id = ing_data.get('ingredient_id')
-                quantity = ing_data.get('quantity', '')
                 ingredient = db.session.get(Ingredient, ingredient_id)
                 if not ingredient:
                     raise ValueError(f"Ingredient with id {ingredient_id} not found")
-                db.session.execute(
-                    cocktail_ingredients.insert().values(
-                        cocktail_id=new_cocktail.id,
-                        ingredient_id=ingredient_id,
-                        quantity=quantity
+
+                quantity_note = ing_data.get('quantity_note')
+                if quantity_note:
+                    db.session.execute(
+                        cocktail_ingredients.insert().values(
+                            cocktail_id=new_cocktail.id,
+                            ingredient_id=ingredient_id,
+                            quantity=None,
+                            unit=None,
+                            quantity_note=quantity_note.strip().lower()
+                        )
                     )
-                )
+                else:
+                    db.session.execute(
+                        cocktail_ingredients.insert().values(
+                            cocktail_id=new_cocktail.id,
+                            ingredient_id=ingredient_id,
+                            quantity=ing_data.get('quantity'),
+                            unit=ing_data.get('unit', ''),
+                            quantity_note=None
+                        )
+                    )
+
             db.session.commit()
             return new_cocktail
         except SQLAlchemyError as e:
@@ -131,17 +146,30 @@ class CocktailService:
                 )
                 for ing_data in data['ingredients']:
                     ingredient_id = ing_data.get('ingredient_id')
-                    quantity = ing_data.get('quantity', '')
                     ingredient = db.session.get(Ingredient, ingredient_id)
                     if not ingredient:
                         raise ValueError(f"Ingredient with id {ingredient_id} not found")
-                    db.session.execute(
-                        cocktail_ingredients.insert().values(
-                            cocktail_id=cocktail_id,
-                            ingredient_id=ingredient_id,
-                            quantity=quantity
+                    quantity_note = ing_data.get('quantity_note')
+                    if quantity_note:
+                        db.session.execute(
+                            cocktail_ingredients.insert().values(
+                                cocktail_id=cocktail_id,
+                                ingredient_id=ingredient_id,
+                                quantity=None,
+                                unit=None,
+                                quantity_note=quantity_note.strip().lower()
+                            )
                         )
-                    )
+                    else:
+                        db.session.execute(
+                            cocktail_ingredients.insert().values(
+                                cocktail_id=cocktail_id,
+                                ingredient_id=ingredient_id,
+                                quantity=ing_data.get('quantity'),
+                                unit=ing_data.get('unit', ''),
+                                quantity_note=None
+                            )
+                        )
             db.session.commit()
             return cocktail
         except SQLAlchemyError as e:
@@ -313,7 +341,7 @@ class CocktailService:
             raise Exception(f'Error adding to favourites: {str(e)}')
 
     @staticmethod
-    def remove_cocktail_from_favourites(user_id: int, cocktail_id: int) -> bool:
+    def remove_cocktail_from_favourites(user_id: int, cocktail_id: int) -> Dict[str, Any]:
         try:
             cocktail = db.session.get(Cocktail, cocktail_id)
             if not cocktail:

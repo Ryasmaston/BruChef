@@ -1,25 +1,30 @@
 from app.models import db, Inventory, Ingredient, User, Cocktail, cocktail_ingredients
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select, and_
-from typing import List, Optional, Dict, Any
-from app.utilities.unit_conversion import standardize_quantity, can_make_cocktail
+from typing import List, Optional, Dict, Any, Tuple
+from app.utilities.unit_conversion import convert_to_base_unit, convert_from_base_unit, get_unit_type
 
 class InventoryService:
 
     @staticmethod
-    def _build_inventory_map(user_id: int) -> tuple[dict, dict]:
+    def _build_inventory_map(user_id: int) -> Tuple[dict, dict]:
         stmt = select(Inventory).where(Inventory.user_id == user_id)
         inventory_items = db.session.execute(stmt).scalars().all()
-        direct_map = {}
+        direct_map: dict = {}
         for item in inventory_items:
-            standardized_amount, unit_type = standardize_quantity(f"{item.quantity} {item.unit}")
-            if standardized_amount > 0:
-                direct_map[item.ingredient_id] = (standardized_amount, unit_type)
+            if not item.quantity or item.quantity <= 0:
+                continue
+            unit_type = get_unit_type(item.unit)
+            if unit_type == 'unknown':
+                continue
+            standardized = convert_to_base_unit(item.quantity, item.unit, unit_type)
+            direct_map[item.ingredient_id] = (standardized, unit_type)
         expanded_map = dict(direct_map)
-        for ingredient_id, amounts in direct_map.items():
+        for ingredient_id in list(direct_map.keys()):
             ingredient = db.session.get(Ingredient, ingredient_id)
             if not ingredient:
                 continue
+            amounts = direct_map[ingredient_id]
             if ingredient.parent_id and ingredient.parent_id not in expanded_map:
                 expanded_map[ingredient.parent_id] = amounts
             if ingredient.is_base:
@@ -133,18 +138,32 @@ class InventoryService:
                 cocktail_ingredients_data = []
                 for ingredient in cocktail.ingredients:
                     result = db.session.execute(
-                        select(cocktail_ingredients.c.quantity).where(
+                        select(
+                            cocktail_ingredients.c.quantity,
+                            cocktail_ingredients.c.unit,
+                            cocktail_ingredients.c.quantity_note
+                        ).where(
                             db.and_(
                                 cocktail_ingredients.c.cocktail_id == cocktail.id,
                                 cocktail_ingredients.c.ingredient_id == ingredient.id
                             )
                         )
-                    ).scalar()
-                    cocktail_ingredients_data.append({
-                        'ingredient_id': ingredient.id,
-                        'quantity': result or ''
-                    })
-                can_make, _ = can_make_cocktail(cocktail_ingredients_data, expanded_map)
+                    ).first()
+                    if result and not result.quantity_note and result.quantity and result.unit:
+                        unit_type = get_unit_type(result.unit)
+                        if unit_type != 'unknown':
+                            standardized = convert_to_base_unit(float(result.quantity), result.unit, unit_type)
+                            cocktail_ingredients_data.append({
+                                'ingredient_id': ingredient.id,
+                                'amount': standardized,
+                                'unit_type': unit_type
+                            })
+                can_make = all(
+                    item['ingredient_id'] in expanded_map and
+                    expanded_map[item['ingredient_id']][1] == item['unit_type'] and
+                    expanded_map[item['ingredient_id']][0] >= item['amount']
+                    for item in cocktail_ingredients_data
+                ) if cocktail_ingredients_data else False
                 if can_make:
                     available_cocktails.append(cocktail.to_dict())
             return available_cocktails
@@ -161,29 +180,40 @@ class InventoryService:
             missing = []
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
-                    select(cocktail_ingredients.c.quantity).where(
+                    select(
+                        cocktail_ingredients.c.quantity,
+                        cocktail_ingredients.c.unit,
+                        cocktail_ingredients.c.quantity_note
+                    ).where(
                         db.and_(
                             cocktail_ingredients.c.cocktail_id == cocktail_id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
                     )
-                ).scalar()
-                required_amount, required_type = standardize_quantity(result or '')
-                if required_type == 'special':
+                ).first()
+                if not result:
                     continue
-                available_info = expanded_map.get(ingredient.id, (0, required_type))
+                if result.quantity_note:
+                    continue
+                if result.quantity is None or result.unit is None:
+                    continue
+                unit_type = get_unit_type(result.unit)
+                if unit_type == 'unknown':
+                    continue
+                required_amount = convert_to_base_unit(float(result.quantity), result.unit, unit_type)
+                available_info = expanded_map.get(ingredient.id, (0, unit_type))
                 available_amount, available_type = available_info
-                if available_type != required_type or available_amount < required_amount:
+                if available_type != unit_type or available_amount < required_amount:
                     missing.append({
                         'id': ingredient.id,
                         'name': ingredient.name,
                         'category': ingredient.category,
                         'subcategory': ingredient.subcategory,
                         'abv': ingredient.abv,
-                        'required': result,
+                        'required': f"{result.quantity} {result.unit}",
                         'required_standardized': required_amount,
-                        'available_standardized': available_amount if available_type == required_type else 0,
-                        'unit_type': required_type,
+                        'available_standardized': available_amount if available_type == unit_type else 0,
+                        'unit_type': unit_type,
                         'parent_id': ingredient.parent_id,
                         'parent_name': ingredient.parent.name if ingredient.parent else None
                     })
@@ -205,17 +235,26 @@ class InventoryService:
             insufficient = []
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
-                    select(cocktail_ingredients.c.quantity).where(
+                    select(
+                        cocktail_ingredients.c.quantity,
+                        cocktail_ingredients.c.unit,
+                        cocktail_ingredients.c.quantity_note
+                    ).where(
                         db.and_(
                             cocktail_ingredients.c.cocktail_id == cocktail_id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
                     )
-                ).scalar()
-                base_required_amount, required_type = standardize_quantity(result or '0 ml')
-                if required_type == 'special':
+                ).first()
+                if not result or result.quantity_note:
                     continue
-                required_amount = base_required_amount * servings
+                if result.quantity is None or result.unit is None:
+                    continue
+                unit_type = get_unit_type(result.unit)
+                if unit_type == 'unknown':
+                    continue
+                base_required = convert_to_base_unit(float(result.quantity), result.unit, unit_type)
+                required_amount = base_required * servings
                 covering_id = None
                 if ingredient.id in direct_map:
                     covering_id = ingredient.id
@@ -230,7 +269,7 @@ class InventoryService:
                     missing.append(ingredient.name)
                     continue
                 available_amount, available_type = direct_map[covering_id]
-                if available_type != required_type:
+                if available_type != unit_type:
                     missing.append(ingredient.name)
                     continue
                 if available_amount < required_amount:
@@ -238,7 +277,7 @@ class InventoryService:
                         'name': ingredient.name,
                         'required': round(required_amount, 1),
                         'available': round(available_amount, 1),
-                        'unit_type': required_type
+                        'unit_type': unit_type
                     })
             if missing:
                 return {'error': f'Missing ingredients: {", ".join(missing)}'}
@@ -250,17 +289,26 @@ class InventoryService:
                 return {'error': f'Insufficient quantities: {details}'}
             for ingredient in cocktail.ingredients:
                 result = db.session.execute(
-                    select(cocktail_ingredients.c.quantity).where(
+                    select(
+                        cocktail_ingredients.c.quantity,
+                        cocktail_ingredients.c.unit,
+                        cocktail_ingredients.c.quantity_note
+                    ).where(
                         db.and_(
                             cocktail_ingredients.c.cocktail_id == cocktail_id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
                     )
-                ).scalar()
-                base_required_amount, required_type = standardize_quantity(result or '0 ml')
-                if required_type == 'special':
+                ).first()
+                if not result or result.quantity_note:
                     continue
-                required_amount = base_required_amount * servings
+                if result.quantity is None or result.unit is None:
+                    continue
+                unit_type = get_unit_type(result.unit)
+                if unit_type == 'unknown':
+                    continue
+                base_required = convert_to_base_unit(float(result.quantity), result.unit, unit_type)
+                required_amount = base_required * servings
                 covering_id = None
                 if ingredient.id in direct_map:
                     covering_id = ingredient.id
@@ -276,7 +324,6 @@ class InventoryService:
                 inventory_item = inventory_item_map[covering_id]
                 current_amount, current_type = direct_map[covering_id]
                 remaining_amount = current_amount - required_amount
-                from app.utilities.unit_conversion import convert_from_base_unit
                 try:
                     inventory_item.quantity = round(
                         convert_from_base_unit(remaining_amount, inventory_item.unit, current_type), 1
@@ -285,7 +332,6 @@ class InventoryService:
                     inventory_item.quantity = round(remaining_amount, 1)
                 if inventory_item.quantity <= 0.1:
                     db.session.delete(inventory_item)
-
             db.session.commit()
             return {
                 'message': f'Made {cocktail.name}! Ingredients deducted from inventory.',

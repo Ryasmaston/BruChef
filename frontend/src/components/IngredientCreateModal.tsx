@@ -10,6 +10,8 @@ interface Ingredient {
   parent_name: string | null
   is_base: boolean
   similarity_score?: number
+  preferred_unit: string | null
+  preferred_mode: 'measured' | 'instructional'
 }
 
 interface IngredientCreateModalProps {
@@ -100,7 +102,6 @@ export default function IngredientCreateModal({
       const data = await response.json()
       setSimilarIngredients(data)
     } catch (err) {
-      console.error('Error fetching similar ingredients:', err)
       setSimilarIngredients([])
     } finally {
       setLoadingSimilar(false)
@@ -118,16 +119,6 @@ export default function IngredientCreateModal({
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }
-  }
-
-  const handleSelectParent = (ingredient: Ingredient) => {
-    setFormData(prev => ({
-      ...prev,
-      parent_id: ingredient.id,
-      category: ingredient.category,
-      subcategory: ingredient.subcategory || CATEGORIES[ingredient.category][0]
-    }))
-    setStep('create')
   }
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -171,30 +162,32 @@ export default function IngredientCreateModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+
         {step === 'similarity' && (
-          <>
-            <h2 className="text-2xl font-bold text-white mb-2">Create New Ingredient</h2>
-            <p className="text-slate-400 text-sm mb-4">
-              We found some similar ingredients already in the system. Are any of these what you're looking for?
-            </p>
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-white">Create New Ingredient</h2>
+
             {loadingSimilar ? (
               <div className="text-center py-8">
                 <p className="text-slate-400 text-sm">Checking for similar ingredients...</p>
               </div>
             ) : similarIngredients.length > 0 ? (
               <>
-                <div className="space-y-2 mb-4">
-                  {similarIngredients.map(ingredient => (
-                    <button
-                      key={ingredient.id}
-                      onClick={() => onCreated(ingredient)}
-                      className="w-full px-4 py-3 text-left bg-slate-900 hover:bg-slate-700 border border-slate-700 hover:border-emerald-500 rounded-lg transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Similar ingredients already exist
+                  </label>
+                  <div className="max-h-48 overflow-y-auto bg-slate-900 border border-slate-700 rounded-lg">
+                    {similarIngredients.map((ingredient) => (
+                      <button
+                        key={ingredient.id}
+                        onClick={() => onCreated(ingredient)}
+                        className="w-full px-4 py-3 text-left hover:bg-slate-800 transition-colors flex items-center space-x-3"
+                      >
                         <span className="text-xl">{getCategoryIcon(ingredient.category)}</span>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-medium">{ingredient.name}</span>
+                            <span className="text-white text-sm font-medium">{ingredient.name}</span>
                             {ingredient.is_base && (
                               <span className="px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
                                 Base
@@ -206,20 +199,24 @@ export default function IngredientCreateModal({
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-500 mt-0.5">
+                          <div className="text-xs text-slate-500">
                             {ingredient.category}
                             {ingredient.subcategory && ` • ${ingredient.subcategory}`}
                             {ingredient.abv > 0 && ` • ${ingredient.abv}% ABV`}
                           </div>
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-500 flex-shrink-0">
                           {Math.round((ingredient.similarity_score || 0) * 100)}% match
                         </div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Select one above to use it, or continue below to create a new ingredient.
+                  </p>
                 </div>
-                <div className="relative my-4">
+
+                <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-slate-700" />
                   </div>
@@ -227,37 +224,33 @@ export default function IngredientCreateModal({
                     <span className="bg-slate-800 px-3 text-slate-500">none of these match</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => setStep('create')}
-                  className="w-full px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
-                >
-                  Create "{initialName}" as a new ingredient
-                </button>
               </>
             ) : (
-              <>
-                <div className="text-center py-4 mb-4 bg-slate-900 rounded-lg border border-slate-700">
-                  <p className="text-slate-400 text-sm">No similar ingredients found.</p>
-                </div>
-                <button
-                  onClick={() => setStep('create')}
-                  className="w-full px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
-                >
-                  Create "{initialName}"
-                </button>
-              </>
+              <div className="p-4 bg-slate-900 border border-slate-700 rounded-lg text-center">
+                <p className="text-sm text-slate-400">No similar ingredients found.</p>
+              </div>
             )}
-            <button
-              onClick={handleClose}
-              className="w-full mt-3 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
-            >
-              Cancel
-            </button>
-          </>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setStep('create')}
+                className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
+              >
+                Create "{initialName}"
+              </button>
+              <button
+                onClick={handleClose}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
+
         {step === 'create' && (
-          <>
-            <div className="flex items-center gap-3 mb-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => setStep('similarity')}
                 className="text-slate-400 hover:text-white transition-colors"
@@ -266,21 +259,28 @@ export default function IngredientCreateModal({
               </button>
               <h2 className="text-2xl font-bold text-white">Create New Ingredient</h2>
             </div>
+
             {formData.parent_id && (
-              <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                <p className="text-blue-400 text-sm">
-                  This will be created as a specific variant under{' '}
-                  <span className="font-semibold">
-                    {similarIngredients.find(i => i.id === formData.parent_id)?.name}
-                  </span>
-                </p>
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div>
+                    <div className="text-white font-medium text-sm">
+                      Variant of: {similarIngredients.find(i => i.id === formData.parent_id)?.name}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      Linked to base ingredient
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
+
             {error && (
-              <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
+              <div className="p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
                 {error}
               </div>
             )}
+
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -293,12 +293,14 @@ export default function IngredientCreateModal({
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  placeholder="e.g. Elderflower Liqueur"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Parent Ingredient
-                  <span className="text-slate-500 font-normal ml-2">(optional — link to a base ingredient)</span>
+                  <span className="text-slate-500 font-normal ml-2">(optional)</span>
                 </label>
                 <select
                   name="parent_id"
@@ -318,6 +320,7 @@ export default function IngredientCreateModal({
                   }
                 </select>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Category *
@@ -333,6 +336,7 @@ export default function IngredientCreateModal({
                   ))}
                 </select>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Subcategory *
@@ -348,6 +352,7 @@ export default function IngredientCreateModal({
                   ))}
                 </select>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   ABV (%)
@@ -364,6 +369,7 @@ export default function IngredientCreateModal({
                   className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Description (optional)
@@ -377,6 +383,7 @@ export default function IngredientCreateModal({
                   placeholder="A floral, sweet liqueur..."
                 />
               </div>
+
               <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
@@ -394,7 +401,7 @@ export default function IngredientCreateModal({
                 </button>
               </div>
             </form>
-          </>
+          </div>
         )}
       </div>
     </div>

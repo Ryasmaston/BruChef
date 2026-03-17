@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import IngredientCreateModal from '../components/IngredientCreateModal'
 
 interface Ingredient {
   id: number
@@ -7,6 +8,8 @@ interface Ingredient {
   category: string
   subcategory: string | null
   abv: number
+  preferred_unit: string | null
+  preferred_mode: 'measured' | 'instructional'
 }
 
 interface CocktailIngredient {
@@ -15,14 +18,18 @@ interface CocktailIngredient {
   category: string
   subcategory: string | null
   abv: number
-  quantity: string
+  quantity: number | null
+  unit: string | null
+  quantity_note: string | null
+  preferred_unit: string | null
 }
 
 interface IngredientQuantity {
   id: number
+  mode: 'measured' | 'instructional'
   amount: string
-  unitType: 'volume'|'mass'|'count'|'approximate'
   unit: string
+  quantity_note: string
 }
 
 interface EditCocktailProps {
@@ -45,11 +52,21 @@ const CATEGORIES: Record<string, string[]> = {
 }
 
 const UNIT_OPTIONS = {
-  volume: ['ml', 'oz'],
-  mass: ['g', 'lb'],
-  count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'bottles', 'cans'],
-  approximate: ['dash', 'splash', 'drop']
+  volume: ['ml', 'oz', 'cl', 'tsp', 'tbsp', 'cup'],
+  mass: ['g', 'kg', 'lb'],
+  count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'eggs', 'bottles', 'cans'],
+  approximate: ['dashes', 'splashes', 'drops']
 }
+
+const INSTRUCTIONAL_OPTIONS = [
+  'top with',
+  'fill',
+  'splash',
+  'to taste',
+  'muddle',
+  'garnish with',
+  'other'
+]
 
 export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
   const { id } = useParams()
@@ -63,7 +80,12 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
     garnish: '',
     difficulty: 'Medium',
     servings: 1,
-    ingredients: [] as Array<{ingredient_id: number, quantity: string}>
+    ingredients: [] as Array<{
+      ingredient_id: number
+      quantity: number | null
+      unit: string | null
+      quantity_note: string | null
+    }>
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -72,15 +94,6 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState('')
   const [ingredientInputs, setIngredientInputs] = useState<IngredientQuantity[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [customIngredient, setCustomIngredient] = useState({
-    name: '',
-    category: 'Spirit',
-    subcategory: CATEGORIES['Spirit'][0],
-    description: '',
-    abv: ''
-  })
-  const [modalLoading, setModalLoading] = useState(false)
-  const [modalError, setModalError] = useState('')
   const [instructionInputs, setInstructionInputs] = useState<string[]>([])
   const [currentInstruction, setCurrentInstruction] = useState('')
   const [editingInstructionIndex, setEditingInstructionIndex] = useState<number | null>(null)
@@ -97,11 +110,13 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
   }, [instructionInputs])
 
   useEffect(() => {
-    const ingredients = ingredientInputs.map(input => ({
+    const mapped = ingredientInputs.map(input => ({
       ingredient_id: input.id,
-      quantity: input.amount && input.unit ? `${input.amount} ${input.unit}` : ''
+      quantity: input.mode === 'measured' ? parseFloat(input.amount) || null : null,
+      unit: input.mode === 'measured' ? input.unit : null,
+      quantity_note: input.mode === 'instructional' ? input.quantity_note : null
     }))
-    setFormData(prev => ({ ...prev, ingredients }))
+    setFormData(prev => ({ ...prev, ingredients: mapped }))
   }, [ingredientInputs])
 
   const fetchCocktail = async () => {
@@ -125,13 +140,22 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
       })
       const instructionsArray = data.instructions ? data.instructions.split('\n').filter((s: string) => s.trim()) : []
       setInstructionInputs(instructionsArray)
-      const parsedIngredients: IngredientQuantity[] = data.ingredients.map((ing: CocktailIngredient) => {
-        const parsed = parseQuantity(ing.quantity)
+      const parsedIngredients: IngredientQuantity[] = data.ingredients.map((ing: any) => {
+        if (ing.quantity_note) {
+          return {
+            id: ing.id,
+            mode: 'instructional' as const,
+            amount: '',
+            unit: ing.preferred_unit || 'oz',
+            quantity_note: ing.quantity_note
+          }
+        }
         return {
           id: ing.id,
-          amount: parsed?.amount.toString() || '',
-          unitType: parsed?.unitType || 'volume',
-          unit: parsed?.unit || 'oz'
+          mode: 'measured' as const,
+          amount: ing.quantity?.toString() || '',
+          unit: ing.unit || ing.preferred_unit || 'oz',
+          quantity_note: ''
         }
       })
       setIngredientInputs(parsedIngredients)
@@ -143,31 +167,6 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
     }
   }
 
-  const parseQuantity = (quantityStr: string) => {
-    if (!quantityStr) return null
-    const lowerQuantity = quantityStr.toLowerCase().trim()
-    const approximateUnits = ['dash', 'dashes', 'splash', 'splashes', 'drop', 'drops']
-    const match = quantityStr.match(/^([\d.]+)\s*(.+)$/)
-    if (match) {
-      const amount = parseFloat(match[1])
-      const unit = match[2].trim().toLowerCase()
-      if (approximateUnits.includes(unit)) {
-        return {
-          amount,
-          unit,
-          unitType: 'approximate' as const
-        }
-      }
-      let unitType: 'volume' | 'mass' | 'count' = 'volume'
-      if (UNIT_OPTIONS.mass.includes(unit)) {
-        unitType = 'mass'
-      } else if (UNIT_OPTIONS.count.includes(unit)) {
-        unitType = 'count'
-      }
-      return { amount, unit, unitType }
-    }
-    return null
-  }
   const fetchIngredients = async () => {
     try {
       const response = await fetch('http://localhost:5001/api/ingredients/')
@@ -186,9 +185,11 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
       setError('Please add at least one ingredient')
       return
     }
-    const missingAmounts = ingredientInputs.filter(input => !input.amount || !input.unit)
+    const missingAmounts = ingredientInputs.filter(input =>
+      input.mode === 'measured' && (!input.amount || !input.unit)
+    )
     if (missingAmounts.length > 0) {
-      setError('Please enter amounts for all ingredients')
+      setError('Please enter amounts for all measured ingredients')
       return
     }
     setSaving(true)
@@ -220,11 +221,14 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
   }
 
   const addIngredient = (ingredientId: number) => {
+    const ing = ingredients.find(i => i.id === ingredientId)
+    if (!ing) return
     setIngredientInputs(prev => [...prev, {
       id: ingredientId,
+      mode: ing.preferred_mode,
       amount: '',
-      unitType: 'volume',
-      unit: 'oz'
+      unit: ing.preferred_unit || 'oz',
+      quantity_note: ing.preferred_mode === 'instructional' ? 'top with' : ''
     }])
   }
 
@@ -238,64 +242,36 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
     ))
   }
 
-  const updateIngredientUnitType = (ingredientId: number, unitType: 'volume' | 'mass' | 'count' | 'approximate') => {
-    setIngredientInputs(prev => prev.map(input =>
-      input.id === ingredientId ? { ...input, unitType, unit: UNIT_OPTIONS[unitType][0] } : input
-    ))
-  }
-
   const updateIngredientUnit = (ingredientId: number, unit: string) => {
     setIngredientInputs(prev => prev.map(input =>
       input.id === ingredientId ? { ...input, unit } : input
     ))
   }
 
-  const handleCustomIngredientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    if (name === 'abv') {
-      setCustomIngredient(prev => ({ ...prev, abv: value }))
-    } else if (name === 'category') {
-      const firstSubcategory = CATEGORIES[value]?.[0]
-      setCustomIngredient(prev => ({ ...prev, category: value, subcategory: firstSubcategory }))
-    } else {
-      setCustomIngredient(prev => ({ ...prev, [name]: value }))
-    }
+  const updateIngredientMode = (ingredientId: number, mode: 'measured' | 'instructional') => {
+    const ing = ingredients.find(i => i.id === ingredientId)
+    setIngredientInputs(prev => prev.map(input =>
+      input.id === ingredientId
+        ? {
+            ...input,
+            mode,
+            quantity_note: mode === 'instructional' ? 'top with' : '',
+            unit: mode === 'measured' ? (ing?.preferred_unit || 'oz') : input.unit
+          }
+        : input
+    ))
   }
 
-  const handleCreateCustomIngredient = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setModalError('')
-    setModalLoading(true)
-    try {
-      const response = await fetch('http://localhost:5001/api/ingredients/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(customIngredient)
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create ingredient')
-      }
-      setIngredients(prev => [...prev, data])
-      addIngredient(data.id)
-      setShowCreateModal(false)
-      setShowIngredientSearch(false)
-      setIngredientSearchQuery('')
-      setCustomIngredient({
-        name: '',
-        category: 'Spirit',
-        subcategory: CATEGORIES['Spirit'][0],
-        description: '',
-        abv: ''
-      })
-      setModalLoading(false)
-    } catch (err: any) {
-      setModalError(err.message || 'Failed to create ingredient')
-      setModalLoading(false)
-    }
+  const updateIngredientNote = (ingredientId: number, note: string) => {
+    setIngredientInputs(prev => prev.map(input =>
+      input.id === ingredientId ? { ...input, quantity_note: note } : input
+    ))
+  }
+
+  const updateIngredientCustomNote = (ingredientId: number, note: string) => {
+    setIngredientInputs(prev => prev.map(input =>
+      input.id === ingredientId ? { ...input, quantity_note: note } : input
+    ))
   }
 
   const addInstruction = () => {
@@ -665,91 +641,113 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
                             Remove
                           </button>
                         </div>
+
+                        {/* Mode toggle */}
                         <div className="mb-3">
                           <label className="block text-xs font-medium text-slate-400 mb-2">
-                            Measurement Type
+                            Quantity Type
                           </label>
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <button
                               type="button"
-                              onClick={() => updateIngredientUnitType(input.id, 'volume')}
+                              onClick={() => updateIngredientMode(input.id, 'measured')}
                               className={`px-3 py-2 text-sm rounded transition-colors ${
-                                input.unitType === 'volume'
+                                input.mode === 'measured'
                                   ? 'bg-emerald-500 text-white'
                                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                               }`}
                             >
-                              Volume
+                              Measured
                             </button>
                             <button
                               type="button"
-                              onClick={() => updateIngredientUnitType(input.id, 'mass')}
+                              onClick={() => updateIngredientMode(input.id, 'instructional')}
                               className={`px-3 py-2 text-sm rounded transition-colors ${
-                                input.unitType === 'mass'
-                                  ? 'bg-emerald-500 text-white'
-                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                              }`}
-                            >
-                              Mass
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => updateIngredientUnitType(input.id, 'count')}
-                              className={`px-3 py-2 text-sm rounded transition-colors ${
-                                input.unitType === 'count'
-                                  ? 'bg-emerald-500 text-white'
-                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                              }`}
-                            >
-                              Count
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => updateIngredientUnitType(input.id, 'approximate')}
-                              className={`px-3 py-2 text-sm rounded transition-colors ${
-                                input.unitType === 'approximate'
+                                input.mode === 'instructional'
                                   ? 'bg-blue-500 text-white'
                                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                               }`}
                             >
-                              Approx
+                              Instructional
                             </button>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">
-                              Amount
-                            </label>
-                            <input
-                              type="number"
-                              value={input.amount}
-                              onChange={(e) => updateIngredientAmount(input.id, e.target.value)}
-                              min="0"
-                              step={input.unitType === 'approximate' ? '1' : '0.1'}
-                              placeholder="0"
-                              className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                            />
+
+                        {input.mode === 'measured' ? (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1">
+                                  Amount
+                                </label>
+                                <input
+                                  type="number"
+                                  value={input.amount}
+                                  onChange={(e) => updateIngredientAmount(input.id, e.target.value)}
+                                  min="0"
+                                  step="0.25"
+                                  placeholder="0"
+                                  className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1">
+                                  Unit
+                                </label>
+                                <select
+                                  value={input.unit}
+                                  onChange={(e) => updateIngredientUnit(input.id, e.target.value)}
+                                  className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-emerald-500"
+                                >
+                                  <optgroup label="Volume">
+                                    {UNIT_OPTIONS.volume.map(u => <option key={u} value={u}>{u}</option>)}
+                                  </optgroup>
+                                  <optgroup label="Mass">
+                                    {UNIT_OPTIONS.mass.map(u => <option key={u} value={u}>{u}</option>)}
+                                  </optgroup>
+                                  <optgroup label="Count">
+                                    {UNIT_OPTIONS.count.map(u => <option key={u} value={u}>{u}</option>)}
+                                  </optgroup>
+                                  <optgroup label="Approximate">
+                                    {UNIT_OPTIONS.approximate.map(u => <option key={u} value={u}>{u}</option>)}
+                                  </optgroup>
+                                </select>
+                              </div>
+                            </div>
                           </div>
+                        ) : (
                           <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">
-                              Unit
+                            <label className="block text-xs font-medium text-slate-400 mb-2">
+                              Instruction
                             </label>
                             <select
-                              value={input.unit}
-                              onChange={(e) => updateIngredientUnit(input.id, e.target.value)}
-                              className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-emerald-500"
+                              value={INSTRUCTIONAL_OPTIONS.includes(input.quantity_note) ? input.quantity_note : 'other'}
+                              onChange={(e) => {
+                                if (e.target.value !== 'other') {
+                                  updateIngredientNote(input.id, e.target.value)
+                                } else {
+                                  updateIngredientNote(input.id, '')
+                                }
+                              }}
+                              className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white focus:outline-none focus:border-blue-500 mb-2"
                             >
-                              {UNIT_OPTIONS[input.unitType].map(u => (
-                                <option key={u} value={u}>{u}</option>
+                              {INSTRUCTIONAL_OPTIONS.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
                               ))}
                             </select>
+                            {(!INSTRUCTIONAL_OPTIONS.includes(input.quantity_note) || input.quantity_note === 'other' || input.quantity_note === '') && (
+                              <input
+                                type="text"
+                                value={input.quantity_note}
+                                onChange={(e) => updateIngredientCustomNote(input.id, e.target.value)}
+                                placeholder="e.g. a pinch of, float on top..."
+                                className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                              />
+                            )}
+                            <p className="mt-1 text-xs text-blue-400">
+                              Instructional quantities are displayed but not tracked in inventory
+                            </p>
                           </div>
-                        </div>
-                        {input.unitType === 'approximate' && (
-                          <p className="mt-1 text-xs text-blue-400">
-                            Approximate: dash ≈ 0.6ml, splash ≈ 7.5ml, drop ≈ 0.05ml
-                          </p>
                         )}
                       </div>
                     )
@@ -816,7 +814,6 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
                     <button
                       type="button"
                       onClick={() => {
-                        setCustomIngredient(prev => ({ ...prev, name: ingredientSearchQuery }))
                         setShowCreateModal(true)
                       }}
                       className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm rounded transition-colors"
@@ -844,125 +841,18 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
           </div>
         </div>
       )}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-white mb-4">Create New Ingredient</h2>
-
-            {modalError && (
-              <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
-                {modalError}
-              </div>
-            )}
-            <form onSubmit={handleCreateCustomIngredient} className="space-y-4">
-              <div>
-                <label htmlFor="custom-name" className="block text-sm font-medium text-slate-300 mb-2">
-                  Ingredient Name *
-                </label>
-                <input
-                  type="text"
-                  id="custom-name"
-                  name="name"
-                  value={customIngredient.name}
-                  onChange={handleCustomIngredientChange}
-                  required
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  placeholder="e.g. Elderflower Liqueur"
-                />
-              </div>
-              <div>
-                <label htmlFor="custom-category" className="block text-sm font-medium text-slate-300 mb-2">
-                  Category *
-                </label>
-                <select
-                  id="custom-category"
-                  name="category"
-                  value={customIngredient.category}
-                  onChange={handleCustomIngredientChange}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                >
-                  {Object.keys(CATEGORIES).map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="custom-subcategory" className="block text-sm font-medium text-slate-300 mb-2">
-                  Subcategory *
-                </label>
-                <select
-                  id="custom-subcategory"
-                  name="subcategory"
-                  value={customIngredient.subcategory}
-                  onChange={handleCustomIngredientChange}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                >
-                  {CATEGORIES[customIngredient.category].map(subcat => (
-                    <option key={subcat} value={subcat}>{subcat}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="custom-abv" className="block text-sm font-medium text-slate-300 mb-2">
-                  ABV (%)
-                </label>
-                <input
-                  type="number"
-                  id="custom-abv"
-                  name="abv"
-                  value={customIngredient.abv}
-                  onChange={handleCustomIngredientChange}
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  placeholder="e.g. 40"
-                />
-              </div>
-              <div>
-                <label htmlFor="custom-description" className="block text-sm font-medium text-slate-300 mb-2">
-                  Description (optional)
-                </label>
-                <textarea
-                  id="custom-description"
-                  name="description"
-                  value={customIngredient.description}
-                  onChange={handleCustomIngredientChange}
-                  rows={2}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  placeholder="A floral, sweet liqueur..."
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={modalLoading}
-                  className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
-                >
-                  {modalLoading ? 'Creating...' : 'Create Ingredient'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false)
-                    setModalError('')
-                    setCustomIngredient({
-                      name: '',
-                      category: 'Spirit',
-                      subcategory: CATEGORIES['Spirit'][0],
-                      description: '',
-                      abv: ''
-                    })
-                  }}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <IngredientCreateModal
+        isOpen={showCreateModal}
+        initialName={ingredientSearchQuery}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={(ingredient) => {
+          setIngredients(prev => [...prev, ingredient])
+          addIngredient(ingredient.id)
+          setShowCreateModal(false)
+          setShowIngredientSearch(false)
+          setIngredientSearchQuery('')
+        }}
+      />
     </>
   )
 }

@@ -33,8 +33,11 @@ interface Ingredient {
   category: string
   subcategory: string | null
   abv: number
-  quantity: string
-  scaledQuantity?: string
+  quantity: number | null
+  unit: string | null
+  quantity_note: string | null
+  preferred_unit: string | null
+  scaledQuantity?: number | null
 }
 
 interface MissingIngredient {
@@ -84,8 +87,10 @@ export default function CocktailDetail() {
   }, [cocktail])
 
   useEffect(() => {
-    checkIfCreator()
-  }, [id])
+    if(cocktail) {
+      checkIfCreator()
+    }
+  }, [id, cocktail])
 
   useEffect(() => {
     if (cocktail && isAuthenticated) {
@@ -169,29 +174,20 @@ export default function CocktailDetail() {
     }
   }
 
-  const parseQuantity = (quantityStr: string) => {
-    if (!quantityStr) return null
-    const lower = quantityStr.toLowerCase().trim()
-    if (lower.includes('top with') || lower.includes('fill')) {
-      return null
-    }
-    const match = quantityStr.match(/^([\d.]+)\s*(.+)$/)
-    if (!match) return null
-    return {
-      amount: parseFloat(match[1]),
-      unit: match[2].trim()
-    }
+  const scaleIngredient = (ingredient: Ingredient, scale: number) => {
+    if (ingredient.quantity_note) return null
+    if (ingredient.quantity === null) return null
+    return Math.round(ingredient.quantity * scale * 100) / 100
   }
 
-  const scaleQuantity = (original: string, scale: number) => {
-    const parsed = parseQuantity(original)
-    if (!parsed) return original
-    const scaled = parsed.amount * scale
-    const formatted = scaled % 1 === 0
-      ? scaled.toString()
-      : scaled.toFixed(2).replace(/\.?0+$/, '')
-
-    return `${formatted} ${parsed.unit}`
+  const formatQuantity = (ingredient: Ingredient & { scaledQuantity?: number | null }) => {
+    if (ingredient.quantity_note) return ingredient.quantity_note
+    if (ingredient.scaledQuantity !== null && ingredient.scaledQuantity !== undefined && ingredient.unit) {
+      const val = ingredient.scaledQuantity
+      const formatted = val % 1 === 0 ? val.toString() : val.toFixed(2).replace(/\.?0+$/, '')
+      return `${formatted} ${ingredient.unit}`
+    }
+    return '—'
   }
 
   const getScaledIngredients = () => {
@@ -200,7 +196,7 @@ export default function CocktailDetail() {
     const scale = currentServings / baseServings
     return cocktail.ingredients.map(ing => ({
       ...ing,
-      scaledQuantity: scaleQuantity(ing.quantity, scale)
+      scaledQuantity: scaleIngredient(ing, scale)
     }))
   }
   const scaledIngredients = getScaledIngredients()
@@ -414,15 +410,25 @@ export default function CocktailDetail() {
       <div className="mb-6 flex gap-3">
         <Link
           to={`/cocktails/${id}/edit`}
-          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
         >
-          <span>Edit Cocktail</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          <span>Edit</span>
         </Link>
         <button
           onClick={() => setShowDeleteDialog(true)}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-slate-800 hover:bg-red-900/30 text-slate-400 hover:text-red-400 border border-slate-600 hover:border-red-700/50 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
         >
-          <span>Delete Cocktail</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+          <span>Delete</span>
         </button>
       </div>
     )}
@@ -545,8 +551,9 @@ export default function CocktailDetail() {
               <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
                 <div className="space-y-3">
                   {scaledIngredients.map((ingredient) => {
-                    const quantityLower = (ingredient.scaledQuantity || '').toLowerCase()
-                    const isApproximate = ['dash', 'splash', 'drop'].some(u => quantityLower.includes(u))
+                    const isApproximate = ingredient.unit
+                      ? ['dash', 'dashes', 'splash', 'splashes', 'drop', 'drops'].includes(ingredient.unit.toLowerCase())
+                      : false
                     return (
                       <div key={ingredient.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors">
                         <div className="flex items-center space-x-3 flex-1">
@@ -570,12 +577,12 @@ export default function CocktailDetail() {
                             </div>
                           </div>
                         </div>
-                        {ingredient.scaledQuantity && (
+                        {(ingredient.scaledQuantity !== null || ingredient.quantity_note) && (
                           <div className={`font-semibold text-sm ml-4 flex items-center gap-1 ${
-                            isApproximate ? 'text-blue-400' : 'text-emerald-400'
+                            ingredient.quantity_note ? 'text-blue-400' : 'text-emerald-400'
                           }`}>
-                            {isApproximate && <span className="text-xs">≈</span>}
-                            {ingredient.scaledQuantity}
+                            {ingredient.quantity_note && <span className="text-xs">~</span>}
+                            {formatQuantity(ingredient)}
                           </div>
                         )}
                       </div>
@@ -626,107 +633,125 @@ export default function CocktailDetail() {
           <button
             onClick={handleMakeCocktail}
             disabled={makingCocktail}
-            className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-700 text-white rounded-lg font-semibold text-center transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 disabled:opacity-50 text-emerald-400 border border-emerald-500/40 hover:border-emerald-500/60 rounded-lg font-medium text-sm text-center transition-colors flex items-center justify-center gap-2"
           >
             {makingCocktail ? (
               <>
-                <span className="animate-spin">⏳</span>
+                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
                 <span>Making...</span>
               </>
             ) : (
               <>
-                <span>🍸</span>
-                <span>Make This Cocktail ({currentServings} serving{currentServings > 1 ? 's' : ''})</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/>
+                  <path d="M18 3v4M20 5h-4"/>
+                  <path d="M9 11l3 3L22 4"/>
+                </svg>
+                <span>Make this cocktail ({currentServings} serving{currentServings > 1 ? 's' : ''})</span>
               </>
             )}
           </button>
         )}
         {!canMake && isAuthenticated && missingIngredients.length > 0 && (
-          <div className="flex-1 px-6 py-3 bg-slate-700 border border-slate-600 rounded-lg">
-            <div className="text-white font-semibold mb-2 flex items-center gap-2">
-              <span>⚠️</span>
-              <span>Missing Ingredients:</span>
+          <div className="flex-1 px-6 py-4 bg-slate-800 border border-slate-700 rounded-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+              <span className="text-sm font-medium text-slate-300">
+                Missing {missingIngredients.length} ingredient{missingIngredients.length !== 1 ? 's' : ''}
+              </span>
             </div>
-            <div className="text-slate-400 text-sm">
-              {missingIngredients.slice(0, 3).map(ing => ing.name).join(', ')}
-              {missingIngredients.length > 3 && ` and ${missingIngredients.length - 3} more`}
+            <div className="flex flex-wrap gap-2">
+              {missingIngredients.slice(0, 4).map(ing => (
+                <span
+                  key={ing.id}
+                  className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700"
+                >
+                  {ing.name}
+                </span>
+              ))}
+              {missingIngredients.length > 4 && (
+                <span className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-500 border-slate-700">
+                  +{missingIngredients.length - 4} more
+                </span>
+              )}
             </div>
+            <Link
+              to="/inventory"
+              className="mt-3 flex items-center gap-1.5 text-xs text-amber-400/70 hover:text-amber-400 transition-colors"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+              Add to inventory
+            </Link>
           </div>
         )}
         {isCreator && cocktail.status === 'private' && (
           <button
             onClick={() => setShowSubmitDialog(true)}
-            className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-center transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg text-sm font-medium text-center transition-colors flex items-center justify-center gap-2"
           >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 2L11 13"/>
+              <path d="M22 2L15 22 11 13 2 9l20-7z"/>
+            </svg>
             <span>Submit for Review</span>
           </button>
         )}
         {isCreator && cocktail.status === 'pending' && (
-          <div className="flex-1 px-6 py-3 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
-            <div className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
-              <span>⏳</span>
-              <span>Pending Review</span>
+          <div className="flex-1 px-6 py-4 bg-slate-800 border border-slate-700 rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0" />
+              <span className="text-sm font-medium text-slate-300">Pending review</span>
             </div>
-            <div className="text-slate-300 text-sm">
-              Your cocktail is waiting for admin approval.
-              {cocktail.submitted_at && (
-                <span className="block text-slate-500 text-xs mt-1">
-                  Submitted {new Date(cocktail.submitted_at).toLocaleDateString()}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-        {isCreator && cocktail.status === 'rejected' && (
-          <div className="flex-1 px-6 py-3 bg-red-900/20 border border-red-700/50 rounded-lg">
-            <div className="text-red-400 font-semibold mb-2 flex items-center gap-2">
-              <span>✗</span>
-              <span>Rejected</span>
-            </div>
-            {cocktail.rejection_reason ? (
-              <>
-                <div className="text-slate-300 text-sm mb-4">
-                  <span className="font-semibold">Reason:</span> {cocktail.rejection_reason}
-                </div>
-                <button
-                  onClick={() => setShowSubmitDialog(true)}
-                  className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
-                >
-                  <span>Resubmit for Review</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="text-slate-300 text-sm mb-4">
-                  Your cocktail was rejected. Please edit and resubmit.
-                </div>
-                <button
-                  onClick={() => setShowSubmitDialog(true)}
-                  className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
-                >
-                  <span>📤</span>
-                  <span>Resubmit for Review</span>
-                </button>
-              </>
+            {cocktail.submitted_at && (
+              <p className="text-xs text-slate-500 ml-3.5">
+                Submitted {new Date(cocktail.submitted_at).toLocaleDateString()}
+              </p>
             )}
           </div>
         )}
-        {isCreator && cocktail.status === 'approved' && !cocktail.is_official && (
-          <div className="flex-1 px-6 py-3 bg-emerald-900/20 border border-emerald-700/50 rounded-lg">
-            <div className="text-emerald-400 font-semibold mb-2 flex items-center gap-2">
-              <span>✓</span>
-              <span>Approved!</span>
+        {isCreator && cocktail.status === 'rejected' && (
+          <div className="flex-1 px-6 py-4 bg-slate-800 border border-slate-700 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+              <span className="text-sm font-medium text-slate-300">Rejected</span>
             </div>
-            <div className="text-slate-300 text-sm">
-              Your cocktail is now visible to the community.
+            {cocktail.rejection_reason && (
+              <p className="text-xs text-slate-500 ml-3.5 mb-3">
+                {cocktail.rejection_reason}
+              </p>
+            )}
+            <button
+              onClick={() => setShowSubmitDialog(true)}
+              className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 2L11 13"/>
+                <path d="M22 2L15 22 11 13 2 9l20-7z"/>
+              </svg>
+              Resubmit for Review
+            </button>
+          </div>
+        )}
+        {isCreator && cocktail.status === 'approved' && !cocktail.is_official && (
+          <div className="flex-1 px-6 py-4 bg-slate-800 border border-slate-700 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+              <span className="text-sm font-medium text-slate-300">Approved — visible to the community</span>
             </div>
           </div>
         )}
         <Link
           to="/cocktails"
-          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold text-center transition-colors"
+          className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-300 border border-slate-700 hover:border-slate-600 rounded-lg text-sm font-medium text-center transition-colors flex items-center gap-2"
         >
-          Browse More Cocktails
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          Browse cocktails
         </Link>
       </div>
       <MakeCocktailConfirm
@@ -737,7 +762,9 @@ export default function CocktailDetail() {
         message={`You're about to make ${currentServings} serving${currentServings > 1 ? 's' : ''} of ${cocktail?.name}.`}
         ingredients={scaledIngredients.map(ing => ({
           name: ing.name,
-          quantity: ing.scaledQuantity || ''
+          quantity: ing.scaledQuantity ?? null,
+          unit: ing.unit,
+          quantity_note: ing.quantity_note
         }))}
         confirmText="Make Cocktail"
         cancelText="Cancel"

@@ -11,6 +11,7 @@ class Ingredient(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     parent_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'), nullable=True)
+    preferred_unit = db.Column(db.String(20), nullable=True)
 
     creator = db.relationship('User', backref=db.backref('created_ingredients', lazy='dynamic'))
     children = db.relationship(
@@ -22,6 +23,10 @@ class Ingredient(db.Model):
     @property
     def is_base(self):
         return self.user_id is None and self.parent_id is None
+
+    @property
+    def preferred_mode(self):
+        return 'instructional' if self.preferred_unit is None else 'measured'
 
     def to_dict(self):
         return {
@@ -37,5 +42,7 @@ class Ingredient(db.Model):
             'parent_id': self.parent_id,
             'parent_name': self.parent.name if self.parent else None,
             'is_base': self.is_base,
-            'children_count': len(self.children.all()) if self.children else 0
+            'children_count': len(self.children.all()) if self.children else 0,
+            'preferred_unit': self.preferred_unit,
+            'preferred_mode': self.preferred_mode,
         }
