@@ -10,8 +10,18 @@ class Ingredient(db.Model):
     abv = db.Column(db.Float)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'), nullable=True)
 
     creator = db.relationship('User', backref=db.backref('created_ingredients', lazy='dynamic'))
+    children = db.relationship(
+        'Ingredient',
+        backref=db.backref('parent', remote_side=[id]),
+        lazy='dynamic'
+    )
+
+    @property
+    def is_base(self):
+        return self.user_id is None and self.parent_id is None
 
     def to_dict(self):
         return {
@@ -23,5 +33,9 @@ class Ingredient(db.Model):
             'abv': self.abv,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'user_id': self.user_id,
-            'creator_name': self.creator.username if self.creator else 'BruChef'
+            'creator_name': self.creator.username if self.creator else 'BruChef',
+            'parent_id': self.parent_id,
+            'parent_name': self.parent.name if self.parent else None,
+            'is_base': self.is_base,
+            'children_count': self.children.count()
         }
