@@ -12,6 +12,10 @@ interface Ingredient {
   abv: number
   user_id: number | null
   creator_name: string
+  parent_id: number | null
+  parent_name: string | null
+  is_base: boolean
+  children_count: number
 }
 
 interface Cocktail {
@@ -38,11 +42,13 @@ export default function IngredientDetail() {
   const [alertType, setAlertType] = useState<'success' | 'error'>('success')
   const [alertTitle, setAlertTitle] = useState('')
   const [alertMessage, setAlertMessage] = useState('')
+  const [children, setChildren] = useState<Ingredient[]>([])
 
   useEffect(() => {
     fetchIngredient()
     fetchCocktailsUsingIngredient()
     checkAuth()
+    fetchChildren()
   }, [id])
 
   const canEdit = ingredient !== null && (isAdmin || (currentUserId !== null && ingredient.user_id === currentUserId))
@@ -59,6 +65,19 @@ export default function IngredientDetail() {
       }
     } catch (err) {
       console.error('Auth check failed:', err)
+    }
+  }
+
+  const fetchChildren = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/ingredients/${id}/variants`
+      )
+      if (!response.ok) return
+      const data = await response.json()
+      setChildren(data)
+    } catch (err) {
+      console.error('Error fetching variants:', err)
     }
   }
 
@@ -243,6 +262,20 @@ export default function IngredientDetail() {
                     {ingredient.abv}% ABV
                   </span>
                 )}
+                {ingredient.is_base && (
+                  <span className="px-3 py-1 text-sm rounded border bg-blue-500/20 text-blue-400 border-blue-500/50">
+                    Base Ingredient
+                  </span>
+                )}
+                {ingredient.parent_name && (
+                  <Link
+                    to={`/ingredients/${ingredient.parent_id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="px-3 py-1 text-sm rounded border bg-slate-700/50 text-slate-300 border-slate-600 hover:border-emerald-500 transition-colors"
+                  >
+                    ↑ {ingredient.parent_name}
+                  </Link>
+                )}
                 <span className="px-3 py-1 text-sm rounded border bg-slate-700/50 text-slate-300 border-slate-600">
                   👤 by {ingredient.creator_name}
                 </span>
@@ -261,6 +294,68 @@ export default function IngredientDetail() {
           ) : (
             <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700 text-center">
               <p className="text-slate-500">No description available</p>
+            </div>
+          )}
+          {ingredient.parent_id && ingredient.parent_name && (
+            <div className="mb-8 mt-10">
+              <h2 className="text-2xl font-bold text-white flex items-center mb-4">
+                Base Ingredient
+              </h2>
+              <Link
+                to={`/ingredients/${ingredient.parent_id}`}
+                className="flex items-center gap-4 p-4 bg-slate-800 rounded-lg border border-slate-700 hover:border-blue-500/50 transition-colors group"
+              >
+                <span className="text-3xl">{getCategoryIcon(ingredient.category)}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-semibold group-hover:text-blue-400 transition-colors">
+                      {ingredient.parent_name}
+                    </span>
+                    <span className="px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                      Base
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {ingredient.category}
+                  </div>
+                </div>
+                <span className="text-slate-500 group-hover:text-blue-400 transition-colors">→</span>
+              </Link>
+            </div>
+          )}
+          {ingredient.is_base && children.length > 0 && (
+            <div className="mb-8 mt-10">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-white flex items-center">
+                  Specific Variants
+                </h2>
+                <span className="text-slate-400">
+                  {children.length} {children.length === 1 ? 'variant' : 'variants'}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {children.map(child => (
+                  <Link
+                    key={child.id}
+                    to={`/ingredients/${child.id}`}
+                    className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors group"
+                  >
+                    <span className="text-2xl">{getCategoryIcon(child.category)}</span>
+                    <div className="flex-1">
+                      <div className="text-white font-medium group-hover:text-emerald-400 transition-colors">
+                        {child.name}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {child.abv > 0 ? `${child.abv}% ABV` : 'Non-alcoholic'}
+                        {child.user_id && (
+                          <span className="ml-2 text-slate-600">• {child.creator_name}</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-slate-500 group-hover:text-emerald-400 transition-colors">→</span>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </div>
