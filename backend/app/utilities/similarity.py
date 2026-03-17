@@ -13,22 +13,13 @@ def normalise(name: str) -> str:
     words = [w for w in name.split() if w not in FILLER_WORDS]
     return ' '.join(words)
 
-def find_similar(query: str, candidates: List[str], threshold: float = 40, limit: int = 5) -> List[dict]:
+def find_similar(query: str, candidates: List[str], threshold: float = 65, limit: int = 5) -> List[dict]:
     normalised_query = normalise(query)
-    normalised_candidates = {c: normalise(c) for c in candidates}
-
-    results = process.extract(
-        normalised_query,
-        normalised_candidates,
-        scorer=fuzz.WRatio,
-        limit=limit * 2
-    )
-
-    seen = set()
-    filtered = []
-    for original_name, score, _ in results:
-        if score >= threshold and original_name not in seen:
-            seen.add(original_name)
-            filtered.append({'name': original_name, 'score': score / 100})
-
-    return filtered[:limit]
+    normalised_candidates = [(c, normalise(c)) for c in candidates]
+    results = []
+    for original_name, normalised_name in normalised_candidates:
+        score = fuzz.WRatio(normalised_query, normalised_name)
+        if score >= threshold:
+            results.append({'name': original_name, 'score': score / 100})
+    results.sort(key=lambda x: x['score'], reverse=True)
+    return results[:limit]
