@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { usePagination } from '../hooks/usePagination'
+import Pagination from '../components/Pagination'
 
 interface Cocktail {
   id: number
@@ -79,6 +81,9 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
       ))
     return matchesSearch && matchesDifficulty && matchesSpirit
   })
+
+  const { currentPage, totalPages, paginatedItems, goToPage, reset } = usePagination(filteredCocktails, 12)
+  useEffect(() => { reset() }, [searchQuery, difficultyFilter, spiritFilter])
 
   const availableSpirits = Array.from(
     new Set(
@@ -202,6 +207,9 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
           <p className="text-slate-400 mt-1">
             {filteredCocktails.length} {filteredCocktails.length === 1 ? 'cocktail' : 'cocktails'}
             {hasActiveFilters && <span className="text-emerald-400"> (filtered)</span>}
+            {totalPages > 1 && (
+              <span className="text-slate-500"> — page {currentPage} of {totalPages}</span>
+            )}
           </p>
         </div>
         {isAuthenticated ? (
@@ -330,7 +338,7 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCocktails.map((cocktail) => (
+          {paginatedItems.map((cocktail) => (
             <Link
               key={cocktail.id}
               to={`/cocktails/${cocktail.id}`}
@@ -416,6 +424,11 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
               </div>
             </Link>
           ))}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+          />
         </div>
       )}
     </div>

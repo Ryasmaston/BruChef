@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { usePagination } from '../hooks/usePagination'
+import Pagination from '../components/Pagination'
 
 interface Ingredient {
   id: number
@@ -59,6 +61,9 @@ export default function Ingredients() {
     const matchesBase = !showBaseOnly || ingredient.is_base
     return matchesSearch && matchesCategory && matchesBase
   })
+
+  const { currentPage, totalPages, paginatedItems, goToPage, reset } = usePagination(filteredIngredients, 12)
+  useEffect(() => { reset() }, [searchQuery, categoryFilter, showBaseOnly])
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -153,6 +158,9 @@ export default function Ingredients() {
           <h1 className="text-3xl font-bold text-white">Ingredients</h1>
           <p className="text-slate-400 mt-1">
             {filteredIngredients.length} {filteredIngredients.length === 1 ? 'ingredient' : 'ingredients'}
+            {totalPages > 1 && (
+              <span className="text-slate-500"> — page {currentPage} of {totalPages}</span>
+            )}
           </p>
         </div>
       </div>
@@ -221,7 +229,7 @@ export default function Ingredients() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredIngredients.map((ingredient) => (
+          {paginatedItems.map((ingredient) => (
             <Link
               key={ingredient.id}
               to={`/ingredients/${ingredient.id}`}
@@ -280,6 +288,11 @@ export default function Ingredients() {
               </div>
             </Link>
           ))}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+          />
         </div>
       )}
     </div>
