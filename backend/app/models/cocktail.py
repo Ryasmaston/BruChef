@@ -4,7 +4,9 @@ from .db import db
 cocktail_ingredients = db.Table('cocktail_ingredients',
     db.Column('cocktail_id', db.Integer, db.ForeignKey('cocktail.id'), primary_key=True),
     db.Column('ingredient_id', db.Integer, db.ForeignKey('ingredient.id'), primary_key=True),
-    db.Column('quantity', db.String(50))
+    db.Column('quantity', db.String(50)),
+    db.Column('unit', db.String(20), nullable=True),
+    db.Column('quantity_note', db.String(100), nullable=True)
 )
 
 favourites=db.Table(
@@ -30,16 +32,10 @@ class Cocktail(db.Model):
     reviewed_at = db.Column(db.DateTime, nullable=True)
     reviewed_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     rejection_reason = db.Column(db.Text, nullable=True)
-    ingredients = db.relationship('Ingredient', secondary=cocktail_ingredients,
-                                 backref=db.backref('cocktails', lazy='dynamic'))
+    ingredients = db.relationship('Ingredient', secondary=cocktail_ingredients, backref=db.backref('cocktails', lazy='dynamic'))
     creator = db.relationship('User', foreign_keys=[user_id], backref=db.backref('created_cocktails', lazy='dynamic'))
     reviewer = db.relationship('User', foreign_keys=[reviewed_by]),
-    favourited_by = db.relationship(
-        'User',
-        secondary=favourites,
-        backref=db.backref('favourite_cocktails', lazy='dynamic'),
-        lazy='dynamic'
-    )
+    favourited_by = db.relationship('User', secondary=favourites, backref=db.backref('favourite_cocktails', lazy='dynamic'), lazy='dynamic')
 
     @property
     def is_official(self):
@@ -71,20 +67,28 @@ class Cocktail(db.Model):
             ingredients_with_quantities = []
             for ingredient in self.ingredients:
                 result = db.session.execute(
-                    db.select(cocktail_ingredients.c.quantity).where(
+                    db.select(
+                        cocktail_ingredients.c.quantity,
+                        cocktail_ingredients.c.unit,
+                        cocktail_ingredients.c.quantity_note
+                    ).where(
                         db.and_(
                             cocktail_ingredients.c.cocktail_id == self.id,
                             cocktail_ingredients.c.ingredient_id == ingredient.id
                         )
                     )
-                ).scalar()
+                ).first()
                 ingredients_with_quantities.append({
-                    "id": ingredient.id,
-                    "name": ingredient.name,
-                    "category": ingredient.category,
-                    "subcategory": ingredient.subcategory,
-                    "abv": ingredient.abv,
-                    "quantity": result or ""
+                    'id': ingredient.id,
+                    'name': ingredient.name,
+                    'category': ingredient.category,
+                    'subcategory': ingredient.subcategory,
+                    'abv': ingredient.abv,
+                    'quantity': result.quantity if result else None,
+                    'unit': result.unit if result else None,
+                    'quantity_note': result.quantity_note if result else None,
+                    'preferred_unit': ingredient.preferred_unit,
+                    'preferred_mode': ingredient.preferred_mode
                 })
             data['ingredients'] = ingredients_with_quantities
         return data
