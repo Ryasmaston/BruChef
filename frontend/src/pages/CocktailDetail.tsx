@@ -33,8 +33,11 @@ interface Ingredient {
   category: string
   subcategory: string | null
   abv: number
-  quantity: string
-  scaledQuantity?: string
+  quantity: number | null
+  unit: string | null
+  quantity_note: string | null
+  preferred_unit: string | null
+  scaledQuantity?: number | null
 }
 
 interface MissingIngredient {
@@ -169,29 +172,20 @@ export default function CocktailDetail() {
     }
   }
 
-  const parseQuantity = (quantityStr: string) => {
-    if (!quantityStr) return null
-    const lower = quantityStr.toLowerCase().trim()
-    if (lower.includes('top with') || lower.includes('fill')) {
-      return null
-    }
-    const match = quantityStr.match(/^([\d.]+)\s*(.+)$/)
-    if (!match) return null
-    return {
-      amount: parseFloat(match[1]),
-      unit: match[2].trim()
-    }
+  const scaleIngredient = (ingredient: Ingredient, scale: number) => {
+    if (ingredient.quantity_note) return null
+    if (ingredient.quantity === null) return null
+    return Math.round(ingredient.quantity * scale * 100) / 100
   }
 
-  const scaleQuantity = (original: string, scale: number) => {
-    const parsed = parseQuantity(original)
-    if (!parsed) return original
-    const scaled = parsed.amount * scale
-    const formatted = scaled % 1 === 0
-      ? scaled.toString()
-      : scaled.toFixed(2).replace(/\.?0+$/, '')
-
-    return `${formatted} ${parsed.unit}`
+  const formatQuantity = (ingredient: Ingredient & { scaledQuantity?: number | null }) => {
+    if (ingredient.quantity_note) return ingredient.quantity_note
+    if (ingredient.scaledQuantity !== null && ingredient.scaledQuantity !== undefined && ingredient.unit) {
+      const val = ingredient.scaledQuantity
+      const formatted = val % 1 === 0 ? val.toString() : val.toFixed(2).replace(/\.?0+$/, '')
+      return `${formatted} ${ingredient.unit}`
+    }
+    return '—'
   }
 
   const getScaledIngredients = () => {
@@ -200,7 +194,7 @@ export default function CocktailDetail() {
     const scale = currentServings / baseServings
     return cocktail.ingredients.map(ing => ({
       ...ing,
-      scaledQuantity: scaleQuantity(ing.quantity, scale)
+      scaledQuantity: scaleIngredient(ing, scale)
     }))
   }
   const scaledIngredients = getScaledIngredients()
@@ -545,8 +539,9 @@ export default function CocktailDetail() {
               <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
                 <div className="space-y-3">
                   {scaledIngredients.map((ingredient) => {
-                    const quantityLower = (ingredient.scaledQuantity || '').toLowerCase()
-                    const isApproximate = ['dash', 'splash', 'drop'].some(u => quantityLower.includes(u))
+                    const isApproximate = ingredient.unit
+                      ? ['dash', 'dashes', 'splash', 'splashes', 'drop', 'drops'].includes(ingredient.unit.toLowerCase())
+                      : false
                     return (
                       <div key={ingredient.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors">
                         <div className="flex items-center space-x-3 flex-1">
@@ -570,12 +565,12 @@ export default function CocktailDetail() {
                             </div>
                           </div>
                         </div>
-                        {ingredient.scaledQuantity && (
+                        {(ingredient.scaledQuantity !== null || ingredient.quantity_note) && (
                           <div className={`font-semibold text-sm ml-4 flex items-center gap-1 ${
-                            isApproximate ? 'text-blue-400' : 'text-emerald-400'
+                            ingredient.quantity_note ? 'text-blue-400' : 'text-emerald-400'
                           }`}>
-                            {isApproximate && <span className="text-xs">≈</span>}
-                            {ingredient.scaledQuantity}
+                            {ingredient.quantity_note && <span className="text-xs">~</span>}
+                            {formatQuantity(ingredient)}
                           </div>
                         )}
                       </div>
@@ -737,7 +732,9 @@ export default function CocktailDetail() {
         message={`You're about to make ${currentServings} serving${currentServings > 1 ? 's' : ''} of ${cocktail?.name}.`}
         ingredients={scaledIngredients.map(ing => ({
           name: ing.name,
-          quantity: ing.scaledQuantity || ''
+          quantity: ing.scaledQuantity ?? null,
+          unit: ing.unit,
+          quantity_note: ing.quantity_note
         }))}
         confirmText="Make Cocktail"
         cancelText="Cancel"
