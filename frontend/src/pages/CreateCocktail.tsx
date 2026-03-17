@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import IngredientCreateModal from '../components/IngredientCreateModal'
 
 interface Ingredient {
   id: number
@@ -60,19 +61,10 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
   const [showIngredientSearch, setShowIngredientSearch] = useState(false)
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState('')
   const [ingredientInputs, setIngredientInputs] = useState<IngredientQuantity[]>([])
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [customIngredient, setCustomIngredient] = useState({
-    name: '',
-    category: 'Spirit',
-    subcategory: CATEGORIES['Spirit'][0],
-    description: '',
-    abv: ''
-  })
-  const [modalLoading, setModalLoading] = useState(false)
-  const [modalError, setModalError] = useState('')
   const [instructionInputs, setInstructionInputs] = useState<string[]>([])
   const [currentInstruction, setCurrentInstruction] = useState('')
-  const [editingInstructionIndex, setEditingInstructionIndex] = useState<number|null>(null)
+  const [editingInstructionIndex, setEditingInstructionIndex] = useState<number | null>(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     fetchIngredients()
@@ -126,7 +118,7 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
         body: JSON.stringify(formData)
       })
       const data = await response.json()
-      console.log("API response:", data)
+      // console.log("API response:", data)
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create cocktail')
       }
@@ -173,54 +165,6 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
     setIngredientInputs(prev => prev.map(input =>
       input.id === ingredientId ? { ...input, unit } : input
     ))
-  }
-
-  const handleCustomIngredientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    if (name === 'abv') {
-      setCustomIngredient(prev => ({ ...prev, abv: value }))
-    } else if (name === 'category') {
-      const firstSubcategory = CATEGORIES[value]?.[0]
-      setCustomIngredient(prev => ({ ...prev, category: value, subcategory: firstSubcategory }))
-    } else {
-      setCustomIngredient(prev => ({ ...prev, [name]: value }))
-    }
-  }
-
-  const handleCreateCustomIngredient = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setModalError('')
-    setModalLoading(true)
-    try {
-      const response = await fetch('http://localhost:5001/api/ingredients/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(customIngredient)
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create ingredient')
-      }
-      setIngredients(prev => [...prev, data])
-      addIngredient(data.id)
-      setShowCreateModal(false)
-      setShowIngredientSearch(false)
-      setIngredientSearchQuery('')
-      setCustomIngredient({
-        name: '',
-        category: 'Spirit',
-        subcategory: CATEGORIES['Spirit'][0],
-        description: '',
-        abv: ''
-      })
-      setModalLoading(false)
-    } catch (err: any) {
-      setModalError(err.message || 'Failed to create ingredient')
-      setModalLoading(false)
-    }
   }
 
   const addInstruction = () => {
@@ -727,7 +671,6 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
                     <button
                       type="button"
                       onClick={() => {
-                        setCustomIngredient(prev => ({ ...prev, name: ingredientSearchQuery }))
                         setShowCreateModal(true)
                       }}
                       className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm rounded transition-colors"
@@ -755,126 +698,20 @@ export default function CreateCocktail({ isAuthenticated }: CreateCocktailProps)
           </div>
         </div>
       )}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-white mb-4">Create New Ingredient</h2>
-
-            {modalError && (
-              <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
-                {modalError}
-              </div>
-            )}
-
-            <form onSubmit={handleCreateCustomIngredient} className="space-y-4">
-              <div>
-                <label htmlFor="custom-name" className="block text-sm font-medium text-slate-300 mb-2">
-                  Ingredient Name *
-                </label>
-                <input
-                  type="text"
-                  id="custom-name"
-                  name="name"
-                  value={customIngredient.name}
-                  onChange={handleCustomIngredientChange}
-                  required
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  placeholder="e.g. Elderflower Liqueur"
-                />
-              </div>
-              <div>
-                <label htmlFor="custom-category" className="block text-sm font-medium text-slate-300 mb-2">
-                  Category *
-                </label>
-                <select
-                  id="custom-category"
-                  name="category"
-                  value={customIngredient.category}
-                  onChange={handleCustomIngredientChange}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                >
-                  {Object.keys(CATEGORIES).map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="custom-subcategory" className="block text-sm font-medium text-slate-300 mb-2">
-                  Subcategory *
-                </label>
-                <select
-                  id="custom-subcategory"
-                  name="subcategory"
-                  value={customIngredient.subcategory}
-                  onChange={handleCustomIngredientChange}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                >
-                  {CATEGORIES[customIngredient.category].map(subcat => (
-                    <option key={subcat} value={subcat}>{subcat}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="custom-abv" className="block text-sm font-medium text-slate-300 mb-2">
-                  ABV (%)
-                </label>
-                <input
-                  type="number"
-                  id="custom-abv"
-                  name="abv"
-                  value={customIngredient.abv}
-                  onChange={handleCustomIngredientChange}
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  placeholder="e.g. 40"
-                />
-              </div>
-              <div>
-                <label htmlFor="custom-description" className="block text-sm font-medium text-slate-300 mb-2">
-                  Description (optional)
-                </label>
-                <textarea
-                  id="custom-description"
-                  name="description"
-                  value={customIngredient.description}
-                  onChange={handleCustomIngredientChange}
-                  rows={2}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  placeholder="A floral, sweet liqueur..."
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={modalLoading}
-                  className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
-                >
-                  {modalLoading ? 'Creating...' : 'Create Ingredient'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false)
-                    setModalError('')
-                    setCustomIngredient({
-                      name: '',
-                      category: 'Spirit',
-                      subcategory: CATEGORIES['Spirit'][0],
-                      description: '',
-                      abv: ''
-                    })
-                  }}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <IngredientCreateModal
+        isOpen={showCreateModal}
+        initialName={ingredientSearchQuery}
+        onClose={() => {
+          setShowCreateModal(false)
+        }}
+        onCreated={(ingredient) => {
+          setIngredients(prev => [...prev, ingredient])
+          addIngredient(ingredient.id)
+          setShowCreateModal(false)
+          setShowIngredientSearch(false)
+          setIngredientSearchQuery('')
+        }}
+      />
     </>
   )
 }

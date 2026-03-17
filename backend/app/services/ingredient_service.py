@@ -44,7 +44,8 @@ class IngredientService:
                 subcategory=data.get('subcategory', ''),
                 description=data.get('description', ''),
                 abv=data.get('abv', 0.0),
-                user_id=data.get('user_id')
+                user_id=data.get('user_id'),
+                parent_id=data.get('parent_id')
             )
             db.session.add(new_ingredient)
             db.session.commit()

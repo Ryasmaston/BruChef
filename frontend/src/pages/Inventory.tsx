@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ConfirmInventoryDeleteDialog from '../components/ConfirmInventoryDeleteDialog'
 import AlertDialog from '../components/AlertDialog'
+import IngredientCreateModal from '../components/IngredientCreateModal'
 
 interface InventoryItem {
   id: number
@@ -75,15 +76,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [notes, setNotes] = useState('')
   const [addLoading, setAddLoading] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [newIngredient, setNewIngredient] = useState({
-    name: '',
-    category: 'Spirit',
-    subcategory: CATEGORIES['Spirit'][0],
-    description: '',
-    abv: ''
-  })
-  const [createLoading, setCreateLoading] = useState(false)
-  const [createError, setCreateError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'inventory' | 'available'>('inventory')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -190,39 +182,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
     }
   }
 
-  const handleCreateIngredient = async () => {
-    setCreateError('')
-    setCreateLoading(true)
-    try {
-      const response = await fetch('http://localhost:5001/api/ingredients/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(newIngredient)
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create ingredient')
-      }
-      setAvailableIngredients(prev => [...prev, data])
-      setSelectedIngredient(data)
-      setIngredientSearch(data.name)
-      setShowCreateModal(false)
-      setNewIngredient({
-        name: '',
-        category: 'Spirit',
-        subcategory: CATEGORIES['Spirit'][0],
-        description: '',
-        abv: ''
-      })
-      setCreateLoading(false)
-    } catch (err: any) {
-      setCreateError(err.message || 'Failed to create ingredient')
-      setCreateLoading(false)
-    }
-  }
 
   const handleAddToInventory = async () => {
     if (!selectedIngredient) return
@@ -984,7 +943,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                         <p className="text-sm text-slate-400 mb-3">No ingredient found with that name</p>
                         <button
                           onClick={() => {
-                            setNewIngredient(prev => ({ ...prev, name: ingredientSearch }))
                             setShowCreateModal(true)
                           }}
                           className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm rounded transition-colors"
@@ -1117,116 +1075,19 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           </div>
         </div>
       )}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-white mb-4">Create New Ingredient</h2>
-            {createError && (
-              <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-400 text-sm">
-                {createError}
-              </div>
-            )}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Ingredient Name *
-                </label>
-                <input
-                  type="text"
-                  value={newIngredient.name}
-                  onChange={(e) => setNewIngredient(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                  placeholder="e.g., Elderflower Liqueur"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Category *
-                </label>
-                <select
-                  value={newIngredient.category}
-                  onChange={(e) => setNewIngredient(prev => ({
-                    ...prev,
-                    category: e.target.value,
-                    subcategory: CATEGORIES[e.target.value][0]
-                  }))}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                >
-                  {Object.keys(CATEGORIES).map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Subcategory *
-                </label>
-                <select
-                  value={newIngredient.subcategory}
-                  onChange={(e) => setNewIngredient(prev => ({ ...prev, subcategory: e.target.value }))}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                >
-                  {CATEGORIES[newIngredient.category].map(subcat => (
-                    <option key={subcat} value={subcat}>{subcat}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  ABV (%)
-                </label>
-                <input
-                  type="number"
-                  value={newIngredient.abv}
-                  onChange={(e) => setNewIngredient(prev => ({ ...prev, abv: e.target.value }))}
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  placeholder="e.g. 40"
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Description (optional)
-                </label>
-                <textarea
-                  value={newIngredient.description}
-                  onChange={(e) => setNewIngredient(prev => ({ ...prev, description: e.target.value }))}
-                  rows={2}
-                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                  placeholder="A floral, sweet liqueur..."
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={handleCreateIngredient}
-                  disabled={!newIngredient.name || createLoading}
-                  className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-white rounded-lg font-semibold transition-colors"
-                >
-                  {createLoading ? 'Creating...' : 'Create Ingredient'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCreateModal(false)
-                    setCreateError('')
-                    setNewIngredient({
-                      name: '',
-                      category: 'Spirit',
-                      subcategory: CATEGORIES['Spirit'][0],
-                      description: '',
-                      abv: ''
-                    })
-                  }}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <IngredientCreateModal
+        isOpen={showCreateModal}
+        initialName={ingredientSearch}
+        onClose={() => {
+          setShowCreateModal(false)
+        }}
+        onCreated={(ingredient) => {
+          setAvailableIngredients(prev => [...prev, ingredient])
+          setSelectedIngredient(ingredient)
+          setIngredientSearch(ingredient.name)
+          setShowCreateModal(false)
+        }}
+      />
       <ConfirmInventoryDeleteDialog
         isOpen={showDeleteDialog}
         onClose={() => {
