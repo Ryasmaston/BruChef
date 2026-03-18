@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { usePagination } from '../hooks/usePagination'
 import Pagination from '../components/Pagination'
+import AddToInventoryModal from '../components/AddToInventoryModal'
 
 interface Ingredient {
   id: number
@@ -14,6 +15,8 @@ interface Ingredient {
   parent_name: string | null
   is_base: boolean
   children_count: number
+  preferred_unit: string | null
+  preferred_mode: 'measured' | 'instructional'
 }
 
 export default function Ingredients() {
@@ -24,10 +27,20 @@ export default function Ingredients() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [categories, setCategories] = useState<string[]>([])
   const [showBaseOnly, setShowBaseOnly] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null)
 
   useEffect(() => {
     fetchIngredients()
     fetchCategories()
+  }, [])
+
+  useEffect(() => {
+    fetch('http://localhost:5001/api/auth/check', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setIsAuthenticated(data.authenticated))
+      .catch(() => setIsAuthenticated(false))
   }, [])
 
   const fetchIngredients = async () => {
@@ -281,10 +294,23 @@ export default function Ingredients() {
                   {ingredient.abv}%
                 </span>
               </div>
-              <div className="mt-3 pt-3 border-t border-slate-700">
+              <div className="mt-3 pt-3 border-t border-slate-700 flex items-center justify-between">
                 <span className="text-emerald-400 text-sm group-hover:text-emerald-300">
                   View Details →
                 </span>
+                {isAuthenticated && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setSelectedIngredient(ingredient)
+                      setShowAddModal(true)
+                    }}
+                    className="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded transition-colors"
+                  >
+                    + Inventory
+                  </button>
+                )}
               </div>
             </Link>
           ))}
@@ -295,6 +321,18 @@ export default function Ingredients() {
           />
         </div>
       )}
+      <AddToInventoryModal
+        isOpen={showAddModal}
+        ingredient={selectedIngredient}
+        onClose={() => {
+          setShowAddModal(false)
+          setSelectedIngredient(null)
+        }}
+        onAdded={() => {
+          setShowAddModal(false)
+          setSelectedIngredient(null)
+        }}
+      />
     </div>
   )
 }

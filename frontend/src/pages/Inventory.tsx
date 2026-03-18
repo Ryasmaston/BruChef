@@ -118,6 +118,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [editUnit, setEditUnit] = useState<string>('')
   const [savingEdit, setSavingEdit] = useState(false)
 
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchInventory()
