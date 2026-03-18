@@ -1,6 +1,6 @@
 from app.models import db, Inventory, Ingredient, User, Cocktail, cocktail_ingredients
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, or_
 from typing import List, Optional, Dict, Any, Tuple
 from app.utilities.unit_conversion import convert_to_base_unit, convert_from_base_unit, get_unit_type
 
@@ -131,7 +131,12 @@ class InventoryService:
             expanded_map, _ = InventoryService._build_inventory_map(user_id)
             if not expanded_map:
                 return []
-            stmt = select(Cocktail).where(Cocktail.status == 'approved')
+            stmt = select(Cocktail).where(
+                or_(
+                    Cocktail.status == 'approved',
+                    Cocktail.user_id == user_id
+                )
+            )
             cocktails = db.session.execute(stmt).scalars().all()
             available_cocktails = []
             for cocktail in cocktails:
