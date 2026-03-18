@@ -27,6 +27,8 @@ interface Ingredient {
   category: string
   subcategory: string | null
   abv: number
+  preferred_unit: string | null
+  preferred_mode: 'measured' | 'instructional'
 }
 
 interface Cocktail {
@@ -61,6 +63,12 @@ const UNIT_OPTIONS = {
   count: ['pieces', 'cubes', 'leaves', 'slices', 'wedges', 'bottles', 'cans']
 }
 
+const getUnitType = (unit: string): 'volume' | 'mass' | 'count' => {
+  if (UNIT_OPTIONS.mass.includes(unit)) return 'mass'
+  if (UNIT_OPTIONS.count.includes(unit)) return 'count'
+  return 'volume'
+}
+
 export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [availableIngredients, setAvailableIngredients] = useState<Ingredient[]>([])
@@ -70,7 +78,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [ingredientSearch, setIngredientSearch] = useState('')
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null)
-  const [quantity, setQuantity] = useState('750')
+  const [quantity, setQuantity] = useState('')
   const [unitType, setUnitType] = useState<'volume'|'mass'|'count'>('volume')
   const [unit, setUnit] = useState('ml')
   const [notes, setNotes] = useState('')
@@ -120,9 +128,6 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
     }
   }, [isAuthenticated])
 
-  useEffect(() => {
-    setUnit(UNIT_OPTIONS[unitType][0])
-  }, [unitType])
 
   const fetchInventory = async () => {
     try {
@@ -925,6 +930,13 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                             onClick={() => {
                               setSelectedIngredient(ing)
                               setIngredientSearch(ing.name)
+                              if (ing.preferred_unit) {
+                                setUnitType(getUnitType(ing.preferred_unit))
+                                setUnit(ing.preferred_unit)
+                              } else {
+                                setUnitType('volume')
+                                setUnit('ml')
+                              }
                             }}
                             className="w-full px-4 py-3 text-left hover:bg-slate-800 transition-colors flex items-center space-x-3"
                           >
@@ -974,7 +986,10 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => setUnitType('volume')}
+                      onClick={() => {
+                        setUnitType('volume')
+                        setUnit(UNIT_OPTIONS.volume[0])
+                      }}
                     className={`px-4 py-2 text-sm rounded transition-colors ${
                       unitType === 'volume'
                         ? 'bg-emerald-500 text-white'
@@ -985,7 +1000,10 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setUnitType('mass')}
+                      onClick={() => {
+                        setUnitType('mass')
+                        setUnit(UNIT_OPTIONS.mass[0])
+                      }}
                     className={`px-4 py-2 text-sm rounded transition-colors ${
                       unitType === 'mass'
                         ? 'bg-emerald-500 text-white'
@@ -996,7 +1014,10 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setUnitType('count')}
+                      onClick={() => {
+                        setUnitType('count')
+                        setUnit(UNIT_OPTIONS.count[0])
+                      }}
                     className={`px-4 py-2 text-sm rounded transition-colors ${
                       unitType === 'count'
                         ? 'bg-emerald-500 text-white'
@@ -1061,7 +1082,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     setShowAddModal(false)
                     setSelectedIngredient(null)
                     setIngredientSearch('')
-                    setQuantity('750')
+                    setQuantity('')
                     setUnitType('volume')
                     setUnit('ml')
                     setNotes('')
@@ -1085,6 +1106,13 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           setAvailableIngredients(prev => [...prev, ingredient])
           setSelectedIngredient(ingredient)
           setIngredientSearch(ingredient.name)
+          if (ingredient.preferred_unit) {
+            setUnitType(getUnitType(ingredient.preferred_unit))
+            setUnit(ingredient.preferred_unit)
+          } else {
+            setUnitType('volume')
+            setUnit('ml')
+          }
           setShowCreateModal(false)
         }}
       />
