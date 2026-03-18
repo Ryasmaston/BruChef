@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { usePagination } from '../hooks/usePagination'
 import Pagination from '../components/Pagination'
+import AddToInventoryModal from '../components/AddToInventoryModal'
 
 interface Ingredient {
   id: number
@@ -14,6 +15,8 @@ interface Ingredient {
   parent_name: string | null
   is_base: boolean
   children_count: number
+  preferred_unit: string | null
+  preferred_mode: 'measured' | 'instructional'
 }
 
 export default function Ingredients() {
@@ -24,10 +27,20 @@ export default function Ingredients() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [categories, setCategories] = useState<string[]>([])
   const [showBaseOnly, setShowBaseOnly] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null)
 
   useEffect(() => {
     fetchIngredients()
     fetchCategories()
+  }, [])
+
+  useEffect(() => {
+    fetch('http://localhost:5001/api/auth/check', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setIsAuthenticated(data.authenticated))
+      .catch(() => setIsAuthenticated(false))
   }, [])
 
   const fetchIngredients = async () => {
@@ -233,58 +246,73 @@ export default function Ingredients() {
             <Link
               key={ingredient.id}
               to={`/ingredients/${ingredient.id}`}
-              className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors group"
+              className="bg-slate-800 rounded-lg border border-slate-700 p-5 hover:border-emerald-500 transition-colors group flex flex-col h-full"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <span className="text-3xl">{getCategoryIcon(ingredient.category)}</span>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">
-                      {ingredient.name}
-                    </h3>
-                    <div className="mt-1 flex items-center gap-2 flex-wrap">
-                      <span className={`inline-block px-2 py-1 text-xs rounded border ${getCategoryColor(ingredient.category)}`}>
-                        {ingredient.category}
-                      </span>
-                      {ingredient.subcategory && (
-                        <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-300 border-slate-600">
-                          {ingredient.subcategory}
-                        </span>
-                      )}
-                      {ingredient.is_base && (
-                        <span className="inline-block px-2 py-1 text-xs rounded border bg-blue-500/20 text-blue-400 border-blue-500/30">
-                          Base
-                        </span>
-                      )}
-                      {ingredient.parent_name && (
-                        <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-400 border-slate-600">
-                          ↑ {ingredient.parent_name}
-                        </span>
-                      )}
-                      {ingredient.children_count > 0 && (
-                        <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-400 border-slate-600">
-                          {ingredient.children_count} variant{ingredient.children_count !== 1 ? 's' : ''}
-                        </span>
-                      )}
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-3xl">{getCategoryIcon(ingredient.category)}</span>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                          {ingredient.name}
+                        </h3>
+                        <div className="mt-1 flex items-center gap-2 flex-wrap">
+                          <span className={`inline-block px-2 py-1 text-xs rounded border ${getCategoryColor(ingredient.category)}`}>
+                            {ingredient.category}
+                          </span>
+                          {ingredient.subcategory && (
+                            <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-300 border-slate-600">
+                              {ingredient.subcategory}
+                            </span>
+                          )}
+                          {ingredient.is_base && (
+                            <span className="inline-block px-2 py-1 text-xs rounded border bg-blue-500/20 text-blue-400 border-blue-500/30">
+                              Base
+                            </span>
+                          )}
+                          {ingredient.parent_name && (
+                            <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-400 border-slate-600">
+                              ↑ {ingredient.parent_name}
+                            </span>
+                          )}
+                          {ingredient.children_count > 0 && (
+                            <span className="inline-block px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-400 border-slate-600">
+                              {ingredient.children_count} variant{ingredient.children_count !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
+                  {ingredient.description && (
+                    <p className="text-slate-400 text-sm mb-3 line-clamp-2 italic">
+                      {ingredient.description}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-slate-700">
+                  <span className="text-sm text-slate-500">ABV</span>
+                  <span className="text-sm font-semibold text-white">{ingredient.abv}%</span>
                 </div>
               </div>
-              {ingredient.description && (
-                <p className="text-slate-400 text-sm mb-3 line-clamp-2 italic">
-                  {ingredient.description}
-                </p>
-              )}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-700">
-                <span className="text-sm text-slate-500">ABV</span>
-                <span className="text-sm font-semibold text-white">
-                  {ingredient.abv}%
-                </span>
-              </div>
-              <div className="mt-3 pt-3 border-t border-slate-700">
+              <div className="mt-3 pt-3 border-t border-slate-700 flex items-center justify-between">
                 <span className="text-emerald-400 text-sm group-hover:text-emerald-300">
                   View Details →
                 </span>
+                {isAuthenticated && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setSelectedIngredient(ingredient)
+                      setShowAddModal(true)
+                    }}
+                    className="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded transition-colors"
+                  >
+                    + Inventory
+                  </button>
+                )}
               </div>
             </Link>
           ))}
@@ -295,6 +323,18 @@ export default function Ingredients() {
           />
         </div>
       )}
+      <AddToInventoryModal
+        isOpen={showAddModal}
+        ingredient={selectedIngredient}
+        onClose={() => {
+          setShowAddModal(false)
+          setSelectedIngredient(null)
+        }}
+        onAdded={() => {
+          setShowAddModal(false)
+          setSelectedIngredient(null)
+        }}
+      />
     </div>
   )
 }
