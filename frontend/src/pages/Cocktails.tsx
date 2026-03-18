@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { usePagination } from '../hooks/usePagination'
 import Pagination from '../components/Pagination'
+import AlertDialog from '../components/AlertDialog'
 
 interface Cocktail {
   id: number
@@ -31,6 +32,10 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
   const [spiritFilter, setSpiritFilter] = useState<string>('all')
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
   const [favouriting, setFavouriting] = useState<Set<number>>(new Set())
+  const [showAlertDialog, setShowAlertDialog] = useState(false)
+  const [alertType, setAlertType] = useState<'success' | 'error'>('success')
+  const [alertTitle, setAlertTitle] = useState('')
+  const [alertMessage, setAlertMessage] = useState('')
 
   useEffect(() => {
     fetchCocktails()
@@ -130,6 +135,10 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
             : c
         ))
       }
+      setAlertType('success')
+      setAlertTitle(isFavourited ? 'Removed from favourites' : 'Added to favourites')
+      setAlertMessage(isFavourited ? `${cocktail.name} has been removed from favourites` : `${cocktail.name} has been added to favourites`)
+      setShowAlertDialog(true)
     } catch {
       setCocktails(prev => prev.map(c =>
         c.id === cocktailId
@@ -141,6 +150,10 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
             }
           : c
       ))
+      setAlertType('error')
+      setAlertTitle('Error')
+      setAlertMessage('Failed to add to favourites')
+      setShowAlertDialog(true)
     } finally {
       setFavouriting(prev => {
         const next = new Set(prev)
@@ -431,6 +444,13 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
           />
         </div>
       )}
+      <AlertDialog
+      isOpen={showAlertDialog}
+      onClose={() => {setShowAlertDialog(false)}}
+      type={alertType}
+      title={alertTitle}
+      message={alertMessage}
+      />
     </div>
   )
 }
