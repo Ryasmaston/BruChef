@@ -545,7 +545,6 @@ export default function CocktailDetail() {
           {cocktail.ingredients && cocktail.ingredients.length > 0 && (
             <div>
               <h2 className="text-xl font-semibold text-white mb-3 flex items-center">
-                <span className="mr-2">🍎</span>
                 What You'll Need
               </h2>
               <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
@@ -595,7 +594,6 @@ export default function CocktailDetail() {
           {cocktail.garnish && (
             <div>
               <h2 className="text-xl font-semibold text-white mb-3 flex items-center">
-                <span className="mr-2">🍋</span>
                 Garnish
               </h2>
               <p className="text-slate-300 bg-slate-900/50 rounded-lg p-4 border border-slate-700">
@@ -605,7 +603,6 @@ export default function CocktailDetail() {
           )}
           <div>
             <h2 className="text-xl font-semibold text-white mb-3 flex items-center">
-              <span className="mr-2">📖</span>
               Instructions
             </h2>
             <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
