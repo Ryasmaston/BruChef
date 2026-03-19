@@ -4,10 +4,20 @@ import { useEffect, useState } from 'react'
 interface HomeProps {
   isAuthenticated: boolean
 }
+
+interface FeaturedCocktail {
+  id: number
+  name: string
+  description: string
+  difficulty: string
+  glass_type: string
+  ingredients: Array<{ name: string }>
+}
+
 export default function Home({ isAuthenticated }: HomeProps) {
   const [stats, setStats] = useState({ cocktails: 0, ingredients: 0 })
+  const [featuredCocktail, setFeaturedCocktail] = useState<FeaturedCocktail | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     Promise.all([
@@ -22,99 +32,195 @@ export default function Home({ isAuthenticated }: HomeProps) {
           cocktails: cocktails.length,
           ingredients: ingredients.length
         })
+        const approved = cocktails.filter((c: any) => c.status === 'approved')
+        if (approved.length > 0) {
+          const random = approved[Math.floor(Math.random() * approved.length)]
+          setFeaturedCocktail(random)
+        }
         setLoading(false)
       })
-      .catch(err => {
-        console.error('Error fetching stats:', err)
-        setError('Failed to connect to backend')
-        setLoading(false)
-      })
+      .catch(() => setLoading(false))
   }, [])
 
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy': return 'bg-green-500/20 text-green-400 border-green-500/50'
+      case 'Medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+      case 'Advanced': return 'bg-red-500/20 text-red-400 border-red-500/50'
+      default: return 'bg-slate-500/20 text-slate-400 border-slate-500/50'
+    }
+  }
+
   return (
-    <div className="space-y-12">
-      <div className="text-center space-y-6">
-        <h1 className="text-5xl font-bold text-white">
-          Welcome to <span className="text-emerald-400">BruChef</span>
-        </h1>
-        <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-          Your personal bartender companion. Discover cocktail recipes, manage ingredients,
-          and craft the perfect drink every time.
-        </p>
+    <div className="max-w-6xl mx-auto space-y-5">
+      <div className="relative pt-12 pb-8">
+        <div className="text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm mb-4">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Your personal bartender companion
+          </div>
+          <h1 className="text-6xl font-bold text-white leading-tight">
+            Craft the perfect<br />
+            <span className="text-emerald-400">cocktail</span>
+          </h1>
+          <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
+            Discover recipes, manage your bar inventory, and find out exactly
+            what you can make tonight.
+          </p>
+          <div className="flex gap-3 justify-center pt-2">
+            <Link
+              to="/cocktails"
+              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Browse Cocktails
+            </Link>
+            {!isAuthenticated ? (
+              <Link
+                to="/register"
+                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 rounded-lg font-medium transition-colors"
+              >
+                Create Account
+              </Link>
+            ) : (
+              <Link
+                to="/inventory"
+                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 rounded-lg font-medium transition-colors"
+              >
+                My Inventory
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
-      {loading && (
-        <div className="text-center">
-          <p className="text-gray-400">Connecting to backend...</p>
-        </div>
-      )}
-      {error && (
-        <div className="text-center">
-          <div className="inline-block p-4 bg-red-900/50 border border-red-700 rounded">
-            <p className="text-red-400">{error}</p>
+      {!loading && featuredCocktail && (
+        <div>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+              Featured Recipe
+            </span>
           </div>
-        </div>
-      )}
-      {!loading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-          <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-700">
-            <div className="text-4xl mb-2">🍹</div>
-            <div className="text-3xl font-bold text-white">
-              {stats.cocktails}
-            </div>
-            <div className="text-slate-400">Cocktail Recipes</div>
-          </div>
-          <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-700">
-            <div className="text-4xl mb-2">🍎</div>
-            <div className="text-3xl font-bold text-white">
-              {stats.ingredients}
-            </div>
-            <div className="text-slate-400">Ingredients</div>
-          </div>
-        </div>
-      )}
-      {!loading && !error && (
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link
-            to="/cocktails"
-            className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
-          >
-            Browse Cocktails
-          </Link>
-          <Link
-            to="/ingredients"
-            className="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
-          >
-            View Ingredients
-          </Link>
-        </div>
-      )}
-      {!isAuthenticated && !loading && !error && (
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-gradient-to-r from-emerald-900/50 to-slate-800 rounded-lg border border-emerald-700/50 p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  Create an account for more features! ✨
-                </h3>
-                <p className="text-slate-300 text-sm mb-4">
-                  Save your favorite cocktails, create custom recipes, and build your personal bar inventory.
-                </p>
-                <div className="flex gap-3">
-                  <Link
-                    to="/register"
-                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md font-medium transition-colors text-sm"
-                  >
-                    Sign Up Free
-                  </Link>
-                  <Link
-                    to="/login"
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md font-medium transition-colors text-sm"
-                  >
-                    Sign In
-                  </Link>
+          <Link to={`/cocktails/${featuredCocktail.id}`}>
+            <div className="bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 transition-colors overflow-hidden group">
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                <div className="h-64 md:h-auto bg-gradient-to-br from-emerald-900/60 to-slate-900 flex items-center justify-center">
+                  <span className="text-9xl">🍹</span>
+                </div>
+                <div className="p-8 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(featuredCocktail.difficulty)}`}>
+                      {featuredCocktail.difficulty}
+                    </span>
+                    {featuredCocktail.glass_type && (
+                      <span className="px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-400 border-slate-600">
+                        {featuredCocktail.glass_type}
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-3xl font-bold text-white group-hover:text-emerald-400 transition-colors mb-3">
+                    {featuredCocktail.name}
+                  </h2>
+                  {featuredCocktail.description && (
+                    <p className="text-slate-400 mb-6 leading-relaxed line-clamp-3">
+                      {featuredCocktail.description}
+                    </p>
+                  )}
+                  {featuredCocktail.ingredients && featuredCocktail.ingredients.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {featuredCocktail.ingredients.slice(0, 5).map((ing, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700"
+                        >
+                          {ing.name}
+                        </span>
+                      ))}
+                      {featuredCocktail.ingredients.length > 5 && (
+                        <span className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-500 border-slate-700">
+                          +{featuredCocktail.ingredients.length - 5} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
+                    <span>View Recipe</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>
+          </Link>
+        </div>
+      )}
+      <div>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+            What you can do
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            to="/cocktails"
+            className="group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
+          >
+            <div className="text-3xl mb-4">🍸</div>
+            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
+              Discover Recipes
+            </h3>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Browse our full library of cocktail recipes, from classics to community creations.
+            </p>
+          </Link>
+          <Link
+            to={isAuthenticated ? '/inventory' : '/register'}
+            className="group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
+          >
+            <div className="text-3xl mb-4">📦</div>
+            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
+              Manage Your Bar
+            </h3>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Track what's in your inventory and instantly see which cocktails you can make tonight.
+            </p>
+          </Link>
+          <Link
+            to={isAuthenticated ? '/cocktails/new' : '/register'}
+            className="group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
+          >
+            <div className="text-3xl mb-4">✏️</div>
+            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
+              Create Recipes
+            </h3>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Build and share your own cocktail recipes with the BruChef community.
+            </p>
+          </Link>
+        </div>
+      </div>
+      {!isAuthenticated && !loading && (
+        <div className="bg-gradient-to-br from-emerald-900/30 to-slate-800 rounded-xl border border-emerald-700/30 p-10 text-center">
+          <h2 className="text-2xl font-bold text-white mb-3">
+            Ready to get started?
+          </h2>
+          <p className="text-slate-400 mb-6 max-w-md mx-auto">
+            Create a free account to save favourites, build your inventory, and craft your own recipes.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Link
+              to="/register"
+              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Sign Up Free
+            </Link>
+            <Link
+              to="/login"
+              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg font-medium transition-colors"
+            >
+              Sign In
+            </Link>
           </div>
         </div>
       )}
