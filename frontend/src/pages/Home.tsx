@@ -32,7 +32,6 @@ export default function Home({ isAuthenticated }: HomeProps) {
           cocktails: cocktails.length,
           ingredients: ingredients.length
         })
-        // Pick a random approved cocktail as featured
         const approved = cocktails.filter((c: any) => c.status === 'approved')
         if (approved.length > 0) {
           const random = approved[Math.floor(Math.random() * approved.length)]
@@ -225,7 +224,6 @@ export default function Home({ isAuthenticated }: HomeProps) {
           </div>
         </div>
       )}
-
     </div>
   )
 }
