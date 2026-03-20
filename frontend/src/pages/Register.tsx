@@ -18,6 +18,30 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    if (formData.username.length < 3) {
+      setError('Username must be at least 3 characters')
+      return
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
+      setError('Username can only contain letters, numbers, hyphens, and underscores')
+      return
+    }
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+    if (!/[A-Z]/.test(formData.password)) {
+      setError('Password must contain at least one uppercase letter')
+      return
+    }
+    if (!/[a-z]/.test(formData.password)) {
+      setError('Password must contain at least one lowercase letter')
+      return
+    }
+    if (!/[0-9]/.test(formData.password)) {
+      setError('Password must contain at least one number')
+      return
+    }
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       return
@@ -26,9 +50,7 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
     try {
       const response = await fetch('http://localhost:5001/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           username: formData.username,
@@ -37,11 +59,7 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
         })
       })
       const data = await response.json()
-      // console.log('Register response:', data)
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed')
-      }
-      // console.log('Registration successful')
+      if (!response.ok) throw new Error(data.error || 'Registration failed')
       onRegisterSuccess()
       navigate('/')
     } catch (err: any) {
@@ -50,6 +68,7 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
       setLoading(false)
     }
   }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -118,9 +137,23 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
                 className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 placeholder="Create a strong password"
               />
-              <p className="mt-1 text-xs text-slate-500">
-                Password bust be at least 8 characters, with uppercase, lowercase, and a number
-              </p>
+              {formData.password && (
+                <div className="mt-2 space-y-1">
+                  {[
+                    { test: formData.password.length >= 8, label: 'At least 8 characters' },
+                    { test: /[A-Z]/.test(formData.password), label: 'One uppercase letter' },
+                    { test: /[a-z]/.test(formData.password), label: 'One lowercase letter' },
+                    { test: /[0-9]/.test(formData.password), label: 'One number' },
+                  ].map(({ test, label }) => (
+                    <div key={label} className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${test ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                      <span className={`text-xs ${test ? 'text-emerald-400' : 'text-slate-500'}`}>
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-2">
@@ -136,6 +169,13 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
                 className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 placeholder="Confirm your password"
               />
+              {formData.confirmPassword && (
+                <p className={`mt-1 text-xs ${
+                  formData.password === formData.confirmPassword ? 'text-emerald-400' : 'text-red-400'
+                }`}>
+                  {formData.password === formData.confirmPassword ? 'Passwords match' : 'Passwords do not match'}
+                </p>
+              )}
             </div>
             <button
               type="submit"
