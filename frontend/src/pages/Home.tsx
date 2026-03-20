@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import BubbleBackground from '../components/BubbleBackground'
 
 interface HomeProps {
   isAuthenticated: boolean
@@ -53,43 +54,46 @@ export default function Home({ isAuthenticated }: HomeProps) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
-      <div className="relative pt-5 pb-8 opacity-0 animate-fade-in-blur animation-delay-100">
-        <div className="text-center space-y-6">
-          <h1 className="text-6xl font-bold text-white leading-tight animate-reveal-up">
-            Craft the perfect<br />
-            <span className="text-emerald-400">cocktail</span>
-          </h1>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
-            Discover recipes, manage your bar inventory, and find out exactly
-            what you can make tonight.
-          </p>
-          <div className="flex gap-3 justify-center pt-2">
-            <Link
-              to="/cocktails"
-              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
-            >
-              Browse Cocktails
-            </Link>
-            {!isAuthenticated ? (
+      <div className="relative rounded-2xl overflow-hidden opacity-0 animate-fade-in-blur animation-delay-100">
+        <div className="animate-morph-gradient absolute inset-0" />
+        <BubbleBackground />
+        <div className="relative z-10 pt-16 pb-16 px-8">
+          <div className="text-center space-y-6">
+            <h1 className="text-6xl font-bold text-white leading-tight animate-reveal-up">
+              Craft the perfect<br />
+              <span className="animate-shimmer">cocktail</span>
+            </h1>
+            <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed animate-typewriter">
+              Discover recipes, manage your bar inventory, and find out exactly what you can make tonight.
+            </p>
+            <div className="flex gap-3 justify-center pt-2">
               <Link
-                to="/register"
-                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 rounded-lg font-medium transition-colors"
+                to="/cocktails"
+                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
               >
-                Create Account
+                Browse Cocktails
               </Link>
-            ) : (
-              <Link
-                to="/inventory"
-                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 rounded-lg font-medium transition-colors"
-              >
-                My Inventory
-              </Link>
-            )}
+              {!isAuthenticated ? (
+                <Link
+                  to="/register"
+                  className="px-6 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg font-medium transition-colors"
+                >
+                  Create Account
+                </Link>
+              ) : (
+                <Link
+                  to="/inventory"
+                  className="px-6 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg font-medium transition-colors"
+                >
+                  My Inventory
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
       {!loading && featuredCocktail && (
-        <div className="opacity-0 animate-fade-in-up animation-delay-300">
+        <div className="opacity-0 animate-fade-in-scale animation-delay-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">
@@ -99,7 +103,9 @@ export default function Home({ isAuthenticated }: HomeProps) {
           <Link to={`/cocktails/${featuredCocktail.id}`}>
             <div className="bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 transition-colors overflow-hidden group">
               <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="h-64 md:h-auto bg-gradient-to-br from-emerald-900/60 to-slate-900 flex items-center justify-center"></div>
+                <div className="h-64 md:h-auto bg-gradient-to-br from-emerald-900/60 to-slate-900 flex items-center justify-center">
+                  <span className="text-9xl">🍹</span>
+                </div>
                 <div className="p-8 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-3">
                     <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(featuredCocktail.difficulty)}`}>
@@ -122,10 +128,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
                   {featuredCocktail.ingredients && featuredCocktail.ingredients.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-6">
                       {featuredCocktail.ingredients.slice(0, 5).map((ing, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700"
-                        >
+                        <span key={i} className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700">
                           {ing.name}
                         </span>
                       ))}

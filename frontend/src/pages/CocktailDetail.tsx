@@ -4,6 +4,7 @@ import MakeCocktailConfirm from '../components/MakeCocktailConfirm'
 import AlertDialog from '../components/AlertDialog'
 import SubmitForReviewDialog from '../components/SubmitForReviewDialog'
 import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog'
+import BubbleBackground from '../components/BubbleBackground'
 
 interface Cocktail {
   id: number
@@ -440,7 +441,10 @@ export default function CocktailDetail() {
       <span>Back to Cocktails</span>
     </button>
       <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-        <div className="bg-gradient-to-br from-emerald-900/50 to-slate-800 p-8">
+      <div className="relative overflow-hidden">
+        <div className="bg-gradient-to-br from-emerald-900/50 to-slate-800 absolute inset-0" />
+        <BubbleBackground />
+        <div className="relative z-10 p-8">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
@@ -475,11 +479,7 @@ export default function CocktailDetail() {
                 </p>
               )}
               <div className="flex flex-wrap gap-3">
-                <span
-                  className={`px-3 py-1 text-sm rounded border ${getDifficultyColor(
-                    cocktail.difficulty
-                  )}`}
-                >
+                <span className={`px-3 py-1 text-sm rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
                   {cocktail.difficulty}
                 </span>
                 {cocktail.glass_type && (
@@ -517,6 +517,7 @@ export default function CocktailDetail() {
             <div className="text-8xl ml-4">🍹</div>
           </div>
         </div>
+      </div>
         <div>
           <div className="flex justify-end gap-8 mb-4 mr-10">
             <h2 className="text-xl font-semibold text-white flex items-center">
