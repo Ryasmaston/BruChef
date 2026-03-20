@@ -71,8 +71,36 @@ def check_auth():
             }), 200
     return jsonify({"authenticated": False}), 200
 
-@auth_bp.route("/change-password", methods=["PUT"])
-def change_password():
+@auth_bp.route("/update-username", methods=["PUT"])
+def update_username():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Not authenticated"}), 401
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        new_username = data.get('username', '').strip()
+        if not new_username:
+            return jsonify({"error": "Username is required"}), 400
+        is_valid, error = AuthService.validate_username(new_username)
+        if not is_valid:
+            return jsonify({"error": error}), 400
+        from app.models import User, db
+        if User.query.filter_by(username=new_username).first():
+            return jsonify({"error": "Username already taken"}), 400
+        user = AuthService.get_user_by_id(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        user.username = new_username
+        db.session.commit()
+        session['username'] = new_username
+        return jsonify({"message": "Username updated successfully", "user": user.to_dict()}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@auth_bp.route("/update-password", methods=["PUT"])
+def update_password():
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({"error": "Not authenticated"}), 401

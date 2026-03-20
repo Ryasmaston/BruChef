@@ -74,13 +74,25 @@ export default function Settings({ isAuthenticated, username, onUpdate }: Settin
       setPasswordError('New passwords do not match')
       return
     }
-    if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters')
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters')
+      return
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      setPasswordError('Password must contain at least one uppercase letter')
+      return
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      setPasswordError('Password must contain at least one lowercase letter')
+      return
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      setPasswordError('Password must contain at least one number')
       return
     }
     setPasswordLoading(true)
     try {
-      const response = await fetch('http://localhost:5001/api/auth/change-password', {
+      const response = await fetch('http://localhost:5001/api/auth/update-password', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -225,6 +237,23 @@ export default function Settings({ isAuthenticated, username, onUpdate }: Settin
                 className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 placeholder="Enter new password"
               />
+              {newPassword && (
+                <div className="mt-2 space-y-1">
+                  {[
+                    { test: newPassword.length >= 8, label: 'At least 8 characters' },
+                    { test: /[A-Z]/.test(newPassword), label: 'One uppercase letter' },
+                    { test: /[a-z]/.test(newPassword), label: 'One lowercase letter' },
+                    { test: /[0-9]/.test(newPassword), label: 'One number' },
+                  ].map(({ test, label }) => (
+                    <div key={label} className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${test ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                      <span className={`text-xs ${test ? 'text-emerald-400' : 'text-slate-500'}`}>
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">

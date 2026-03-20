@@ -99,6 +99,24 @@ class AuthService:
         return User.query.filter_by(email=email.lower()).first()
 
     @staticmethod
+    def update_username(user_id: int, new_username: str) -> User:
+        is_valid, error = AuthService.validate_username(new_username)
+        if not is_valid:
+            raise ValueError(error)
+        if User.query.filter_by(username=new_username).first():
+            raise ValueError("Username already taken")
+        user = User.query.get(user_id)
+        if not user:
+            raise ValueError("User not found")
+        try:
+            user.username = new_username
+            db.session.commit()
+            return user
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            raise Exception(f"Error updating username: {str(e)}")
+
+    @staticmethod
     def update_password(user_id: int, old_password: str, new_password: str) -> bool:
         user = User.query.get(user_id)
         if not user:
