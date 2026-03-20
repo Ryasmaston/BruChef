@@ -210,7 +210,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
               to="/register"
               className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
             >
-              Sign Up Free
+              Create Account
             </Link>
             <Link
               to="/login"
