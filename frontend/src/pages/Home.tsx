@@ -53,9 +53,9 @@ export default function Home({ isAuthenticated }: HomeProps) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
-      <div className="relative pt-5 pb-8">
+      <div className="relative pt-5 pb-8 opacity-0 animate-fade-in-blur animation-delay-100">
         <div className="text-center space-y-6">
-          <h1 className="text-6xl font-bold text-white leading-tight">
+          <h1 className="text-6xl font-bold text-white leading-tight animate-reveal-up">
             Craft the perfect<br />
             <span className="text-emerald-400">cocktail</span>
           </h1>
@@ -89,7 +89,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
         </div>
       </div>
       {!loading && featuredCocktail && (
-        <div>
+        <div className="opacity-0 animate-fade-in-up animation-delay-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">
@@ -149,53 +149,53 @@ export default function Home({ isAuthenticated }: HomeProps) {
         </div>
       )}
       <div>
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-6 opacity-0 animate-fade-in-up animation-delay-400">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">
             What you can do
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link
-            to="/cocktails"
-            className="group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
-          >
-            <div className="text-3xl mb-4">🍸</div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
-              Discover Recipes
-            </h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Browse our full library of cocktail recipes, from classics to community creations.
-            </p>
-          </Link>
-          <Link
-            to={isAuthenticated ? '/inventory' : '/register'}
-            className="group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
-          >
-            <div className="text-3xl mb-4">📦</div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
-              Manage Your Bar
-            </h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Track what's in your inventory and instantly see which cocktails you can make tonight.
-            </p>
-          </Link>
-          <Link
-            to={isAuthenticated ? '/cocktails/new' : '/register'}
-            className="group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
-          >
-            <div className="text-3xl mb-4">✏️</div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
-              Create Recipes
-            </h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Build and share your own cocktail recipes with the BruChef community.
-            </p>
-          </Link>
+          {[
+            {
+              to: '/cocktails',
+              icon: '🍸',
+              title: 'Discover Recipes',
+              desc: 'Browse our full library of cocktail recipes, from classics to community creations.',
+              delay: 500
+            },
+            {
+              to: isAuthenticated ? '/inventory' : '/register',
+              icon: '📦',
+              title: 'Manage Your Bar',
+              desc: "Track what's in your inventory and instantly see which cocktails you can make tonight.",
+              delay: 600
+            },
+            {
+              to: isAuthenticated ? '/cocktails/new' : '/register',
+              icon: '✏️',
+              title: 'Create Recipes',
+              desc: 'Build and share your own cocktail recipes with the BruChef community.',
+              delay: 700
+            }
+          ].map((card) => (
+            <Link
+              key={card.title}
+              to={card.to}
+              style={{ animationDelay: `${card.delay}ms` }}
+              className="opacity-0 animate-fade-in-up group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
+            >
+              <div className="text-3xl mb-4">{card.icon}</div>
+              <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
+                {card.title}
+              </h3>
+              <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
+            </Link>
+          ))}
         </div>
       </div>
       {!isAuthenticated && !loading && (
-        <div className="bg-gradient-to-br from-emerald-900/30 to-slate-800 rounded-xl border border-emerald-700/30 p-10 text-center">
+        <div className="bg-gradient-to-br from-emerald-900/30 to-slate-800 rounded-xl border border-emerald-700/30 p-10 text-center opacity-0 animate-fade-in-up animation-delay-600">
           <h2 className="text-2xl font-bold text-white mb-3">
             Ready to get started?
           </h2>
