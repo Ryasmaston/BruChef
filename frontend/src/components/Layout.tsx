@@ -77,14 +77,17 @@ export default function Layout({ children, isAuthenticated, username, isAdmin, o
             <div className="flex items-center space-x-4 pl-4">
               {isAuthenticated ? (
                 <>
-                  <span className="text-sm text-slate-400">
+                  <Link
+                    to="/settings"
+                    className="text-sm text-slate-400 hover:text-white transition-colors"
+                  >
                     Hello, <span className="text-emerald-400 font-semibold">{username}</span>
                     {isAdmin && (
                       <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded border border-yellow-500/50 font-semibold">
                         ADMIN
                       </span>
                     )}
-                  </span>
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors"
