@@ -358,7 +358,6 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
               className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
             >
               <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center relative">
-                <span className="text-6xl">🍹</span>
                 {currentUserId && (
                   <button
                     onClick={(e) => handleToggleFavourite(e, cocktail.id)}

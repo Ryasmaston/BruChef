@@ -53,12 +53,8 @@ export default function Home({ isAuthenticated }: HomeProps) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
-      <div className="relative pt-12 pb-8">
+      <div className="relative pt-5 pb-8">
         <div className="text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm mb-4">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            Your personal bartender companion
-          </div>
           <h1 className="text-6xl font-bold text-white leading-tight">
             Craft the perfect<br />
             <span className="text-emerald-400">cocktail</span>
@@ -103,9 +99,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
           <Link to={`/cocktails/${featuredCocktail.id}`}>
             <div className="bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 transition-colors overflow-hidden group">
               <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="h-64 md:h-auto bg-gradient-to-br from-emerald-900/60 to-slate-900 flex items-center justify-center">
-                  <span className="text-9xl">🍹</span>
-                </div>
+                <div className="h-64 md:h-auto bg-gradient-to-br from-emerald-900/60 to-slate-900 flex items-center justify-center"></div>
                 <div className="p-8 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-3">
                     <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(featuredCocktail.difficulty)}`}>
