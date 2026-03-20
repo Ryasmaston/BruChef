@@ -446,14 +446,12 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-                <div className="text-3xl mb-2">📦</div>
-                <div className="text-2xl font-bold text-white">{inventory.length}</div>
                 <div className="text-slate-400 text-sm">Ingredients in Stock</div>
+                <div className="text-2xl font-bold text-white">{inventory.length}</div>
               </div>
               <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-                <div className="text-3xl mb-2">🍸</div>
-                <div className="text-2xl font-bold text-emerald-400">{availableCocktails.length}</div>
                 <div className="text-slate-400 text-sm">Cocktails You Can Make</div>
+                <div className="text-2xl font-bold text-emerald-400">{availableCocktails.length}</div>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">

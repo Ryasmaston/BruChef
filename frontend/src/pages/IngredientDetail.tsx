@@ -394,7 +394,6 @@ export default function IngredientDetail() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white flex items-center">
-            <span className="mr-3">🍹</span>
             Cocktails Using {ingredient.name}
           </h2>
           <span className="text-slate-400">

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import BubbleBackground from '../components/BubbleBackground'
 
 interface HomeProps {
   isAuthenticated: boolean
@@ -53,47 +54,46 @@ export default function Home({ isAuthenticated }: HomeProps) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
-      <div className="relative pt-12 pb-8">
-        <div className="text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm mb-4">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            Your personal bartender companion
-          </div>
-          <h1 className="text-6xl font-bold text-white leading-tight">
-            Craft the perfect<br />
-            <span className="text-emerald-400">cocktail</span>
-          </h1>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
-            Discover recipes, manage your bar inventory, and find out exactly
-            what you can make tonight.
-          </p>
-          <div className="flex gap-3 justify-center pt-2">
-            <Link
-              to="/cocktails"
-              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
-            >
-              Browse Cocktails
-            </Link>
-            {!isAuthenticated ? (
+      <div className="relative rounded-2xl overflow-hidden opacity-0 animate-fade-in-blur animation-delay-100">
+        <div className="animate-morph-gradient absolute inset-0" />
+        <BubbleBackground />
+        <div className="relative z-10 pt-16 pb-16 px-8">
+          <div className="text-center space-y-6">
+            <h1 className="text-6xl font-bold text-white leading-tight animate-reveal-up">
+              Craft the perfect<br />
+              <span className="animate-shimmer">cocktail</span>
+            </h1>
+            <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed animate-typewriter">
+              Discover recipes, manage your bar inventory, and find out exactly what you can make tonight.
+            </p>
+            <div className="flex gap-3 justify-center pt-2">
               <Link
-                to="/register"
-                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 rounded-lg font-medium transition-colors"
+                to="/cocktails"
+                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
               >
-                Create Account
+                Browse Cocktails
               </Link>
-            ) : (
-              <Link
-                to="/inventory"
-                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 rounded-lg font-medium transition-colors"
-              >
-                My Inventory
-              </Link>
-            )}
+              {!isAuthenticated ? (
+                <Link
+                  to="/register"
+                  className="px-6 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg font-medium transition-colors"
+                >
+                  Create Account
+                </Link>
+              ) : (
+                <Link
+                  to="/inventory"
+                  className="px-6 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg font-medium transition-colors"
+                >
+                  My Inventory
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
       {!loading && featuredCocktail && (
-        <div>
+        <div className="opacity-0 animate-fade-in-scale animation-delay-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">
@@ -128,10 +128,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
                   {featuredCocktail.ingredients && featuredCocktail.ingredients.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-6">
                       {featuredCocktail.ingredients.slice(0, 5).map((ing, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700"
-                        >
+                        <span key={i} className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700">
                           {ing.name}
                         </span>
                       ))}
@@ -155,53 +152,53 @@ export default function Home({ isAuthenticated }: HomeProps) {
         </div>
       )}
       <div>
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-6 opacity-0 animate-fade-in-up animation-delay-400">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">
             What you can do
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link
-            to="/cocktails"
-            className="group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
-          >
-            <div className="text-3xl mb-4">🍸</div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
-              Discover Recipes
-            </h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Browse our full library of cocktail recipes, from classics to community creations.
-            </p>
-          </Link>
-          <Link
-            to={isAuthenticated ? '/inventory' : '/register'}
-            className="group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
-          >
-            <div className="text-3xl mb-4">📦</div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
-              Manage Your Bar
-            </h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Track what's in your inventory and instantly see which cocktails you can make tonight.
-            </p>
-          </Link>
-          <Link
-            to={isAuthenticated ? '/cocktails/new' : '/register'}
-            className="group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
-          >
-            <div className="text-3xl mb-4">✏️</div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
-              Create Recipes
-            </h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Build and share your own cocktail recipes with the BruChef community.
-            </p>
-          </Link>
+          {[
+            {
+              to: '/cocktails',
+              icon: '🍸',
+              title: 'Discover Recipes',
+              desc: 'Browse our full library of cocktail recipes, from classics to community creations.',
+              delay: 500
+            },
+            {
+              to: isAuthenticated ? '/inventory' : '/register',
+              icon: '📦',
+              title: 'Manage Your Bar',
+              desc: "Track what's in your inventory and instantly see which cocktails you can make tonight.",
+              delay: 600
+            },
+            {
+              to: isAuthenticated ? '/cocktails/new' : '/register',
+              icon: '✏️',
+              title: 'Create Recipes',
+              desc: 'Build and share your own cocktail recipes with the BruChef community.',
+              delay: 700
+            }
+          ].map((card) => (
+            <Link
+              key={card.title}
+              to={card.to}
+              style={{ animationDelay: `${card.delay}ms` }}
+              className="opacity-0 animate-fade-in-up group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
+            >
+              <div className="text-3xl mb-4">{card.icon}</div>
+              <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
+                {card.title}
+              </h3>
+              <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
+            </Link>
+          ))}
         </div>
       </div>
       {!isAuthenticated && !loading && (
-        <div className="bg-gradient-to-br from-emerald-900/30 to-slate-800 rounded-xl border border-emerald-700/30 p-10 text-center">
+        <div className="bg-gradient-to-br from-emerald-900/30 to-slate-800 rounded-xl border border-emerald-700/30 p-10 text-center opacity-0 animate-fade-in-up animation-delay-600">
           <h2 className="text-2xl font-bold text-white mb-3">
             Ready to get started?
           </h2>
@@ -213,7 +210,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
               to="/register"
               className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
             >
-              Sign Up Free
+              Create Account
             </Link>
             <Link
               to="/login"
