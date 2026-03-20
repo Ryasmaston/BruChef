@@ -28,34 +28,8 @@ export default function Settings({ isAuthenticated, username, onUpdate }: Settin
   } | null>(null)
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchStats()
-    }
-  }, [isAuthenticated])
-
-  useEffect(() => {
     setNewUsername(username || '')
   }, [username])
-
-  const fetchStats = async () => {
-    try {
-      const [cocktailsRes, favouritesRes] = await Promise.all([
-        fetch('http://localhost:5001/api/cocktails/my-cocktails', { credentials: 'include' }),
-        fetch('http://localhost:5001/api/cocktails/favourite-cocktails', { credentials: 'include' })
-      ])
-      const [cocktails, favourites] = await Promise.all([
-        cocktailsRes.json(),
-        favouritesRes.json()
-      ])
-      setStats({
-        cocktails_created: (cocktails.private?.length || 0) + (cocktails.pending?.length || 0) + (cocktails.approved?.length || 0) + (cocktails.rejected?.length || 0),
-        approved_cocktails: cocktails.approved?.length || 0,
-        favourites: favourites.length || 0
-      })
-    } catch (err) {
-      console.error('Failed to fetch stats:', err)
-    }
-  }
 
   const handleUpdateUsername = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -111,7 +85,7 @@ export default function Settings({ isAuthenticated, username, onUpdate }: Settin
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          current_password: currentPassword,
+          old_password: currentPassword,
           new_password: newPassword
         })
       })
@@ -154,22 +128,6 @@ export default function Settings({ isAuthenticated, username, onUpdate }: Settin
         <h1 className="text-3xl font-bold text-white">Settings</h1>
         <p className="text-slate-400 mt-1">Manage your account and preferences</p>
       </div>
-      {stats && (
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-5 text-center">
-            <div className="text-2xl font-bold text-white mb-1">{stats.cocktails_created}</div>
-            <div className="text-xs text-slate-500">Recipes Created</div>
-          </div>
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-5 text-center">
-            <div className="text-2xl font-bold text-emerald-400 mb-1">{stats.approved_cocktails}</div>
-            <div className="text-xs text-slate-500">Approved</div>
-          </div>
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-5 text-center">
-            <div className="text-2xl font-bold text-yellow-400 mb-1">{stats.favourites}</div>
-            <div className="text-xs text-slate-500">Favourites</div>
-          </div>
-        </div>
-      )}
       <div className="mb-6 flex gap-4 border-b border-slate-700">
         <button
           onClick={() => setActiveTab('profile')}
