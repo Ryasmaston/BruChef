@@ -86,24 +86,24 @@
   animation: float 3s ease-in-out infinite;
 }
 
-@keyframes typewriter {
-  from { width: 0 }
-  to { width: 100% }
+@keyframes morphGradient {
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
 }
 
-@keyframes blinkCursor {
-  from { border-right-color: #34d399 }
-  to { border-right-color: transparent }
-}
-
-.animate-typewriter {
-  overflow: hidden;
-  white-space: nowrap;
-  border-right: 2px solid #34d399;
-  animation:
-    typewriter 2s steps(60) 0.8s forwards,
-    blinkCursor 0.5s step-end infinite alternate;
-  width: 0;
+.animate-morph-gradient {
+  background: linear-gradient(
+    -45deg,
+    #064e3b,
+    #065f46,
+    #0f172a,
+    #134e4a,
+    #0f172a,
+    #052e16
+  );
+  background-size: 400% 400%;
+  animation: morphGradient 12s ease infinite;
 }
 
 .animation-delay-100 { animation-delay: 100ms; }
