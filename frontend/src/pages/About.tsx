@@ -11,37 +11,37 @@ export default function About() {
 
   const features = [
     {
-      icon: '🍸',
+      icon: '',
       title: 'Discover Recipes',
       desc: 'Browse a curated library of classic and community cocktail recipes, with difficulty ratings and full ingredient lists.',
       delay: 300
     },
     {
-      icon: '📦',
+      icon: '',
       title: 'Manage Your Bar',
       desc: 'Track exactly what\'s in your inventory and instantly see which cocktails you can make tonight with what you have.',
       delay: 400
     },
     {
-      icon: '✏️',
+      icon: '',
       title: 'Create & Share',
       desc: 'Build your own cocktail recipes, submit them for community review, and share your creations with other bartenders.',
       delay: 500
     },
     {
-      icon: '⭐',
+      icon: '',
       title: 'Save Favourites',
       desc: 'Star the cocktails you love and find them instantly from your personal favourites list.',
       delay: 600
     },
     {
-      icon: '🔍',
+      icon: '',
       title: 'Smart Matching',
       desc: 'BruChef understands ingredient hierarchies — add Rum to your inventory and it covers all rum-based cocktails.',
       delay: 700
     },
     {
-      icon: '👥',
+      icon: '',
       title: 'Community Recipes',
       desc: 'Explore cocktails created by other users that have been reviewed and approved for the community library.',
       delay: 800
