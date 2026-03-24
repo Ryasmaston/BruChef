@@ -23,13 +23,19 @@ interface CocktailProps {
   isAuthenticated?: boolean
 }
 
-export default function Cocktails({isAuthenticated = false}: CocktailProps) {
+const INGREDIENT_CATEGORIES = [
+  'Spirit', 'Liqueur', 'Wine', 'Bitters', 'Juice',
+  'Syrup', 'Soda', 'Dairy', 'Egg', 'Fresh Ingredient', 'Garnish'
+]
+
+export default function Cocktails({ isAuthenticated = false }: CocktailProps) {
   const [cocktails, setCocktails] = useState<Cocktail[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all')
-  const [spiritFilter, setSpiritFilter] = useState<string>('all')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [glassFilter, setGlassFilter] = useState<string>('all')
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
   const [favouriting, setFavouriting] = useState<Set<number>>(new Set())
   const [showAlertDialog, setShowAlertDialog] = useState(false)
@@ -72,6 +78,10 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
     }
   }
 
+  const availableGlassTypes = Array.from(
+    new Set(cocktails.map(c => c.glass_type).filter(Boolean))
+  ).sort()
+
   const filteredCocktails = cocktails.filter(cocktail => {
     const matchesSearch = searchQuery === '' ||
       cocktail.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -79,26 +89,14 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
         ing.name.toLowerCase().includes(searchQuery.toLowerCase())
       ))
     const matchesDifficulty = difficultyFilter === 'all' || cocktail.difficulty === difficultyFilter
-    const matchesSpirit = spiritFilter === 'all' ||
-      (cocktail.ingredients && cocktail.ingredients.some(ing =>
-        ing.category === 'Spirit' &&
-        (spiritFilter === 'Spirit' || ing.name.toLowerCase().includes(spiritFilter.toLowerCase()))
-      ))
-    return matchesSearch && matchesDifficulty && matchesSpirit
+    const matchesCategory = categoryFilter === 'all' ||
+      (cocktail.ingredients && cocktail.ingredients.some(ing => ing.category === categoryFilter))
+    const matchesGlass = glassFilter === 'all' || cocktail.glass_type === glassFilter
+    return matchesSearch && matchesDifficulty && matchesCategory && matchesGlass
   })
 
   const { currentPage, totalPages, paginatedItems, goToPage, reset } = usePagination(filteredCocktails, 12)
-  useEffect(() => { reset() }, [searchQuery, difficultyFilter, spiritFilter])
-
-  const availableSpirits = Array.from(
-    new Set(
-      cocktails.flatMap(cocktail =>
-        cocktail.ingredients
-          ?.filter(ing => ing.category === 'Spirit')
-          .map(ing => ing.name) || []
-      )
-    )
-  ).sort()
+  useEffect(() => { reset() }, [searchQuery, difficultyFilter, categoryFilter, glassFilter])
 
   const handleToggleFavourite = async (e: React.MouseEvent, cocktailId: number) => {
     e.preventDefault()
@@ -152,7 +150,7 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
       ))
       setAlertType('error')
       setAlertTitle('Error')
-      setAlertMessage('Failed to add to favourites')
+      setAlertMessage('Failed to update favourites')
       setShowAlertDialog(true)
     } finally {
       setFavouriting(prev => {
@@ -165,24 +163,38 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy':
-        return 'bg-green-500/20 text-green-400 border-green-500/50'
-      case 'Medium':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
-      case 'Advanced':
-        return 'bg-red-500/20 text-red-400 border-red-500/50'
-      default:
-        return 'bg-slate-500/20 text-slate-400 border-slate-500/50'
+      case 'Easy': return 'bg-green-500/20 text-green-400 border-green-500/50'
+      case 'Medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+      case 'Advanced': return 'bg-red-500/20 text-red-400 border-red-500/50'
+      default: return 'bg-slate-500/20 text-slate-400 border-slate-500/50'
+    }
+  }
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Spirit': return '🥃'
+      case 'Liqueur': return '🍾'
+      case 'Wine': return '🍷'
+      case 'Bitters': return '💧'
+      case 'Juice': return '🧃'
+      case 'Syrup': return '🍯'
+      case 'Soda': return '🥤'
+      case 'Dairy': return '🥛'
+      case 'Egg': return '🥚'
+      case 'Fresh Ingredient': return '🌿'
+      case 'Garnish': return '🍋'
+      default: return '🍎'
     }
   }
 
   const clearFilters = () => {
     setSearchQuery('')
     setDifficultyFilter('all')
-    setSpiritFilter('all')
+    setCategoryFilter('all')
+    setGlassFilter('all')
   }
 
-  const hasActiveFilters = searchQuery !== '' || difficultyFilter !== 'all' || spiritFilter !== 'all'
+  const hasActiveFilters = searchQuery !== '' || difficultyFilter !== 'all' || categoryFilter !== 'all' || glassFilter !== 'all'
 
   if (loading) {
     return (
@@ -235,43 +247,58 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
           </Link>
         ) : (
           <div className="text-sm text-slate-500">
-            <Link to="/login" className="text-emerald-400 hover:text-emerald-300">
-              Sign in
-            </Link>
+            <Link to="/login" className="text-emerald-400 hover:text-emerald-300">Sign in</Link>
             {' '}to create cocktails
           </div>
         )}
       </div>
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-slate-400 mb-2">
+            Search by name or ingredient
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., Margarita or Vodka"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
             <label className="block text-xs font-medium text-slate-400 mb-2">
-              Search by name or ingredient
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., Margarita or Vodka"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-          <div className="lg:w-64">
-            <label className="block text-xs font-medium text-slate-400 mb-2">
-              Filter by spirit
+              Ingredient Category
             </label>
             <select
-              value={spiritFilter}
-              onChange={(e) => setSpiritFilter(e.target.value)}
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
               className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
             >
-              <option value="all">All Spirits</option>
-              {availableSpirits.map(spirit => (
-                <option key={spirit} value={spirit}>{spirit}</option>
+              <option value="all">All Categories</option>
+              {INGREDIENT_CATEGORIES.map(cat => (
+                <option key={cat} value={cat}>
+                  {getCategoryIcon(cat)} {cat}
+                </option>
               ))}
             </select>
           </div>
-          <div className="lg:w-48">
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-2">
+              Glass Type
+            </label>
+            <select
+              value={glassFilter}
+              onChange={(e) => setGlassFilter(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+            >
+              <option value="all">All Glasses</option>
+              {availableGlassTypes.map(glass => (
+                <option key={glass} value={glass}>{glass}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-xs font-medium text-slate-400 mb-2">
               Difficulty
             </label>
@@ -288,7 +315,7 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
           </div>
         </div>
         {hasActiveFilters && (
-          <div className="mt-4 pt-4 border-t border-slate-700">
+          <div className="pt-3 border-t border-slate-700">
             <button
               onClick={clearFilters}
               className="text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors"
@@ -304,34 +331,25 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
           {searchQuery && (
             <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full text-emerald-400 text-sm flex items-center gap-2">
               <span>Search: "{searchQuery}"</span>
-              <button
-                onClick={() => setSearchQuery('')}
-                className="hover:text-emerald-300"
-              >
-                ✕
-              </button>
+              <button onClick={() => setSearchQuery('')} className="hover:text-emerald-300">✕</button>
             </div>
           )}
-          {spiritFilter !== 'all' && (
+          {categoryFilter !== 'all' && (
             <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full text-emerald-400 text-sm flex items-center gap-2">
-              <span>Spirit: {spiritFilter}</span>
-              <button
-                onClick={() => setSpiritFilter('all')}
-                className="hover:text-emerald-300"
-              >
-                ✕
-              </button>
+              <span>{getCategoryIcon(categoryFilter)} {categoryFilter}</span>
+              <button onClick={() => setCategoryFilter('all')} className="hover:text-emerald-300">✕</button>
+            </div>
+          )}
+          {glassFilter !== 'all' && (
+            <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full text-emerald-400 text-sm flex items-center gap-2">
+              <span>🥃 {glassFilter}</span>
+              <button onClick={() => setGlassFilter('all')} className="hover:text-emerald-300">✕</button>
             </div>
           )}
           {difficultyFilter !== 'all' && (
             <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full text-emerald-400 text-sm flex items-center gap-2">
-              <span>Difficulty: {difficultyFilter}</span>
-              <button
-                onClick={() => setDifficultyFilter('all')}
-                className="hover:text-emerald-300"
-              >
-                ✕
-              </button>
+              <span>{difficultyFilter}</span>
+              <button onClick={() => setDifficultyFilter('all')} className="hover:text-emerald-300">✕</button>
             </div>
           )}
         </div>
@@ -341,114 +359,121 @@ export default function Cocktails({isAuthenticated = false}: CocktailProps) {
           <div className="text-4xl mb-4">🔍</div>
           <p className="text-slate-400 mb-4">No cocktails found</p>
           {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="text-emerald-400 hover:text-emerald-300"
-            >
+            <button onClick={clearFilters} className="text-emerald-400 hover:text-emerald-300">
               Clear all filters
             </button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {paginatedItems.map((cocktail) => (
-            <Link
-              key={cocktail.id}
-              to={`/cocktails/${cocktail.id}`}
-              className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
-            >
-              <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center relative">
-                {currentUserId && (
-                  <button
-                    onClick={(e) => handleToggleFavourite(e, cocktail.id)}
-                    disabled={favouriting.has(cocktail.id)}
-                    className="absolute top-3 right-3 text-yellow-400 hover:text-yellow-300 disabled:opacity-50 transition-colors"
-                    title={cocktail.favourited_by.includes(currentUserId) ? 'Remove from favourites' : 'Add to favourites'}
-                  >
-                    <svg
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill={cocktail.favourited_by.includes(currentUserId) ? 'currentColor' : 'none'}
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedItems.map((cocktail) => (
+              <Link
+                key={cocktail.id}
+                to={`/cocktails/${cocktail.id}`}
+                className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
+              >
+                <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center relative">
+                  <span className="text-6xl">🍹</span>
+                  {currentUserId && (
+                    <button
+                      onClick={(e) => handleToggleFavourite(e, cocktail.id)}
+                      disabled={favouriting.has(cocktail.id)}
+                      className="absolute top-3 right-3 text-yellow-400 hover:text-yellow-300 disabled:opacity-50 transition-colors"
+                      title={cocktail.favourited_by.includes(currentUserId) ? 'Remove from favourites' : 'Add to favourites'}
                     >
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-              <div className="p-5">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
-                    {cocktail.name}
-                  </h3>
-                  <span
-                    className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(
-                      cocktail.difficulty
-                    )}`}
-                  >
-                    {cocktail.difficulty}
-                  </span>
+                      <svg
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill={cocktail.favourited_by.includes(currentUserId) ? 'currentColor' : 'none'}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
-                <p className="text-slate-400 text-sm mb-4 line-clamp-2">
-                  {cocktail.description || 'No description available'}
-                </p>
-                {searchQuery && cocktail.ingredients && (
-                  <div className="mb-3">
-                    <div className="text-xs text-slate-500 mb-1">Contains:</div>
-                    <div className="flex flex-wrap gap-1">
-                      {cocktail.ingredients
-                        .filter(ing => ing.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                        .slice(0, 3)
-                        .map(ing => (
-                          <span
-                            key={ing.id}
-                            className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-xs rounded"
-                          >
-                            {ing.name}
-                          </span>
-                        ))}
-                    </div>
+                <div className="p-5">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                      {cocktail.name}
+                    </h3>
+                    <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
+                      {cocktail.difficulty}
+                    </span>
                   </div>
-                )}
-                <div className="space-y-2 text-sm">
-                  {cocktail.glass_type && (
-                    <div className="flex items-center text-slate-500">
-                      <span className="mr-2">🥃</span>
-                      <span>{cocktail.glass_type}</span>
+                  <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+                    {cocktail.description || 'No description available'}
+                  </p>
+                  {searchQuery && cocktail.ingredients && (
+                    <div className="mb-3">
+                      <div className="text-xs text-slate-500 mb-1">Contains:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {cocktail.ingredients
+                          .filter(ing => ing.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                          .slice(0, 3)
+                          .map(ing => (
+                            <span key={ing.id} className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-xs rounded">
+                              {ing.name}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   )}
-                  {cocktail.garnish && (
-                    <div className="flex items-center text-slate-500">
-                      <span className="mr-2">🍋</span>
-                      <span className="line-clamp-1">{cocktail.garnish}</span>
+                  {categoryFilter !== 'all' && cocktail.ingredients && (
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-1">
+                        {cocktail.ingredients
+                          .filter(ing => ing.category === categoryFilter)
+                          .slice(0, 3)
+                          .map(ing => (
+                            <span key={ing.id} className="px-2 py-0.5 bg-slate-700 text-slate-300 text-xs rounded border border-slate-600">
+                              {getCategoryIcon(ing.category)} {ing.name}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   )}
+                  <div className="space-y-2 text-sm">
+                    {cocktail.glass_type && (
+                      <div className="flex items-center text-slate-500">
+                        <span className="mr-2">🥃</span>
+                        <span>{cocktail.glass_type}</span>
+                      </div>
+                    )}
+                    {cocktail.garnish && (
+                      <div className="flex items-center text-slate-500">
+                        <span className="mr-2">🍋</span>
+                        <span className="line-clamp-1">{cocktail.garnish}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-700">
+                    <span className="text-emerald-400 text-sm group-hover:text-emerald-300">
+                      View Recipe →
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-slate-700">
-                  <span className="text-emerald-400 text-sm group-hover:text-emerald-300">
-                    View Recipe →
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={goToPage}
           />
-        </div>
+        </>
       )}
       <AlertDialog
-      isOpen={showAlertDialog}
-      onClose={() => {setShowAlertDialog(false)}}
-      type={alertType}
-      title={alertTitle}
-      message={alertMessage}
+        isOpen={showAlertDialog}
+        onClose={() => setShowAlertDialog(false)}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
       />
     </div>
   )
