@@ -36,7 +36,7 @@ class Cocktail(db.Model):
     creator = db.relationship('User', foreign_keys=[user_id], backref=db.backref('created_cocktails', lazy='dynamic'))
     reviewer = db.relationship('User', foreign_keys=[reviewed_by])
     favourited_by = db.relationship('User', secondary=favourites, backref=db.backref('favourite_cocktails', lazy='dynamic'), lazy='dynamic')
-    image_url = db.Column(db.String(50), nullable=True)
+    image_url = db.Column(db.String(500), nullable=True)
 
     @property
     def is_official(self):

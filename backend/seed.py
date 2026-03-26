@@ -1,5 +1,6 @@
 from app import create_app
 from app.models import db, Cocktail, Ingredient, User, cocktail_ingredients
+from app.utilities.unsplash import fetch_image_url
 
 
 def seed_database():
@@ -264,6 +265,7 @@ def seed_database():
             glass_type="Highball", garnish="Mint sprig", difficulty="Easy",
             status='approved', user_id=None
         )
+        mojito.image_url = fetch_image_url("Margarita cocktail drink")
         db.session.add(mojito)
         db.session.flush()
         db.session.execute(cocktail_ingredients.insert().values([
