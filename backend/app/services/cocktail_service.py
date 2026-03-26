@@ -3,6 +3,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select, or_
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from app.utilities.unsplash import fetch_image_url
 
 class CocktailService:
     @staticmethod
@@ -63,6 +64,11 @@ class CocktailService:
                 user_id=data.get('user_id'),
                 status='private'
             )
+            try:
+                image_url = fetch_image_url(f"{data['name']} cocktail drink")
+                new_cocktail.image_url = image_url
+            except Exception:
+                image_url = None
             db.session.add(new_cocktail)
             db.session.flush()
             for ing_data in data['ingredients']:
