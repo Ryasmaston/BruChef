@@ -5,6 +5,7 @@ import AlertDialog from '../components/AlertDialog'
 import SubmitForReviewDialog from '../components/SubmitForReviewDialog'
 import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog'
 import BubbleBackground from '../components/BubbleBackground'
+import CocktailImage from '../components/CocktailImage'
 
 interface Cocktail {
   id: number
@@ -26,6 +27,7 @@ interface Cocktail {
   creator_name: string
   is_official: boolean
   favourited_by: number[]
+  image_url?: string | null
 }
 
 interface Ingredient {
@@ -514,7 +516,12 @@ export default function CocktailDetail() {
                 )}
               </div>
             </div>
-            <div className="text-8xl ml-4">🍹</div>
+            <div className="ml-4 w-40 h-40">
+              <CocktailImage
+                imageUrl={cocktail.image_url ?? null}
+                name={cocktail.name}
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import ConfirmInventoryDeleteDialog from '../components/ConfirmInventoryDeleteDialog'
 import AlertDialog from '../components/AlertDialog'
 import IngredientCreateModal from '../components/IngredientCreateModal'
+import CocktailImage from '../components/CocktailImage'
 
 interface InventoryItem {
   id: number
@@ -36,6 +37,15 @@ interface Cocktail {
   name: string
   description: string
   difficulty: string
+  glass_type: string
+  garnish: string
+  image_url?: string | null
+  ingredients?: Array<{
+    id: number
+    name: string
+    category: string
+  }>
+  favourited_by: number[]
 }
 
 interface InventoryProps {
@@ -870,8 +880,11 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     to={`/cocktails/${cocktail.id}`}
                     className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
                   >
-                    <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
-                      <span className="text-6xl">🍹</span>
+                    <div className="relative">
+                      <CocktailImage
+                        imageUrl={cocktail.image_url ?? null}
+                        name={cocktail.name}
+                      />
                     </div>
                     <div className="p-5">
                       <div className="flex justify-between items-start mb-2">

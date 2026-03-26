@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { usePagination } from '../hooks/usePagination'
 import Pagination from '../components/Pagination'
 import AlertDialog from '../components/AlertDialog'
+import CocktailImage from '../components/CocktailImage'
 
 interface Cocktail {
   id: number
@@ -11,6 +12,7 @@ interface Cocktail {
   difficulty: string
   glass_type: string
   garnish: string
+  image_url?: string | null
   ingredients?: Array<{
     id: number
     name: string
@@ -373,8 +375,11 @@ export default function Cocktails({ isAuthenticated = false }: CocktailProps) {
                 to={`/cocktails/${cocktail.id}`}
                 className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
               >
-                <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center relative">
-                  <span className="text-6xl">🍹</span>
+                <div className="relative">
+                  <CocktailImage
+                    imageUrl={cocktail.image_url ?? null}
+                    name={cocktail.name}
+                  />
                   {currentUserId && (
                     <button
                       onClick={(e) => handleToggleFavourite(e, cocktail.id)}
