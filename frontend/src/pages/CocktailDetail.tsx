@@ -520,6 +520,7 @@ export default function CocktailDetail() {
               <CocktailImage
                 imageUrl={cocktail.image_url ?? null}
                 name={cocktail.name}
+                variant="thumb"
               />
             </div>
           </div>
