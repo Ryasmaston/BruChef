@@ -379,6 +379,7 @@ export default function Cocktails({ isAuthenticated = false }: CocktailProps) {
                   <CocktailImage
                     imageUrl={cocktail.image_url ?? null}
                     name={cocktail.name}
+                    variant="card"
                   />
                   {currentUserId && (
                     <button

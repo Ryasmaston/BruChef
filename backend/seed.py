@@ -2,6 +2,13 @@ from app import create_app
 from app.models import db, Cocktail, Ingredient, User, cocktail_ingredients
 from app.utilities.unsplash import fetch_image_url
 
+def assign_image(cocktail):
+    try:
+        image_url = fetch_image_url(f"{cocktail.name} cocktail drink")
+        print(f"Fetched image for {cocktail.name}: {image_url}")
+        cocktail.image_url = image_url
+    except Exception:
+        cocktail.image_url = None
 
 def seed_database():
     app = create_app()
@@ -252,6 +259,7 @@ def seed_database():
         )
         db.session.add(margarita)
         db.session.flush()
+        assign_image(margarita)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(margarita.id, base_tequila.id, 2.0, 'oz'),
             measured(margarita.id, base_triple_sec.id, 1.0, 'oz'),
@@ -265,9 +273,9 @@ def seed_database():
             glass_type="Highball", garnish="Mint sprig", difficulty="Easy",
             status='approved', user_id=None
         )
-        mojito.image_url = fetch_image_url("Margarita cocktail drink")
         db.session.add(mojito)
         db.session.flush()
+        assign_image(mojito)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(mojito.id, base_white_rum.id, 2.0, 'oz'),
             measured(mojito.id, base_lime_juice.id, 0.75, 'oz'),
@@ -285,6 +293,7 @@ def seed_database():
         )
         db.session.add(cosmopolitan)
         db.session.flush()
+        assign_image(cosmopolitan)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(cosmopolitan.id, base_vodka.id, 1.5, 'oz'),
             measured(cosmopolitan.id, base_triple_sec.id, 0.5, 'oz'),
@@ -301,6 +310,7 @@ def seed_database():
         )
         db.session.add(old_fashioned)
         db.session.flush()
+        assign_image(old_fashioned)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(old_fashioned.id, base_bourbon.id, 2.0, 'oz'),
             measured(old_fashioned.id, base_angostura.id, 2.0, 'dashes'),
@@ -316,6 +326,7 @@ def seed_database():
         )
         db.session.add(negroni)
         db.session.flush()
+        assign_image(negroni)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(negroni.id, base_gin.id, 1.0, 'oz'),
             measured(negroni.id, base_campari.id, 1.0, 'oz'),
@@ -331,6 +342,7 @@ def seed_database():
         )
         db.session.add(whiskey_sour)
         db.session.flush()
+        assign_image(whiskey_sour)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(whiskey_sour.id, base_bourbon.id, 2.0, 'oz'),
             measured(whiskey_sour.id, base_lemon_juice.id, 0.75, 'oz'),
@@ -347,6 +359,7 @@ def seed_database():
         )
         db.session.add(pina_colada)
         db.session.flush()
+        assign_image(pina_colada)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(pina_colada.id, base_white_rum.id, 2.0, 'oz'),
             measured(pina_colada.id, base_pineapple_juice.id, 3.0, 'oz'),
@@ -362,6 +375,7 @@ def seed_database():
         )
         db.session.add(aperol_spritz)
         db.session.flush()
+        assign_image(aperol_spritz)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(aperol_spritz.id, base_prosecco.id, 3.0, 'oz'),
             measured(aperol_spritz.id, base_aperol.id, 2.0, 'oz'),
@@ -377,6 +391,7 @@ def seed_database():
         )
         db.session.add(rum_and_coke)
         db.session.flush()
+        assign_image(rum_and_coke)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(rum_and_coke.id, base_white_rum.id, 2.0, 'oz'),
             instructional(rum_and_coke.id, base_cola.id, 'fill'),
@@ -391,6 +406,7 @@ def seed_database():
         )
         db.session.add(moscow_mule)
         db.session.flush()
+        assign_image(moscow_mule)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(moscow_mule.id, base_vodka.id, 2.0, 'oz'),
             measured(moscow_mule.id, base_lime_juice.id, 0.5, 'oz'),
@@ -406,6 +422,7 @@ def seed_database():
         )
         db.session.add(gin_tonic)
         db.session.flush()
+        assign_image(gin_tonic)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(gin_tonic.id, base_gin.id, 2.0, 'oz'),
             instructional(gin_tonic.id, base_tonic_water.id, 'fill'),
@@ -420,6 +437,7 @@ def seed_database():
         )
         db.session.add(daiquiri)
         db.session.flush()
+        assign_image(daiquiri)
         db.session.execute(cocktail_ingredients.insert().values([
             measured(daiquiri.id, base_white_rum.id, 2.0, 'oz'),
             measured(daiquiri.id, base_lime_juice.id, 1.0, 'oz'),
