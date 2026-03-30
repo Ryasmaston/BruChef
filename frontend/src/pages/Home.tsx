@@ -168,21 +168,18 @@ export default function Home({ isAuthenticated }: HomeProps) {
           {[
             {
               to: '/cocktails',
-              icon: '🍸',
               title: 'Discover Recipes',
               desc: 'Browse our full library of cocktail recipes, from classics to community creations.',
               delay: 500
             },
             {
               to: isAuthenticated ? '/inventory' : '/register',
-              icon: '📦',
               title: 'Manage Your Bar',
               desc: "Track what's in your inventory and instantly see which cocktails you can make tonight.",
               delay: 600
             },
             {
               to: isAuthenticated ? '/cocktails/new' : '/register',
-              icon: '✏️',
               title: 'Create Recipes',
               desc: 'Build and share your own cocktail recipes with the BruChef community.',
               delay: 700
