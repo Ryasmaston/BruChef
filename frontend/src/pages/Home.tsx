@@ -65,7 +65,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
               Craft the perfect<br />
               <span className="animate-shimmer">cocktail</span>
             </h1>
-            <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed animate-typewriter">
+            <p className="text-lg text-slate-400 font-thin max-w-xl mx-auto leading-relaxed animate-typewriter">
               Discover recipes, manage your bar inventory, and find out exactly what you can make tonight.
             </p>
             <div className="flex gap-3 justify-center pt-2">
@@ -191,11 +191,11 @@ export default function Home({ isAuthenticated }: HomeProps) {
               style={{ animationDelay: `${card.delay}ms` }}
               className="opacity-0 animate-fade-in-up group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
             >
-              <div className="text-3xl mb-4">{card.icon}</div>
-              <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
+              <div className="text-3xl">{card.icon}</div>
+              <h3 className="font-calivorne text-2xl text-center font-semibold text-white group-hover:text-emerald-400 transition-colors animate-shimmer mb-2">
                 {card.title}
               </h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
+              <p className="text-sm text-slate-500 text-center leading-relaxed">{card.desc}</p>
             </Link>
           ))}
         </div>

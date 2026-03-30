@@ -228,9 +228,10 @@ export default function Cocktails({ isAuthenticated = false }: CocktailProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Cocktails</h1>
+      <div className="grid grid-cols-3 items-center">
+        <div />
+        <div className="text-center">
+          <h1 className="text-3xl font-calivorne text-white">Cocktails</h1>
           <p className="text-slate-400 mt-1">
             {filteredCocktails.length} {filteredCocktails.length === 1 ? 'cocktail' : 'cocktails'}
             {hasActiveFilters && <span className="text-emerald-400"> (filtered)</span>}
@@ -239,20 +240,24 @@ export default function Cocktails({ isAuthenticated = false }: CocktailProps) {
             )}
           </p>
         </div>
-        {isAuthenticated ? (
-          <Link
-            to="/cocktails/new"
-            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2"
-          >
-            <span>+</span>
-            <span>New Cocktail</span>
-          </Link>
-        ) : (
-          <div className="text-sm text-slate-500">
-            <Link to="/login" className="text-emerald-400 hover:text-emerald-300">Sign in</Link>
-            {' '}to create cocktails
-          </div>
-        )}
+        <div className="flex justify-end">
+          {isAuthenticated ? (
+            <Link
+              to="/cocktails/new"
+              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2"
+            >
+              <span>+</span>
+              <span>New Cocktail</span>
+            </Link>
+          ) : (
+            <div className="text-sm text-slate-500">
+              <Link to="/login" className="text-emerald-400 hover:text-emerald-300">
+                Sign in
+              </Link>{' '}
+              to create cocktails
+            </div>
+          )}
+        </div>
       </div>
       <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 space-y-4">
         <div>

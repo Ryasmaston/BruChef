@@ -166,15 +166,23 @@ export default function Ingredients() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Ingredients</h1>
+      <div className="grid grid-cols-3 items-center">
+        <div />
+        <div className="text-center">
+          <h1 className="text-3xl font-calivorne text-white">Ingredients</h1>
           <p className="text-slate-400 mt-1">
             {filteredIngredients.length} {filteredIngredients.length === 1 ? 'ingredient' : 'ingredients'}
             {totalPages > 1 && (
               <span className="text-slate-500"> — page {currentPage} of {totalPages}</span>
             )}
           </p>
+        </div>
+        <div className="flex justify-end">
+          {isAuthenticated && (
+            <button className="px-4 py-2 bg-emerald-500 rounded-lg text-white">
+              + New Ingredient
+            </button>
+          )}
         </div>
       </div>
       <div className="flex flex-col sm:flex-row gap-4">
