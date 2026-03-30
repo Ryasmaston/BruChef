@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog'
 import AlertDialog from '../components/AlertDialog'
 import AddToInventoryModal from '../components/AddToInventoryModal'
+import CocktailImage from '../components/CocktailImage'
 
 interface Ingredient {
   id: number
@@ -26,6 +27,7 @@ interface Cocktail {
   description: string
   difficulty: string
   glass_type: string
+  image_url?: string | null
   garnish: string
 }
 
@@ -418,8 +420,11 @@ export default function IngredientDetail() {
                 to={`/cocktails/${cocktail.id}`}
                 className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group"
               >
-                <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
-                  <span className="text-6xl">🍹</span>
+                <div className="relative">
+                  <CocktailImage
+                    imageUrl={cocktail.image_url ?? null}
+                    name={cocktail.name}
+                  />
                 </div>
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-2">

@@ -627,8 +627,11 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredCocktails.map((cocktail) => (
                       <Link key={cocktail.id} to={`/cocktails/${cocktail.id}`} className="bg-slate-800 rounded-lg border border-slate-700 hover:border-emerald-500 transition-colors overflow-hidden group">
-                        <div className="h-48 bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
-                          <span className="text-6xl">🍹</span>
+                        <div className="relative">
+                          <CocktailImage
+                            imageUrl={cocktail.image_url ?? null}
+                            name={cocktail.name}
+                          />
                         </div>
                         <div className="p-5">
                           <div className="flex justify-between items-start mb-2">
