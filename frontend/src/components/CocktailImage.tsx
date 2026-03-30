@@ -82,8 +82,7 @@ export default function CocktailImage({ imageUrl, name, variant = 'card' }: Prop
             alt={name}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-slate-900/10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent" />
         </>
       ) : (
         <div className="w-full h-full bg-gradient-to-br from-emerald-900/50 to-slate-800 flex items-center justify-center">
