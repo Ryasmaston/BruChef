@@ -61,7 +61,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
         <BubbleBackground />
         <div className="relative z-10 pt-16 pb-16 px-8">
           <div className="text-center space-y-6">
-            <h1 className="text-6xl font-bold text-white leading-tight animate-reveal-up">
+            <h1 className="text-6xl font-calivorne text-white leading-tight animate-reveal-up">
               Craft the perfect<br />
               <span className="animate-shimmer">cocktail</span>
             </h1>

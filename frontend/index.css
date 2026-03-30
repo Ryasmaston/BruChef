@@ -106,6 +106,17 @@
   animation: morphGradient 12s ease infinite;
 }
 
+@font-face {
+    font-family: 'calivorne';
+    src: url('fonts/calivorne.ttf');
+    font-weight: 400;
+    font-style: normal;
+}
+
+.font-calivorne {
+    font-family: 'calivorne', sans-serif
+}
+
 .animation-delay-100 { animation-delay: 100ms; }
 .animation-delay-200 { animation-delay: 200ms; }
 .animation-delay-300 { animation-delay: 300ms; }
