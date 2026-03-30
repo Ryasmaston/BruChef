@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import BubbleBackground from '../components/BubbleBackground'
+import CocktailImage from '../components/CocktailImage'
 
 interface HomeProps {
   isAuthenticated: boolean
@@ -12,6 +13,7 @@ interface FeaturedCocktail {
   description: string
   difficulty: string
   glass_type: string
+  image_url?: string | null
   ingredients: Array<{ name: string }>
 }
 
@@ -103,8 +105,12 @@ export default function Home({ isAuthenticated }: HomeProps) {
           <Link to={`/cocktails/${featuredCocktail.id}`}>
             <div className="bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 transition-colors overflow-hidden group">
               <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="h-64 md:h-auto bg-gradient-to-br from-emerald-900/60 to-slate-900 flex items-center justify-center">
-                  <span className="text-9xl">🍹</span>
+                <div className="h-64 md:h-auto min-h-64 relative overflow-hidden">
+                  <CocktailImage
+                    imageUrl={featuredCocktail.image_url ?? null}
+                    name={featuredCocktail.name}
+                    variant="detail"
+                  />
                 </div>
                 <div className="p-8 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-3">
