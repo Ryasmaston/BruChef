@@ -55,7 +55,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-5">
+    <div className="w-full space-y-5">
       <div className="relative rounded-2xl overflow-hidden opacity-0 animate-fade-in-blur animation-delay-100">
         <div className="animate-morph-gradient absolute inset-0" />
         <BubbleBackground />
