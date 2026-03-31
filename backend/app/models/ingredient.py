@@ -6,6 +6,11 @@ class Ingredient(db.Model):
     name = db.Column(db.String(100), nullable=False, unique=True)
     category = db.Column(db.String(50), nullable=False)
     subcategory = db.Column(db.String(50))
+    base_type = db.Column(db.String(50), nullable=True, index=True)
+    type = db.Column(db.String(50), nullable=True)
+    family = db.Column(db.String(50), nullable=True)
+    role = db.Column(db.String(50), nullable=True)
+    flavour = db.Column(db.String(50), nullable=True)
     description = db.Column(db.Text)
     abv = db.Column(db.Float)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -34,6 +39,11 @@ class Ingredient(db.Model):
             'name': self.name,
             'category': self.category,
             'subcategory': self.subcategory,
+            'base_type': self.base_type,
+            'type': self.type,
+            'family': self.family,
+            'role': self.role,
+            'flavour': self.flavour,
             'description': self.description,
             'abv': self.abv,
             'created_at': self.created_at.isoformat() if self.created_at else None,
