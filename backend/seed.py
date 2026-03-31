@@ -254,7 +254,7 @@ def seed_database():
             name="Margarita",
             description="A classic tequila cocktail with lime and triple sec",
             instructions="Add tequila, triple sec, and lime juice to shaker with ice\nShake well\nStrain into salt-rimmed rocks glass\nGarnish with lime wheel",
-            glass_type="Rocks", garnish="Lime wheel, salt rim", difficulty="Easy",
+            glass_type="Rocks glass", garnish="Lime wheel, salt rim", difficulty="Easy",
             status='approved', user_id=None
         )
         db.session.add(margarita)
@@ -270,7 +270,7 @@ def seed_database():
             name="Mojito",
             description="A refreshing rum cocktail with mint and lime",
             instructions="Muddle mint with simple syrup and lime juice\nAdd rum and ice\nTop with soda water\nStir gently\nGarnish with mint sprig",
-            glass_type="Highball", garnish="Mint sprig", difficulty="Easy",
+            glass_type="Highball glass", garnish="Mint sprig", difficulty="Easy",
             status='approved', user_id=None
         )
         db.session.add(mojito)
@@ -288,7 +288,7 @@ def seed_database():
             name="Cosmopolitan",
             description="A vodka cocktail with cranberry and citrus",
             instructions="Add vodka, triple sec, lime juice, cranberry juice to shaker with ice\nShake well\nStrain into chilled martini glass\nGarnish with lime wheel",
-            glass_type="Martini", garnish="Lime wheel", difficulty="Medium",
+            glass_type="Cocktail glass", garnish="Lime wheel", difficulty="Medium",
             status='approved', user_id=None
         )
         db.session.add(cosmopolitan)
@@ -305,7 +305,7 @@ def seed_database():
             name="Old Fashioned",
             description="A timeless whiskey cocktail with bitters and sugar",
             instructions="Muddle sugar cube with bitters\nAdd bourbon and ice\nStir gently\nGarnish with orange peel",
-            glass_type="Rocks", garnish="Orange peel", difficulty="Easy",
+            glass_type="Rocks glass", garnish="Orange peel", difficulty="Easy",
             status="approved", user_id=None
         )
         db.session.add(old_fashioned)
@@ -321,7 +321,7 @@ def seed_database():
             name="Negroni",
             description="A bold gin cocktail with Campari and sweet vermouth",
             instructions="Add gin, Campari, sweet vermouth to mixing glass with ice\nStir until chilled\nStrain over ice in rocks glass\nGarnish with orange peel",
-            glass_type="Rocks", garnish="Orange peel", difficulty="Medium",
+            glass_type="Rocks glass", garnish="Orange peel", difficulty="Medium",
             status="approved", user_id=None
         )
         db.session.add(negroni)
@@ -337,7 +337,7 @@ def seed_database():
             name="Whiskey Sour",
             description="A balanced cocktail with lemon and egg white",
             instructions="Add whiskey, lemon juice, simple syrup, egg white\nDry shake\nAdd ice and shake again\nStrain into rocks glass\nGarnish with cherry",
-            glass_type="Rocks", garnish="Cherry", difficulty="Medium",
+            glass_type="Rocks glass", garnish="Cherry", difficulty="Medium",
             status="approved", user_id=None
         )
         db.session.add(whiskey_sour)
@@ -354,7 +354,7 @@ def seed_database():
             name="Piña Colada",
             description="A tropical rum cocktail with pineapple and coconut",
             instructions="Add rum, pineapple juice, coconut cream to blender\nAdd ice and blend\nPour into hurricane glass\nGarnish with pineapple wedge",
-            glass_type="Hurricane", garnish="Pineapple wedge", difficulty="Easy",
+            glass_type="Hurricane glass", garnish="Pineapple wedge", difficulty="Easy",
             status="approved", user_id=None
         )
         db.session.add(pina_colada)
@@ -370,7 +370,7 @@ def seed_database():
             name="Aperol Spritz",
             description="A light Italian aperitif with prosecco and Aperol",
             instructions="Fill wine glass with ice\nAdd prosecco\nAdd Aperol\nTop with soda water\nStir gently",
-            glass_type="Wine", garnish="Orange slice", difficulty="Easy",
+            glass_type="Wine glass", garnish="Orange slice", difficulty="Easy",
             status="approved", user_id=None
         )
         db.session.add(aperol_spritz)
@@ -386,7 +386,7 @@ def seed_database():
             name="Rum & Coke",
             description="A simple highball with rum and cola",
             instructions="Fill highball glass with ice\nAdd rum\nTop with cola\nStir gently",
-            glass_type="Highball", garnish="Lime wedge", difficulty="Easy",
+            glass_type="Highball glass", garnish="Lime wedge", difficulty="Easy",
             status="approved", user_id=None
         )
         db.session.add(rum_and_coke)
@@ -417,7 +417,7 @@ def seed_database():
             name="Gin & Tonic",
             description="A classic highball with gin and tonic water",
             instructions="Fill highball glass with ice\nAdd gin\nTop with tonic water\nGarnish with lime wedge",
-            glass_type="Highball", garnish="Lime wedge", difficulty="Easy",
+            glass_type="Highball glass", garnish="Lime wedge", difficulty="Easy",
             status="approved", user_id=None
         )
         db.session.add(gin_tonic)
@@ -432,7 +432,7 @@ def seed_database():
             name="Daiquiri",
             description="A classic rum sour with lime and sugar",
             instructions="Add rum, lime juice, and simple syrup to shaker with ice\nShake well\nStrain into chilled coupe glass",
-            glass_type="Coupe", garnish="Lime wheel", difficulty="Easy",
+            glass_type="Coupe glass", garnish="Lime wheel", difficulty="Easy",
             status="approved", user_id=None
         )
         db.session.add(daiquiri)
