@@ -25,7 +25,6 @@ export default function Cocktails({ isAuthenticated = false }) {
       const community = data.filter((c: { is_official: boolean }) => !c.is_official).length
       setStats({ classic, community })
     } catch {
-      // stats remain 0 on error
     } finally {
       setLoading(false)
     }
@@ -58,18 +57,17 @@ export default function Cocktails({ isAuthenticated = false }) {
     <div className="max-w-4xl mx-auto space-y-10 py-6">
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-calivorne text-white">Cocktails</h1>
-        <p className="text-slate-400 text-lg">Choose a collection to explore</p>
+        <p className="text-slate-400 text-lg font-light">Choose a collection to explore</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {categories.map((cat) => (
           <Link
             key={cat.slug}
-            to={`/cocktails/${cat.slug}`}
+            to={`/cocktails/category/${cat.slug}`}
             className={`group relative bg-slate-800 rounded-xl border border-slate-700 ${cat.borderClass} hover:shadow-xl transition-all duration-300 overflow-hidden p-8 flex flex-col gap-5`}
           >
             <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_70%_20%,white,transparent_60%)] pointer-events-none" />
             <div className="flex items-start justify-between">
-              <span className="text-5xl leading-none">{cat.icon}</span>
               {loading ? (
                 <span className={`px-3 py-1 rounded-full text-xs font-medium border ${cat.badgeClass} animate-pulse w-20 h-6`} />
               ) : (
@@ -79,10 +77,10 @@ export default function Cocktails({ isAuthenticated = false }) {
               )}
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-white">
+              <h2 className="text-2xl font-calivorne text-white">
                 {cat.label}
               </h2>
-              <p className="text-slate-400 text-sm leading-relaxed">
+              <p className="text-slate-400 text-sm font-light leading-relaxed">
                 {cat.description}
               </p>
             </div>

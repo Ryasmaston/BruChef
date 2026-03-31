@@ -1,9 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { usePagination } from '../hooks/usePagination'
 import Pagination from '../components/Pagination'
 import AlertDialog from '../components/AlertDialog'
 import CocktailImage from '../components/CocktailImage'
+
+interface Ingredient {
+  id: number
+  name: string
+  category: string
+  abv?: number | null
+}
 
 interface Cocktail {
   id: number
@@ -15,11 +22,7 @@ interface Cocktail {
   image_url?: string | null
   is_official: boolean
   creator_name: string
-  ingredients?: Array<{
-    id: number
-    name: string
-    category: string
-  }>
+  ingredients?: Ingredient[]
   favourited_by: number[]
 }
 
@@ -39,6 +42,7 @@ const CATEGORY_CONFIG = {
     accentBorder: 'border-emerald-500',
     accentText: 'text-emerald-400',
     accentHover: 'hover:text-emerald-300',
+    sliderAccent: '#10b981',
     filter: (c: Cocktail) => c.is_official,
   },
   community: {
@@ -47,6 +51,7 @@ const CATEGORY_CONFIG = {
     accentBorder: 'border-sky-500',
     accentText: 'text-sky-400',
     accentHover: 'hover:text-sky-300',
+    sliderAccent: '#0ea5e9',
     filter: (c: Cocktail) => !c.is_official,
   },
   all: {
@@ -55,11 +60,17 @@ const CATEGORY_CONFIG = {
     accentBorder: 'border-emerald-500',
     accentText: 'text-emerald-400',
     accentHover: 'hover:text-emerald-300',
+    sliderAccent: '#10b981',
     filter: () => true,
   },
 }
 
 type CategorySlug = keyof typeof CATEGORY_CONFIG
+
+function getCocktailMaxAbv(cocktail: Cocktail): number {
+  if (!cocktail.ingredients || cocktail.ingredients.length === 0) return 0
+  return Math.max(...cocktail.ingredients.map(ing => ing.abv ?? 0))
+}
 
 export default function CocktailCategory({ isAuthenticated = false }: CocktailCategoryProps) {
   const { category } = useParams<{ category: string }>()
@@ -72,6 +83,9 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [glassFilter, setGlassFilter] = useState<string>('all')
+  const [alcoholFilter, setAlcoholFilter] = useState<'all' | 'alcoholic' | 'non-alcoholic'>('all')
+  const [abvMax, setAbvMax] = useState<number>(0)
+  const [abvFilter, setAbvFilter] = useState<number>(0)
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
   const [favouriting, setFavouriting] = useState<Set<number>>(new Set())
   const [showAlertDialog, setShowAlertDialog] = useState(false)
@@ -118,14 +132,30 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
     }
   }
 
-  if (!slug) return null
-  const config = CATEGORY_CONFIG[slug]
-  const scopedCocktails = cocktails.filter(config.filter)
-  const availableGlassTypes = Array.from(
-    new Set(scopedCocktails.map(c => c.glass_type).filter(Boolean))
-  ).sort()
+  const config = slug ? CATEGORY_CONFIG[slug] : CATEGORY_CONFIG['all']
 
-  const filteredCocktails = scopedCocktails.filter(cocktail => {
+  const scopedCocktails = useMemo(
+    () => cocktails.filter(config.filter),
+    [cocktails, slug]
+  )
+
+  const computedAbvMax = useMemo(() => {
+    if (scopedCocktails.length === 0) return 0
+    return Math.ceil(Math.max(...scopedCocktails.map(getCocktailMaxAbv)))
+  }, [scopedCocktails.length])
+
+  useEffect(() => {
+    setAbvMax(computedAbvMax)
+    setAbvFilter(computedAbvMax)
+  }, [computedAbvMax])
+
+  const availableGlassTypes = useMemo(() => Array.from(
+    new Set(scopedCocktails.map(c => c.glass_type).filter(Boolean))
+  ).sort(), [scopedCocktails])
+
+  const isAbvFilterActive = abvMax > 0 && abvFilter < abvMax
+
+  const filteredCocktails = useMemo(() => scopedCocktails.filter(cocktail => {
     const matchesSearch = searchQuery === '' ||
       cocktail.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (cocktail.ingredients && cocktail.ingredients.some(ing =>
@@ -135,12 +165,21 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
     const matchesCategory = categoryFilter === 'all' ||
       (cocktail.ingredients && cocktail.ingredients.some(ing => ing.category === categoryFilter))
     const matchesGlass = glassFilter === 'all' || cocktail.glass_type === glassFilter
-    return matchesSearch && matchesDifficulty && matchesCategory && matchesGlass
-  })
+    const cocktailMaxAbv = getCocktailMaxAbv(cocktail)
+    const isAlcoholic = cocktailMaxAbv > 0
+    const matchesAlcohol =
+      alcoholFilter === 'all' ||
+      (alcoholFilter === 'alcoholic' && isAlcoholic) ||
+      (alcoholFilter === 'non-alcoholic' && !isAlcoholic)
+    const matchesAbv = !isAbvFilterActive || cocktailMaxAbv <= abvFilter
+    return matchesSearch && matchesDifficulty && matchesCategory && matchesGlass && matchesAlcohol && matchesAbv
+  }), [scopedCocktails, searchQuery, difficultyFilter, categoryFilter, glassFilter, alcoholFilter, abvFilter, isAbvFilterActive])
 
   const { currentPage, totalPages, paginatedItems, goToPage, reset } = usePagination(filteredCocktails, 12)
 
-  useEffect(() => { reset() }, [searchQuery, difficultyFilter, categoryFilter, glassFilter])
+  useEffect(() => { reset() }, [searchQuery, difficultyFilter, categoryFilter, glassFilter, alcoholFilter, abvFilter])
+
+  if (!slug) return null
 
   const handleToggleFavourite = async (e: React.MouseEvent, cocktailId: number) => {
     e.preventDefault()
@@ -231,9 +270,19 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
     setDifficultyFilter('all')
     setCategoryFilter('all')
     setGlassFilter('all')
+    setAlcoholFilter('all')
+    setAbvFilter(abvMax)
   }
 
-  const hasActiveFilters = searchQuery !== '' || difficultyFilter !== 'all' || categoryFilter !== 'all' || glassFilter !== 'all'
+  const hasActiveFilters =
+    searchQuery !== '' ||
+    difficultyFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    glassFilter !== 'all' ||
+    alcoholFilter !== 'all' ||
+    isAbvFilterActive
+
+  const sliderFillPct = abvMax > 0 ? (abvFilter / abvMax) * 100 : 100
 
   if (loading) {
     return (
@@ -305,6 +354,7 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
           )}
         </div>
       </div>
+
       <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 space-y-4">
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-2">
@@ -367,6 +417,56 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
             </select>
           </div>
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-2">
+              Alcohol Content
+            </label>
+            <div className="flex rounded-lg overflow-hidden border border-slate-700 h-[42px]">
+              {(['all', 'alcoholic', 'non-alcoholic'] as const).map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setAlcoholFilter(opt)}
+                  className={`flex-1 text-xs font-medium transition-colors ${
+                    alcoholFilter === opt
+                      ? 'bg-slate-600 text-white'
+                      : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-700'
+                  }`}
+                >
+                  {opt === 'all' ? 'All' : opt === 'alcoholic' ? 'Alcoholic' : 'Virgin'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-2">
+              Max ABV{' '}
+              <span className={`font-semibold ${isAbvFilterActive ? config.accentText : 'text-slate-300'}`}>
+                {abvFilter}%
+              </span>
+              {isAbvFilterActive && (
+                <span className="text-slate-500 ml-1">(cap: {abvMax}%)</span>
+              )}
+            </label>
+            <div className="flex items-center gap-3 h-[42px]">
+              <span className="text-xs text-slate-500 shrink-0">0%</span>
+              <input
+                type="range"
+                min={0}
+                max={abvMax || 1}
+                step={1}
+                value={abvFilter}
+                onChange={(e) => setAbvFilter(Number(e.target.value))}
+                disabled={abvMax === 0}
+                className="flex-1 h-2 rounded-full appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{
+                  background: `linear-gradient(to right, ${config.sliderAccent} 0%, ${config.sliderAccent} ${sliderFillPct}%, #1e293b ${sliderFillPct}%, #1e293b 100%)`,
+                }}
+              />
+              <span className="text-xs text-slate-500 shrink-0 w-8">{abvMax}%</span>
+            </div>
+          </div>
+        </div>
         {hasActiveFilters && (
           <div className="pt-3 border-t border-slate-700">
             <button
@@ -403,6 +503,18 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
             <div className={`px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full ${config.accentText} text-sm flex items-center gap-2`}>
               <span>{difficultyFilter}</span>
               <button onClick={() => setDifficultyFilter('all')} className={config.accentHover}>✕</button>
+            </div>
+          )}
+          {alcoholFilter !== 'all' && (
+            <div className={`px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full ${config.accentText} text-sm flex items-center gap-2`}>
+              <span>{alcoholFilter === 'alcoholic' ? '🍹 Alcoholic' : '🧃 Virgin'}</span>
+              <button onClick={() => setAlcoholFilter('all')} className={config.accentHover}>✕</button>
+            </div>
+          )}
+          {isAbvFilterActive && (
+            <div className={`px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full ${config.accentText} text-sm flex items-center gap-2`}>
+              <span>Max ABV: {abvFilter}%</span>
+              <button onClick={() => setAbvFilter(abvMax)} className={config.accentHover}>✕</button>
             </div>
           )}
         </div>
@@ -537,6 +649,26 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
         title={alertTitle}
         message={alertMessage}
       />
+      <style>{`
+        input[type='range']::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: ${config.sliderAccent};
+          cursor: pointer;
+          border: 2px solid #0f172a;
+          box-shadow: 0 0 0 2px ${config.sliderAccent}50;
+        }
+        input[type='range']::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: ${config.sliderAccent};
+          cursor: pointer;
+          border: 2px solid #0f172a;
+        }
+      `}</style>
     </div>
   )
 }

@@ -67,7 +67,7 @@ export default function Layout({ children, isAuthenticated, username, isAdmin, o
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-3 py-2 rounded-md font-light text-sm transition-colors ${
                       isActive(link.path)
                         ? 'bg-slate-700 text-white'
                         : 'text-slate-300 hover:bg-slate-700 hover:text-white'
@@ -97,7 +97,7 @@ export default function Layout({ children, isAuthenticated, username, isAdmin, o
                     onClick={() => setDropdownOpen(prev => !prev)}
                     className="flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors hover:bg-slate-700"
                   >
-                    <span className="text-slate-400">
+                    <span className="text-slate-400 font-light">
                       Hello, <span className="text-emerald-400 font-semibold">{username}</span>
                     </span>
                     {isAdmin && (

@@ -27,20 +27,16 @@ export default function App() {
     checkAuth()
   }, [])
   const checkAuth = async () => {
-    // console.log('Checking authentication')
     try {
       const response = await fetch('http://localhost:5001/api/auth/check', {
         credentials: 'include'
       })
       const data = await response.json()
-      // console.log('Auth check response:', data)
       if (data.authenticated && data.user) {
-        // console.log('User is authenticated')
         setIsAuthenticated(true)
         setUsername(data.user.username)
         setIsAdmin(data.user.is_admin || false)
       } else {
-        // console.log('User is not authenticated')
         setIsAuthenticated(false)
         setUsername(null)
         setIsAdmin(false)
@@ -49,21 +45,13 @@ export default function App() {
       setIsAuthenticated(false)
       setUsername(null)
       setIsAdmin(false)
-      // console.log('Not authenticated')
     } finally {
       setLoading(false)
     }
   }
-  const handleLoginSuccess = () => {
-    // console.log('handleLoginSuccess called')
-    checkAuth()
-  }
-  const handleRegisterSuccess = () => {
-    // console.log('handleRegisterSuccess called')
-    checkAuth()
-  }
+  const handleLoginSuccess = () => { checkAuth() }
+  const handleRegisterSuccess = () => { checkAuth() }
   const handleLogout = () => {
-    // console.log('handleLogout called')
     setIsAuthenticated(false)
     setUsername(null)
     setIsAdmin(false)
@@ -91,19 +79,19 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home isAuthenticated={isAuthenticated} />} />
           <Route path="/cocktails" element={<Cocktails isAuthenticated={isAuthenticated} />} />
-          <Route path="/cocktails/:category" element={<CocktailCategory isAuthenticated={isAuthenticated} />} />
           <Route path="/cocktails/new" element={<CreateCocktail isAuthenticated={isAuthenticated} />} />
+          <Route path="/cocktails/category/:category" element={<CocktailCategory />} />
+          <Route path="/cocktails/:id/edit" element={<EditCocktail isAuthenticated={isAuthenticated} />} />
           <Route path="/cocktails/:id" element={<CocktailDetail />} />
           <Route path="/ingredients" element={<Ingredients />} />
+          <Route path="/ingredients/:id/edit" element={<EditIngredient isAuthenticated={isAuthenticated} />} />
           <Route path="/ingredients/:id" element={<IngredientDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/register" element={<Register onRegisterSuccess={handleRegisterSuccess} />} />
           <Route path="/inventory" element={<Inventory isAuthenticated={isAuthenticated} />} />
           <Route path='/admin/review' element={<AdminReview />} />
-          <Route path="/cocktails/:id/edit" element={<EditCocktail isAuthenticated={isAuthenticated} />} />
-          <Route path="/ingredients/:id/edit" element={<EditIngredient isAuthenticated={isAuthenticated} />} />
-          <Route path="/settings" element={<Settings isAuthenticated={isAuthenticated} username={username} onUpdate={checkAuth} />}/>
+          <Route path="/settings" element={<Settings isAuthenticated={isAuthenticated} username={username} onUpdate={checkAuth} />} />
         </Routes>
       </Layout>
     </Router>

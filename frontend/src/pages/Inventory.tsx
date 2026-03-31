@@ -436,8 +436,8 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-white">My Inventory</h1>
-                <p className="text-slate-400 mt-1">
+                <h1 className="text-4xl md:text-5xl font-calivorne text-white">My Inventory</h1>
+                <p className="text-slate-400 font-thin mt-1">
                   Manage your ingredients and discover what you can make
                 </p>
               </div>
@@ -467,7 +467,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     viewMode === 'inventory' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  📦 My Inventory
+                  My Inventory
                 </button>
                 <button
                   onClick={() => setViewMode('available')}
@@ -475,7 +475,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     viewMode === 'available' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  🍸 Available Cocktails
+                  Available Cocktails
                 </button>
               </div>
               <div className="flex-1">
@@ -651,8 +651,8 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           <>
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-white">My Recipes</h1>
-                <p className="text-slate-400 mt-1">
+                <h1 className="text-4xl md:text-5xl font-calivorne  text-white">My Recipes</h1>
+                <p className="text-slate-400 font-thin mt-1">
                   View and manage all your cocktail creations
                 </p>
               </div>
@@ -843,8 +843,8 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           <>
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-white">Favourite Cocktails</h1>
-                <p className="text-slate-400 mt-1">
+                <h1 className="text-4xl md:text-5xl font-calivorne  text-white">Favourite Cocktails</h1>
+                <p className="text-slate-400 font-thin mt-1">
                   Cocktails you've saved to your favourites
                 </p>
               </div>
