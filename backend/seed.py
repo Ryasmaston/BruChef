@@ -33,113 +33,113 @@ def seed_database():
 
         print("Creating base ingredients")
 
-        base_vodka = Ingredient(name="Vodka", category="Spirit", subcategory="Vodka", abv=40.0, preferred_unit="oz",
+        base_vodka = Ingredient(name="Vodka", category="Spirit", base_type="vodka", abv=40.0, preferred_unit="oz",
             description="A clear, neutral spirit distilled from grains or potatoes.")
-        base_gin = Ingredient(name="Gin", category="Spirit", subcategory="Gin", abv=40.0, preferred_unit="oz",
+        base_gin = Ingredient(name="Gin", category="Spirit", base_type="gin", abv=40.0, preferred_unit="oz",
             description="A juniper-flavoured spirit with botanical infusions.")
-        base_white_rum = Ingredient(name="White Rum", category="Spirit", subcategory="Rum", abv=40.0, preferred_unit="oz",
+        base_white_rum = Ingredient(name="White Rum", category="Spirit", base_type="rum", abv=40.0, preferred_unit="oz",
             description="A light-bodied rum distilled from sugarcane or molasses.")
-        base_dark_rum = Ingredient(name="Dark Rum", category="Spirit", subcategory="Rum", abv=40.0, preferred_unit="oz",
+        base_dark_rum = Ingredient(name="Dark Rum", category="Spirit", base_type="rum", abv=40.0, preferred_unit="oz",
             description="A rich, full-bodied rum aged in charred oak barrels.")
-        base_tequila = Ingredient(name="Tequila", category="Spirit", subcategory="Tequila", abv=40.0, preferred_unit="oz",
-            description="A Mexican spirit distilled from blue agave plants.")
-        base_bourbon = Ingredient(name="Bourbon Whiskey", category="Spirit", subcategory="Bourbon", abv=45.0, preferred_unit="oz",
-            description="An American whiskey aged in new charred oak barrels.")
-        base_scotch = Ingredient(name="Scotch Whisky", category="Spirit", subcategory="Scotch", abv=40.0, preferred_unit="oz",
-            description="A malt or grain whisky made in Scotland.")
-        base_irish_whiskey = Ingredient(name="Irish Whiskey", category="Spirit", subcategory="Whiskey", abv=40.0, preferred_unit="oz",
-            description="A smooth whiskey distilled and aged in Ireland.")
-        base_rye = Ingredient(name="Rye Whiskey", category="Spirit", subcategory="Whiskey", abv=40.0, preferred_unit="oz",
-            description="A whiskey made with a majority rye grain mash.")
-        base_brandy = Ingredient(name="Brandy", category="Spirit", subcategory="Brandy", abv=40.0, preferred_unit="oz",
-            description="A spirit distilled from wine or fermented fruit juice.")
-        base_cognac = Ingredient(name="Cognac", category="Spirit", subcategory="Cognac", abv=40.0, preferred_unit="oz",
-            description="A variety of brandy from the Cognac region of France.")
-        base_mezcal = Ingredient(name="Mezcal", category="Spirit", subcategory="Mezcal", abv=40.0, preferred_unit="oz",
-            description="A smoky Mexican spirit made from agave.")
-        base_spiced_rum = Ingredient(name="Spiced Rum", category="Spirit", subcategory="Rum", abv=40.0, preferred_unit="oz",
+        base_spiced_rum = Ingredient(name="Spiced Rum", category="Spirit", base_type="rum", abv=40.0, preferred_unit="oz",
             description="Rum infused with spices such as vanilla, cinnamon, and clove.")
-        base_triple_sec = Ingredient(name="Triple Sec", category="Liqueur", subcategory="Orange", abv=30.0, preferred_unit="oz",
-            description="A clear orange-flavoured liqueur.")
-        base_campari = Ingredient(name="Campari", category="Liqueur", subcategory="Herbal", abv=24.0, preferred_unit="oz",
+        base_tequila = Ingredient(name="Tequila", category="Spirit", base_type="tequila", abv=40.0, preferred_unit="oz",
+            description="A Mexican spirit distilled from blue agave plants.")
+        base_bourbon = Ingredient(name="Bourbon Whiskey", category="Spirit", base_type="whiskey", abv=45.0, preferred_unit="oz",
+            description="An American whiskey aged in new charred oak barrels.")
+        base_scotch = Ingredient(name="Scotch Whisky", category="Spirit", base_type="whiskey", abv=40.0, preferred_unit="oz",
+            description="A malt or grain whisky made in Scotland.")
+        base_irish_whiskey = Ingredient(name="Irish Whiskey", category="Spirit", base_type="whiskey", abv=40.0, preferred_unit="oz",
+            description="A smooth whiskey distilled and aged in Ireland.")
+        base_rye = Ingredient(name="Rye Whiskey", category="Spirit", base_type="whiskey", abv=40.0, preferred_unit="oz",
+            description="A whiskey made with a majority rye grain mash.")
+        base_brandy = Ingredient(name="Brandy", category="Spirit", base_type="brandy", abv=40.0, preferred_unit="oz",
+            description="A spirit distilled from wine or fermented fruit juice.")
+        base_cognac = Ingredient(name="Cognac", category="Spirit", base_type="brandy", abv=40.0, preferred_unit="oz",
+            description="A variety of brandy from the Cognac region of France.")
+        base_mezcal = Ingredient(name="Mezcal", category="Spirit", base_type="mezcal", abv=40.0, preferred_unit="oz",
+            description="A smoky Mexican spirit made from agave.")
+        base_triple_sec = Ingredient(name="Triple Sec", category="Liqueur", base_type="orange_liqueur", abv=30.0, preferred_unit="oz",
+            description="A clear orange-flavoured Liqueur.")
+        base_campari = Ingredient(name="Campari", category="Liqueur", base_type="bitter_liqueur", abv=24.0, preferred_unit="oz",
             description="An iconic Italian bitter liqueur with a distinctive red colour.")
-        base_aperol = Ingredient(name="Aperol", category="Liqueur", subcategory="Herbal", abv=11.0, preferred_unit="oz",
+        base_aperol = Ingredient(name="Aperol", category="Liqueur", base_type="bitter_liqueur", abv=11.0, preferred_unit="oz",
             description="A bright orange Italian aperitif with a bittersweet flavour.")
-        base_amaretto = Ingredient(name="Amaretto", category="Liqueur", subcategory="Nut", abv=28.0, preferred_unit="oz",
+        base_amaretto = Ingredient(name="Amaretto", category="Liqueur", base_type="nut_liqueur", abv=28.0, preferred_unit="oz",
             description="A sweet Italian liqueur with an almond flavour.")
-        base_coffee_liqueur = Ingredient(name="Coffee Liqueur", category="Liqueur", subcategory="Coffee", abv=20.0, preferred_unit="oz",
+        base_coffee_liqueur = Ingredient(name="Coffee Liqueur", category="Liqueur", base_type="coffee_liqueur", abv=20.0, preferred_unit="oz",
             description="A sweet coffee-flavoured liqueur.")
-        base_cream_liqueur = Ingredient(name="Cream Liqueur", category="Liqueur", subcategory="Cream", abv=17.0, preferred_unit="oz",
+        base_cream_liqueur = Ingredient(name="Cream Liqueur", category="Liqueur", base_type="cream_liqueur", abv=17.0, preferred_unit="oz",
             description="A liqueur combining cream with a spirit base.")
-        base_raspberry_liqueur = Ingredient(name="Raspberry Liqueur", category="Liqueur", subcategory="Fruit", abv=16.0, preferred_unit="oz",
+        base_raspberry_liqueur = Ingredient(name="Raspberry Liqueur", category="Liqueur", base_type="fruit_liqueur", abv=16.0, preferred_unit="oz",
             description="A sweet fruit liqueur made from raspberries.")
-        base_elderflower_liqueur = Ingredient(name="Elderflower Liqueur", category="Liqueur", subcategory="Herbal", abv=20.0, preferred_unit="oz",
+        base_elderflower_liqueur = Ingredient(name="Elderflower Liqueur", category="Liqueur", base_type="floral_liqueur", abv=20.0, preferred_unit="oz",
             description="A floral liqueur made from elderflower blossoms.")
-        base_peach_schnapps = Ingredient(name="Peach Schnapps", category="Liqueur", subcategory="Fruit", abv=20.0, preferred_unit="oz",
+        base_peach_schnapps = Ingredient(name="Peach Schnapps", category="Liqueur", base_type="fruit_liqueur", abv=20.0, preferred_unit="oz",
             description="A sweet peach-flavoured liqueur.")
-        base_blue_curacao = Ingredient(name="Blue Curaçao", category="Liqueur", subcategory="Orange", abv=25.0, preferred_unit="oz",
+        base_blue_curacao = Ingredient(name="Blue Curaçao", category="Liqueur", base_type="orange_liqueur", abv=25.0, preferred_unit="oz",
             description="A blue-coloured orange-flavoured liqueur.")
-        base_creme_de_menthe = Ingredient(name="Crème de Menthe", category="Liqueur", subcategory="Herbal", abv=25.0, preferred_unit="oz",
+        base_creme_de_menthe = Ingredient(name="Crème de Menthe", category="Liqueur", base_type="herbal_liqueur", abv=25.0, preferred_unit="oz",
             description="A sweet mint-flavoured liqueur.")
-        base_creme_de_cacao = Ingredient(name="Crème de Cacao", category="Liqueur", subcategory="Chocolate", abv=25.0, preferred_unit="oz",
+        base_creme_de_cacao = Ingredient(name="Crème de Cacao", category="Liqueur", base_type="chocolate_liqueur", abv=25.0, preferred_unit="oz",
             description="A chocolate-flavoured liqueur.")
-        base_sweet_vermouth = Ingredient(name="Sweet Vermouth", category="Wine", subcategory="Fortified", abv=16.0, preferred_unit="oz",
+        base_sweet_vermouth = Ingredient(name="Sweet Vermouth", category="Wine and Champagne", base_type="vermouth", abv=16.0, preferred_unit="oz",
             description="A sweet fortified wine used in Manhattans and Negronis.")
-        base_dry_vermouth = Ingredient(name="Dry Vermouth", category="Wine", subcategory="Fortified", abv=18.0, preferred_unit="oz",
+        base_dry_vermouth = Ingredient(name="Dry Vermouth", category="Wine and Champagne", base_type="vermouth", abv=18.0, preferred_unit="oz",
             description="A dry fortified wine used in Martinis.")
-        base_prosecco = Ingredient(name="Prosecco", category="Wine", subcategory="Sparkling", abv=11.0, preferred_unit="oz",
+        base_prosecco = Ingredient(name="Prosecco", category="Wine and Champagne", base_type="sparkling_wine", abv=11.0, preferred_unit="oz",
             description="An Italian sparkling wine.")
-        base_champagne = Ingredient(name="Champagne", category="Wine", subcategory="Sparkling", abv=12.0, preferred_unit="oz",
+        base_champagne = Ingredient(name="Champagne", category="Wine and Champagne", base_type="sparkling_wine", abv=12.0, preferred_unit="oz",
             description="A French sparkling wine from the Champagne region.")
-        base_angostura = Ingredient(name="Angostura Bitters", category="Bitters", subcategory="Aromatic", abv=44.7, preferred_unit="dashes",
+        base_angostura = Ingredient(name="Angostura Bitters", category="Mixer", base_type="bitters", abv=44.7, preferred_unit="dashes",
             description="A concentrated botanical extract from Trinidad.")
-        base_orange_bitters = Ingredient(name="Orange Bitters", category="Bitters", subcategory="Orange", abv=28.0, preferred_unit="dashes",
+        base_orange_bitters = Ingredient(name="Orange Bitters", category="Mixer", base_type="bitters", abv=28.0, preferred_unit="dashes",
             description="A bitter citrus-forward cocktail additive.")
-        base_peychauds = Ingredient(name="Peychaud's Bitters", category="Bitters", subcategory="Aromatic", abv=35.0, preferred_unit="dashes",
+        base_peychauds = Ingredient(name="Peychaud's Bitters", category="Mixer", base_type="bitters", abv=35.0, preferred_unit="dashes",
             description="A gentian-based bitters with a floral, anise character.")
-        base_lime_juice = Ingredient(name="Lime Juice", category="Juice", subcategory="Citrus", abv=0.0, preferred_unit="oz",
+        base_lime_juice = Ingredient(name="Lime Juice", category="Mixer", base_type="citrus", abv=0.0, preferred_unit="oz",
             description="Freshly squeezed lime juice providing bright, tart acidity.")
-        base_lemon_juice = Ingredient(name="Lemon Juice", category="Juice", subcategory="Citrus", abv=0.0, preferred_unit="oz",
+        base_lemon_juice = Ingredient(name="Lemon Juice", category="Mixer", base_type="citrus", abv=0.0, preferred_unit="oz",
             description="Fresh lemon juice offering balanced acidity and citrus brightness.")
-        base_orange_juice = Ingredient(name="Orange Juice", category="Juice", subcategory="Citrus", abv=0.0, preferred_unit="oz",
+        base_orange_juice = Ingredient(name="Orange Juice", category="Mixer", base_type="citrus", abv=0.0, preferred_unit="oz",
             description="Freshly squeezed orange juice with sweet citrus flavour.")
-        base_cranberry_juice = Ingredient(name="Cranberry Juice", category="Juice", subcategory="Berry", abv=0.0, preferred_unit="oz",
+        base_cranberry_juice = Ingredient(name="Cranberry Juice", category="Mixer", base_type="juice", abv=0.0, preferred_unit="oz",
             description="A tart, ruby-red juice that adds colour and fruity acidity.")
-        base_pineapple_juice = Ingredient(name="Pineapple Juice", category="Juice", subcategory="Tropical", abv=0.0, preferred_unit="oz",
+        base_pineapple_juice = Ingredient(name="Pineapple Juice", category="Mixer", base_type="juice", abv=0.0, preferred_unit="oz",
             description="A sweet, tropical juice perfect for tiki drinks.")
-        base_grapefruit_juice = Ingredient(name="Grapefruit Juice", category="Juice", subcategory="Citrus", abv=0.0, preferred_unit="oz",
+        base_grapefruit_juice = Ingredient(name="Grapefruit Juice", category="Mixer", base_type="citrus", abv=0.0, preferred_unit="oz",
             description="A tart, slightly bitter citrus juice.")
-        base_simple_syrup = Ingredient(name="Simple Syrup", category="Syrup", subcategory="Simple", abv=0.0, preferred_unit="oz",
-            description="A 1:1 mixture of sugar and water.")
-        base_sugar_cube = Ingredient(name="Sugar Cube", category="Syrup", subcategory="Simple", abv=0.0, preferred_unit="cubes",
-            description="A measured cube of sugar used in Old Fashioneds.")
-        base_grenadine = Ingredient(name="Grenadine", category="Syrup", subcategory="Grenadine", abv=0.0, preferred_unit="oz",
-            description="A sweet pomegranate syrup used for colour and sweetness.")
-        base_honey_syrup = Ingredient(name="Honey Syrup", category="Syrup", subcategory="Honey", abv=0.0, preferred_unit="oz",
-            description="A mixture of honey and water used as a natural sweetener.")
-        base_agave_syrup = Ingredient(name="Agave Syrup", category="Syrup", subcategory="Agave", abv=0.0, preferred_unit="oz",
-            description="A natural sweetener made from agave nectar.")
-        base_soda_water = Ingredient(name="Soda Water", category="Soda", subcategory="Club Soda", abv=0.0, preferred_unit=None,
+        base_soda_water = Ingredient(name="Soda Water", category="Mixer", base_type="soda", abv=0.0, preferred_unit=None,
             description="Carbonated water that adds effervescence without sweetness.")
-        base_tonic_water = Ingredient(name="Tonic Water", category="Soda", subcategory="Tonic", abv=0.0, preferred_unit=None,
+        base_tonic_water = Ingredient(name="Tonic Water", category="Mixer", base_type="soda", abv=0.0, preferred_unit=None,
             description="A carbonated soft drink containing quinine, with a bitter flavour.")
-        base_ginger_beer = Ingredient(name="Ginger Beer", category="Soda", subcategory="Ginger Beer", abv=0.0, preferred_unit=None,
+        base_ginger_beer = Ingredient(name="Ginger Beer", category="Mixer", base_type="soda", abv=0.0, preferred_unit=None,
             description="A spicy, fermented ginger drink.")
-        base_cola = Ingredient(name="Cola", category="Soda", subcategory="Cola", abv=0.0, preferred_unit=None,
+        base_cola = Ingredient(name="Cola", category="Mixer", base_type="soda", abv=0.0, preferred_unit=None,
             description="A sweet, caramel-flavoured carbonated soft drink.")
-        base_coconut_cream = Ingredient(name="Coconut Cream", category="Dairy", subcategory="Coconut Cream", abv=0.0, preferred_unit="oz",
+        base_simple_syrup = Ingredient(name="Simple Syrup", category="Kitchen cupboard", base_type="sweetener", abv=0.0, preferred_unit="oz",
+            description="A 1:1 mixture of sugar and water.")
+        base_sugar_cube = Ingredient(name="Sugar Cube", category="Kitchen cupboard", base_type="sweetener", abv=0.0, preferred_unit="cubes",
+            description="A measured cube of sugar used in Old Fashioneds.")
+        base_grenadine = Ingredient(name="Grenadine", category="Kitchen cupboard", base_type="sweetener", abv=0.0, preferred_unit="oz",
+            description="A sweet pomegranate syrup used for colour and sweetness.")
+        base_honey_syrup = Ingredient(name="Honey Syrup", category="Kitchen cupboard", base_type="sweetener", abv=0.0, preferred_unit="oz",
+            description="A mixture of honey and water used as a natural sweetener.")
+        base_agave_syrup = Ingredient(name="Agave Syrup", category="Kitchen cupboard", base_type="sweetener", abv=0.0, preferred_unit="oz",
+            description="A natural sweetener made from agave nectar.")
+        base_coconut_cream = Ingredient(name="Coconut Cream", category="Kitchen cupboard", base_type="cream", abv=0.0, preferred_unit="oz",
             description="A thick, rich cream made from coconut meat and water.")
-        base_heavy_cream = Ingredient(name="Heavy Cream", category="Dairy", subcategory="Cream", abv=0.0, preferred_unit="oz",
+        base_heavy_cream = Ingredient(name="Heavy Cream", category="Kitchen cupboard", base_type="cream", abv=0.0, preferred_unit="oz",
             description="Full-fat dairy cream used to add richness to cocktails.")
-        base_egg_white = Ingredient(name="Egg White", category="Egg", subcategory="Egg White", abv=0.0, preferred_unit="pieces",
+        base_egg_white = Ingredient(name="Egg White", category="Kitchen cupboard", base_type="egg", abv=0.0, preferred_unit="pieces",
             description="Fresh egg whites that create silky foam when shaken.")
-        base_whole_egg = Ingredient(name="Whole Egg", category="Egg", subcategory="Whole Egg", abv=0.0, preferred_unit="pieces",
+        base_whole_egg = Ingredient(name="Whole Egg", category="Kitchen cupboard", base_type="egg", abv=0.0, preferred_unit="pieces",
             description="A whole egg used in flips and other egg-based cocktails.")
-        base_mint = Ingredient(name="Fresh Mint", category="Fresh Ingredient", subcategory="Herb", abv=0.0, preferred_unit="leaves",
+        base_mint = Ingredient(name="Fresh Mint", category="Kitchen cupboard", base_type="herb", abv=0.0, preferred_unit="leaves",
             description="Aromatic herb with refreshing menthol notes.")
-        base_basil = Ingredient(name="Fresh Basil", category="Fresh Ingredient", subcategory="Herb", abv=0.0, preferred_unit="leaves",
+        base_basil = Ingredient(name="Fresh Basil", category="Kitchen cupboard", base_type="herb", abv=0.0, preferred_unit="leaves",
             description="A sweet aromatic herb that pairs well with gin and vodka.")
-        base_cucumber = Ingredient(name="Cucumber", category="Fresh Ingredient", subcategory="Vegetable", abv=0.0, preferred_unit="slices",
+        base_cucumber = Ingredient(name="Cucumber", category="Kitchen cupboard", base_type="fresh", abv=0.0, preferred_unit="slices",
             description="Adds a cool, fresh flavour when muddled or used as garnish.")
 
         all_base_ingredients = [
@@ -166,58 +166,58 @@ def seed_database():
 
         print("Creating specific ingredients")
 
-        grey_goose = Ingredient(name="Grey Goose", category="Spirit", subcategory="Vodka", abv=40.0,
+        grey_goose = Ingredient(name="Grey Goose", category="Spirit", base_type="vodka", abv=40.0,
             preferred_unit="oz", parent_id=base_vodka.id,
             description="A premium French vodka distilled from wheat.")
-        absolut = Ingredient(name="Absolut Vodka", category="Spirit", subcategory="Vodka", abv=40.0,
+        absolut = Ingredient(name="Absolut Vodka", category="Spirit", base_type="vodka", abv=40.0,
             preferred_unit="oz", parent_id=base_vodka.id,
             description="A Swedish vodka known for its clean, smooth taste.")
-        hendricks = Ingredient(name="Hendrick's Gin", category="Spirit", subcategory="Gin", abv=41.4,
+        hendricks = Ingredient(name="Hendrick's Gin", category="Spirit", base_type="gin", abv=41.4,
             preferred_unit="oz", parent_id=base_gin.id,
             description="A Scottish gin distilled with cucumber and rose petals.")
-        tanqueray = Ingredient(name="Tanqueray Gin", category="Spirit", subcategory="Gin", abv=43.1,
+        tanqueray = Ingredient(name="Tanqueray Gin", category="Spirit", base_type="gin", abv=43.1,
             preferred_unit="oz", parent_id=base_gin.id,
             description="A classic London Dry gin with juniper and citrus notes.")
-        bombay = Ingredient(name="Bombay Sapphire", category="Spirit", subcategory="Gin", abv=47.0,
+        bombay = Ingredient(name="Bombay Sapphire", category="Spirit", base_type="gin", abv=47.0,
             preferred_unit="oz", parent_id=base_gin.id,
             description="A London Dry gin with 10 hand-selected botanicals.")
-        bacardi = Ingredient(name="Bacardí White Rum", category="Spirit", subcategory="Rum", abv=40.0,
+        bacardi = Ingredient(name="Bacardí White Rum", category="Spirit", base_type="rum", abv=40.0,
             preferred_unit="oz", parent_id=base_white_rum.id,
             description="A light, crisp white rum from Puerto Rico.")
-        captain_morgan = Ingredient(name="Captain Morgan Spiced Rum", category="Spirit", subcategory="Rum", abv=35.0,
+        captain_morgan = Ingredient(name="Captain Morgan Spiced Rum", category="Spirit", base_type="rum", abv=35.0,
             preferred_unit="oz", parent_id=base_spiced_rum.id,
             description="A popular spiced rum with vanilla and caramel notes.")
-        patron = Ingredient(name="Patrón Silver", category="Spirit", subcategory="Tequila", abv=40.0,
+        patron = Ingredient(name="Patrón Silver", category="Spirit", base_type="tequila", abv=40.0,
             preferred_unit="oz", parent_id=base_tequila.id,
             description="A smooth, ultra-premium silver tequila.")
-        jose_cuervo = Ingredient(name="Jose Cuervo Especial", category="Spirit", subcategory="Tequila", abv=38.0,
+        jose_cuervo = Ingredient(name="Jose Cuervo Especial", category="Spirit", base_type="tequila", abv=38.0,
             preferred_unit="oz", parent_id=base_tequila.id,
             description="A well-known gold tequila blended for smoothness.")
-        makers_mark = Ingredient(name="Maker's Mark", category="Spirit", subcategory="Bourbon", abv=45.0,
+        makers_mark = Ingredient(name="Maker's Mark", category="Spirit", base_type="whiskey", abv=45.0,
             preferred_unit="oz", parent_id=base_bourbon.id,
             description="A wheated bourbon with a soft, sweet flavour.")
-        jack_daniels = Ingredient(name="Jack Daniel's", category="Spirit", subcategory="Whiskey", abv=40.0,
+        jack_daniels = Ingredient(name="Jack Daniel's", category="Spirit", base_type="whiskey", abv=40.0,
             preferred_unit="oz", parent_id=base_bourbon.id,
             description="A Tennessee whiskey charcoal-mellowed for smoothness.")
-        cointreau = Ingredient(name="Cointreau", category="Liqueur", subcategory="Orange", abv=40.0,
+        cointreau = Ingredient(name="Cointreau", category="Liqueur", base_type="orange_liqueur", abv=40.0,
             preferred_unit="oz", parent_id=base_triple_sec.id,
             description="A premium French orange liqueur.")
-        grand_marnier = Ingredient(name="Grand Marnier", category="Liqueur", subcategory="Orange", abv=40.0,
+        grand_marnier = Ingredient(name="Grand Marnier", category="Liqueur", base_type="orange_liqueur", abv=40.0,
             preferred_unit="oz", parent_id=base_triple_sec.id,
             description="A blend of cognac and distilled essence of orange.")
-        kahlua = Ingredient(name="Kahlúa", category="Liqueur", subcategory="Coffee", abv=20.0,
+        kahlua = Ingredient(name="Kahlúa", category="Liqueur", base_type="coffee_liqueur", abv=20.0,
             preferred_unit="oz", parent_id=base_coffee_liqueur.id,
             description="A coffee-flavoured rum-based liqueur.")
-        baileys = Ingredient(name="Baileys Irish Cream", category="Liqueur", subcategory="Cream", abv=17.0,
+        baileys = Ingredient(name="Baileys Irish Cream", category="Liqueur", base_type="cream_liqueur", abv=17.0,
             preferred_unit="oz", parent_id=base_cream_liqueur.id,
             description="An Irish whiskey and cream liqueur.")
-        chambord = Ingredient(name="Chambord", category="Liqueur", subcategory="Fruit", abv=16.5,
+        chambord = Ingredient(name="Chambord", category="Liqueur", base_type="fruit_liqueur", abv=16.5,
             preferred_unit="oz", parent_id=base_raspberry_liqueur.id,
             description="A French black raspberry liqueur.")
-        st_germain = Ingredient(name="St-Germain", category="Liqueur", subcategory="Herbal", abv=20.0,
+        st_germain = Ingredient(name="St-Germain", category="Liqueur", base_type="floral_liqueur", abv=20.0,
             preferred_unit="oz", parent_id=base_elderflower_liqueur.id,
             description="A French elderflower liqueur with a delicate floral flavour.")
-        frangelico = Ingredient(name="Frangelico", category="Liqueur", subcategory="Nut", abv=20.0,
+        frangelico = Ingredient(name="Frangelico", category="Liqueur", base_type="nut_liqueur", abv=20.0,
             preferred_unit="oz", parent_id=base_amaretto.id,
             description="An Italian hazelnut liqueur.")
 
