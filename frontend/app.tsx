@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Layout from './src/components/Layout'
 import Home from './src/pages/Home'
 import Cocktails from './src/pages/Cocktails'
+import CocktailCategory from './src/pages/CocktailCategory'
 import CreateCocktail from './src/pages/CreateCocktail'
 import CocktailDetail from './src/pages/CocktailDetail'
 import Ingredients from './src/pages/Ingredients'
@@ -90,6 +91,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home isAuthenticated={isAuthenticated} />} />
           <Route path="/cocktails" element={<Cocktails isAuthenticated={isAuthenticated} />} />
+          <Route path="/cocktails/:category" element={<CocktailCategory isAuthenticated={isAuthenticated} />} />
           <Route path="/cocktails/new" element={<CreateCocktail isAuthenticated={isAuthenticated} />} />
           <Route path="/cocktails/:id" element={<CocktailDetail />} />
           <Route path="/ingredients" element={<Ingredients />} />
