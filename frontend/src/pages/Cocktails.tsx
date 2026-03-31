@@ -176,15 +176,10 @@ export default function Cocktails({ isAuthenticated = false }: CocktailProps) {
     switch (category) {
       case 'Spirit': return '🥃'
       case 'Liqueur': return '🍾'
-      case 'Wine': return '🍷'
-      case 'Bitters': return '💧'
-      case 'Juice': return '🧃'
-      case 'Syrup': return '🍯'
-      case 'Soda': return '🥤'
-      case 'Dairy': return '🥛'
-      case 'Egg': return '🥚'
-      case 'Fresh Ingredient': return '🌿'
-      case 'Garnish': return '🍋'
+      case 'Wine and Champagne': return '🍷'
+      case 'Mixer': return '🥤'
+      case 'Kitchen cupboard': return '🍯'
+      case 'Beers and Cider': return '🍺'
       default: return '🍎'
     }
   }

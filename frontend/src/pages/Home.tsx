@@ -134,9 +134,13 @@ export default function Home({ isAuthenticated }: HomeProps) {
                   {featuredCocktail.ingredients && featuredCocktail.ingredients.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-6">
                       {featuredCocktail.ingredients.slice(0, 5).map((ing, i) => (
-                        <span key={i} className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700">
+                        <Link
+                          key={i}
+                          to={`/ingredients/${ing.id}`}
+                          className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700 hover:text-white hover:border-emerald-500 transition-colors"
+                        >
                           {ing.name}
-                        </span>
+                        </Link>
                       ))}
                       {featuredCocktail.ingredients.length > 5 && (
                         <span className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-500 border-slate-700">

@@ -80,30 +80,13 @@ export default function Ingredients() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'Spirit':
-        return '🥃'
-      case 'Liqueur':
-        return '🍾'
-      case 'Wine':
-        return '🍷'
-      case 'Bitters':
-        return '💧'
-      case 'Juice':
-        return '🧃'
-      case 'Syrup':
-        return '🍯'
-      case 'Soda':
-        return '🥤'
-      case 'Dairy':
-        return '🥛'
-      case 'Egg':
-        return '🥚'
-      case 'Fresh Ingredient':
-        return '🌿'
-      case 'Garnish':
-        return '🍋'
-      default:
-        return '🍎'
+      case 'Spirit': return '🥃'
+      case 'Liqueur': return '🍾'
+      case 'Wine and Champagne': return '🍷'
+      case 'Mixer': return '🥤'
+      case 'Kitchen cupboard': return '🍯'
+      case 'Beers and Cider': return '🍺'
+      default: return '🍎'
     }
   }
 
