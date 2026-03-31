@@ -113,6 +113,28 @@
     font-style: normal;
 }
 
+@font-face {
+    font-family: 'Milara';
+    src: url('fonts/Milara.ttf');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Decoslice';
+    src: url('fonts/Decoslice.ttf');
+    font-weight: 400;
+    font-style: normal;
+}
+
+.font-milara{
+    font-family: 'milara', sans-serif
+}
+
+.font-decoslice{
+    font-family: 'decoslice', sans-serif
+}
+
 .font-calivorne {
     font-family: 'calivorne', sans-serif
 }

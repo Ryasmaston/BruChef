@@ -123,7 +123,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
                       </span>
                     )}
                   </div>
-                  <h2 className="text-3xl font-bold text-white group-hover:text-emerald-400 transition-colors mb-3">
+                  <h2 className="text-5xl font-calivorne text-white group-hover:text-emerald-400 transition-colors mb-3">
                     {featuredCocktail.name}
                   </h2>
                   {featuredCocktail.description && (
