@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import BubbleBackground from '../components/BubbleBackground'
 import CocktailImage from '../components/CocktailImage'
@@ -21,6 +21,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
   const [stats, setStats] = useState({ cocktails: 0, ingredients: 0 })
   const [featuredCocktail, setFeaturedCocktail] = useState<FeaturedCocktail | null>(null)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     Promise.all([
@@ -102,59 +103,65 @@ export default function Home({ isAuthenticated }: HomeProps) {
               Featured Recipe
             </span>
           </div>
-          <Link to={`/cocktails/${featuredCocktail.id}`}>
-            <div className="bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 transition-colors overflow-hidden group">
-              <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="h-64 md:h-auto min-h-64 relative overflow-hidden">
-                  <CocktailImage
-                    imageUrl={featuredCocktail.image_url ?? null}
-                    name={featuredCocktail.name}
-                    variant="detail"
-                  />
-                </div>
-                <div className="p-8 flex flex-col justify-center">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(featuredCocktail.difficulty)}`}>
-                      {featuredCocktail.difficulty}
+          <div
+            onClick={() => navigate(`/cocktails/${featuredCocktail.id}`)}
+            className="cursor-pointer ..."
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              <div className="h-64 md:h-auto min-h-64 relative overflow-hidden">
+                <CocktailImage
+                  imageUrl={featuredCocktail.image_url ?? null}
+                  name={featuredCocktail.name}
+                  variant="detail"
+                />
+              </div>
+              <div className="p-8 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(featuredCocktail.difficulty)}`}>
+                    {featuredCocktail.difficulty}
+                  </span>
+                  {featuredCocktail.glass_type && (
+                    <span className="px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-400 border-slate-600">
+                      {featuredCocktail.glass_type}
                     </span>
-                    {featuredCocktail.glass_type && (
-                      <span className="px-2 py-1 text-xs rounded border bg-slate-700/50 text-slate-400 border-slate-600">
-                        {featuredCocktail.glass_type}
+                  )}
+                </div>
+                <h2 className="text-5xl font-calivorne text-white group-hover:text-emerald-400 transition-colors mb-3">
+                  {featuredCocktail.name}
+                </h2>
+                {featuredCocktail.description && (
+                  <p className="text-slate-400 mb-6 leading-relaxed line-clamp-3">
+                    {featuredCocktail.description}
+                  </p>
+                )}
+                {featuredCocktail.ingredients && featuredCocktail.ingredients.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {featuredCocktail.ingredients.slice(0, 5).map((ing, i) => (
+                      <Link
+                        key={i}
+                        to={`/ingredients/${ing.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700 hover:text-white hover:border-emerald-500 transition-colors"
+                      >
+                        {ing.name}
+                      </Link>
+                    ))}
+                    {featuredCocktail.ingredients.length > 5 && (
+                      <span className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-500 border-slate-700">
+                        +{featuredCocktail.ingredients.length - 5} more
                       </span>
                     )}
                   </div>
-                  <h2 className="text-5xl font-calivorne text-white group-hover:text-emerald-400 transition-colors mb-3">
-                    {featuredCocktail.name}
-                  </h2>
-                  {featuredCocktail.description && (
-                    <p className="text-slate-400 mb-6 leading-relaxed line-clamp-3">
-                      {featuredCocktail.description}
-                    </p>
-                  )}
-                  {featuredCocktail.ingredients && featuredCocktail.ingredients.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-6">
-                      {featuredCocktail.ingredients.slice(0, 5).map((ing, i) => (
-                        <span key={i} className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700">
-                          {ing.name}
-                        </span>
-                      ))}
-                      {featuredCocktail.ingredients.length > 5 && (
-                        <span className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-500 border-slate-700">
-                          +{featuredCocktail.ingredients.length - 5} more
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
-                    <span>View Recipe</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                  </div>
+                )}
+                <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
+                  <span>View Recipe</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
                 </div>
               </div>
             </div>
-          </Link>
+          </div>
         </div>
       )}
       <div>
