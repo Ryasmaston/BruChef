@@ -55,17 +55,17 @@ export default function Home({ isAuthenticated }: HomeProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-5">
+    <div className="w-full space-y-5">
       <div className="relative rounded-2xl overflow-hidden opacity-0 animate-fade-in-blur animation-delay-100">
         <div className="animate-morph-gradient absolute inset-0" />
         <BubbleBackground />
         <div className="relative z-10 pt-16 pb-16 px-8">
           <div className="text-center space-y-6">
-            <h1 className="text-6xl font-bold text-white leading-tight animate-reveal-up">
+            <h1 className="text-6xl font-calivorne text-white leading-tight animate-reveal-up">
               Craft the perfect<br />
               <span className="animate-shimmer">cocktail</span>
             </h1>
-            <p className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed animate-typewriter">
+            <p className="text-lg text-slate-400 font-thin max-w-xl mx-auto leading-relaxed animate-typewriter">
               Discover recipes, manage your bar inventory, and find out exactly what you can make tonight.
             </p>
             <div className="flex gap-3 justify-center pt-2">
@@ -123,7 +123,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
                       </span>
                     )}
                   </div>
-                  <h2 className="text-3xl font-bold text-white group-hover:text-emerald-400 transition-colors mb-3">
+                  <h2 className="text-5xl font-calivorne text-white group-hover:text-emerald-400 transition-colors mb-3">
                     {featuredCocktail.name}
                   </h2>
                   {featuredCocktail.description && (
@@ -191,11 +191,11 @@ export default function Home({ isAuthenticated }: HomeProps) {
               style={{ animationDelay: `${card.delay}ms` }}
               className="opacity-0 animate-fade-in-up group bg-slate-800 rounded-xl border border-slate-700 hover:border-emerald-500/50 p-6 transition-colors"
             >
-              <div className="text-3xl mb-4">{card.icon}</div>
-              <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors mb-2">
+              <div className="text-3xl">{card.icon}</div>
+              <h3 className="font-calivorne text-2xl text-center font-semibold text-white group-hover:text-emerald-400 transition-colors animate-shimmer mb-2">
                 {card.title}
               </h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
+              <p className="text-sm text-slate-500 text-center leading-relaxed">{card.desc}</p>
             </Link>
           ))}
         </div>

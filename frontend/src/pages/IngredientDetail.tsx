@@ -276,11 +276,6 @@ export default function IngredientDetail() {
               <h1 className="text-4xl font-bold text-white mb-3">
                 {ingredient.name}
               </h1>
-              {ingredient.description && (
-                <p className="text-xl text-slate-300 mb-4">
-                  {ingredient.description}
-                </p>
-              )}
               <div className="flex flex-wrap gap-3">
                 <span className="px-3 py-1 text-sm rounded border bg-slate-700/50 text-slate-300 border-slate-600">
                   {ingredient.category}

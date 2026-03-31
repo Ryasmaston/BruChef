@@ -63,10 +63,10 @@ export default function About() {
         <div className="animate-morph-gradient absolute inset-0" />
         <BubbleBackground />
         <div className="relative z-10 pt-14 pb-14 px-8 text-center">
-          <h1 className="text-5xl font-bold text-white mb-4 animate-reveal-up">
+          <h1 className="text-5xl font-calivorne text-white mb-4 animate-reveal-up">
             About <span className="animate-shimmer">BruChef</span>
           </h1>
-          <p className="text-lg text-slate-300 max-w-xl mx-auto leading-relaxed">
+          <p className="text-lg text-slate-300 font-thin max-w-xl mx-auto leading-relaxed">
             Your personal bartender companion — built for home mixologists who want to
             make the most of what's behind their bar.
           </p>
@@ -80,7 +80,7 @@ export default function About() {
           </span>
         </div>
         <div className="bg-slate-800 rounded-xl border border-slate-700 p-8">
-          <p className="text-slate-300 leading-relaxed text-lg">
+          <p className="text-slate-300 font-thin leading-relaxed text-lg">
             BruChef started as a simple question — <span className="text-white font-medium">what can I actually make right now?</span> Most
             cocktail apps show you recipes but don't know what you have. BruChef connects
             your inventory to the recipe library so you always know exactly what you can pour,
@@ -102,9 +102,9 @@ export default function About() {
               style={{ animationDelay: `${feature.delay}ms` }}
               className="opacity-0 animate-fade-in-up bg-slate-800 rounded-xl border border-slate-700 p-6 hover:border-emerald-500/50 transition-colors"
             >
-              <div className="text-3xl mb-4">{feature.icon}</div>
-              <h3 className="text-white font-semibold mb-2">{feature.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{feature.desc}</p>
+              <div className="text-3xl mb-0">{feature.icon}</div>
+              <h3 className="text-white font-calivorne text-2xl text-center mb-2">{feature.title}</h3>
+              <p className="text-sm text-center text-slate-500 leading-relaxed">{feature.desc}</p>
             </div>
           ))}
         </div>
