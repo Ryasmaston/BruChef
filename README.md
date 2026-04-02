@@ -1,4 +1,4 @@
-# 🍸 BruChef - Bartender Companion Application
+# BruChef - Bartender Companion Application
 
 A full-stack web application for managing cocktails, tracking bar inventory, and discovering what drinks you can make with the ingredients you have on hand.
 
