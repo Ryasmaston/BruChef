@@ -26,10 +26,6 @@ interface Cocktail {
   favourited_by: number[]
 }
 
-interface CocktailCategoryProps {
-  isAuthenticated?: boolean
-}
-
 const INGREDIENT_CATEGORIES = [
   'Spirit', 'Liqueur', 'Mixer', 'Wine and Champagne', 'Beers and Cider',
   'Kitchen cupboard'
@@ -72,7 +68,7 @@ function getCocktailMaxAbv(cocktail: Cocktail): number {
   return Math.max(...cocktail.ingredients.map(ing => ing.abv ?? 0))
 }
 
-export default function CocktailCategory({ isAuthenticated = false }: CocktailCategoryProps) {
+export default function CocktailCategory() {
   const { category } = useParams<{ category: string }>()
   const navigate = useNavigate()
   const slug = (category as CategorySlug) in CATEGORY_CONFIG ? (category as CategorySlug) : null
@@ -92,6 +88,7 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
   const [alertType, setAlertType] = useState<'success' | 'error'>('success')
   const [alertTitle, setAlertTitle] = useState('')
   const [alertMessage, setAlertMessage] = useState('')
+  const isAuthenticated = currentUserId !== null
 
   useEffect(() => {
     if (!slug) {
