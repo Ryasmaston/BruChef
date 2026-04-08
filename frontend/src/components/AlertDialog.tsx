@@ -23,10 +23,10 @@ export default function AlertDialog({
         <div className={`bg-gradient-to-br ${bgColor} -mx-6 -mt-6 p-6 rounded-t-lg mb-4`}>
           <div className="flex items-center gap-3">
             <span className="text-5xl">{icon}</span>
-            <h2 className="text-2xl font-bold text-white">{title}</h2>
+            <h2 className="text-2xl font-calivorne text-white">{title}</h2>
           </div>
         </div>
-        <p className="text-slate-300 mb-6">{message}</p>
+        <p className="text-slate-300 font-light mb-6">{message}</p>
         <button
           onClick={onClose}
           className={`w-full px-6 py-3 ${

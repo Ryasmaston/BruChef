@@ -418,7 +418,7 @@ export default function IngredientDetail() {
                 </div>
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                    <h3 className="text-xl font-calivorne text-white group-hover:text-emerald-400 transition-colors">
                       {cocktail.name}
                     </h3>
                     <span
@@ -429,7 +429,7 @@ export default function IngredientDetail() {
                       {cocktail.difficulty}
                     </span>
                   </div>
-                  <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+                  <p className="text-slate-400 font-light text-sm mb-4 line-clamp-2">
                     {cocktail.description || 'No description available'}
                   </p>
                   <div className="space-y-2 text-sm">

@@ -447,7 +447,7 @@ export default function CocktailDetail() {
           <div className="flex items-end justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <h1 className="text-4xl font-bold text-white drop-shadow">
+                <h1 className="text-4xl font-calivorne text-white drop-shadow">
                   {cocktail.name}
                 </h1>
                 {isAuthenticated && (
@@ -469,7 +469,7 @@ export default function CocktailDetail() {
                 )}
               </div>
               {cocktail.description && (
-                <p className="text-lg text-slate-300 mb-4 max-w-2xl">
+                <p className="text-lg font-light text-slate-300 mb-4 max-w-2xl">
                   {cocktail.description}
                 </p>
               )}
@@ -479,7 +479,7 @@ export default function CocktailDetail() {
                 </span>
                 {cocktail.glass_type && (
                   <span className="px-3 py-1 text-sm rounded border bg-slate-700/50 text-slate-300 border-slate-600">
-                    🥃 {cocktail.glass_type}
+                    {cocktail.glass_type}
                   </span>
                 )}
                 {cocktail.status === 'pending' && (
