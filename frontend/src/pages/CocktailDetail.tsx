@@ -5,7 +5,6 @@ import AlertDialog from '../components/AlertDialog'
 import SubmitForReviewDialog from '../components/SubmitForReviewDialog'
 import ConfirmDeleteDialog from '../components/ConfirmDeleteDialog'
 import BubbleBackground from '../components/BubbleBackground'
-import CocktailImage from '../components/CocktailImage'
 
 interface Cocktail {
   id: number
@@ -426,14 +425,29 @@ export default function CocktailDetail() {
       <span>Back to Cocktails</span>
     </button>
       <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-      <div className="relative overflow-hidden">
-        <div className="bg-gradient-to-br from-emerald-900/50 to-slate-800 absolute inset-0" />
-        <BubbleBackground />
-        <div className="relative z-10 p-8">
-          <div className="flex items-start justify-between">
+      <div className="relative overflow-hidden" style={{ minHeight: '320px' }}>
+        {cocktail.image_url ? (
+          <img
+            src={cocktail.image_url}
+            alt={cocktail.name}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <>
+            <div className="bg-linear-to-br from-emerald-900/50 to-slate-800 absolute inset-0" />
+            <BubbleBackground />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-20">
+              <span style={{ fontSize: '64px' }}>🍸</span>
+              <span className="text-white text-xl font-semibold tracking-wide">{cocktail.name}</span>
+            </div>
+          </>
+        )}
+        <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-slate-900/60 to-transparent" />
+        <div className="relative z-10 p-8 flex flex-col justify-end" style={{ minHeight: '320px' }}>
+          <div className="flex items-end justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <h1 className="text-4xl font-bold text-white">
+                <h1 className="text-4xl font-bold text-white drop-shadow">
                   {cocktail.name}
                 </h1>
                 {isAuthenticated && (
@@ -444,14 +458,10 @@ export default function CocktailDetail() {
                     title={isFavourited ? 'Remove from favourites' : 'Add to favourites'}
                   >
                     <svg
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
+                      width="32" height="32" viewBox="0 0 24 24"
                       fill={isFavourited ? 'currentColor' : 'none'}
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      stroke="currentColor" strokeWidth="2"
+                      strokeLinecap="round" strokeLinejoin="round"
                     >
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                     </svg>
@@ -459,7 +469,7 @@ export default function CocktailDetail() {
                 )}
               </div>
               {cocktail.description && (
-                <p className="text-xl text-slate-300 mb-4">
+                <p className="text-lg text-slate-300 mb-4 max-w-2xl">
                   {cocktail.description}
                 </p>
               )}
@@ -499,18 +509,11 @@ export default function CocktailDetail() {
                 )}
               </div>
             </div>
-            <div className="ml-4 w-40 h-40">
-              <CocktailImage
-                imageUrl={cocktail.image_url ?? null}
-                name={cocktail.name}
-                variant="thumb"
-              />
-            </div>
           </div>
         </div>
       </div>
         <div>
-          <div className="flex justify-end gap-8 mb-4 mr-10">
+          <div className="flex justify-end gap-8 mb-4 mr-10 mt-3">
             <h2 className="text-xl font-semibold text-white flex items-center">
               <span className="ml-4">Servings</span>
             </h2>
