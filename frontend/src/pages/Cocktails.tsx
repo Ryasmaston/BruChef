@@ -56,7 +56,7 @@ export default function Cocktails({ isAuthenticated = false }) {
   return (
     <div className="max-w-4xl mx-auto space-y-10 py-6">
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-calivorne text-white">Cocktails</h1>
+        <h1 className="text-4xl font-calivorne text-white animate-shimmer">Cocktails</h1>
         <p className="text-slate-400 text-lg font-light">Choose a collection to explore</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -99,7 +99,6 @@ export default function Cocktails({ isAuthenticated = false }) {
           to="/cocktails/all"
           className="text-sm text-slate-500 hover:text-slate-300 transition-colors underline underline-offset-4"
         >
-          Browse all cocktails
         </Link>
       </div>
     </div>

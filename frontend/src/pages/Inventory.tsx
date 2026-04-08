@@ -436,7 +436,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-4xl md:text-5xl font-calivorne text-white">My Inventory</h1>
+                <h1 className="text-4xl md:text-5xl font-calivorne text-white animate-shimmer">My Inventory</h1>
                 <p className="text-slate-400 font-thin mt-1">
                   Manage your ingredients and discover what you can make
                 </p>
@@ -630,10 +630,10 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                         </div>
                         <div className="p-5">
                           <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">{cocktail.name}</h3>
+                            <h3 className="text-xl font-calivorne text-white group-hover:text-emerald-400 transition-colors">{cocktail.name}</h3>
                             <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>{cocktail.difficulty}</span>
                           </div>
-                          <p className="text-slate-400 text-sm mb-4 line-clamp-2">{cocktail.description || 'No description available'}</p>
+                          <p className="text-slate-400 font-light text-sm mb-4 line-clamp-2">{cocktail.description || 'No description available'}</p>
                           <div className="flex items-center text-emerald-400 text-sm">
                             <span className="mr-2">✓</span>
                             <span>You have all ingredients!</span>
@@ -651,7 +651,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           <>
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-4xl md:text-5xl font-calivorne  text-white">My Recipes</h1>
+                <h1 className="text-4xl md:text-5xl font-calivorne  text-white animate-shimmer">My Recipes</h1>
                 <p className="text-slate-400 font-thin mt-1">
                   View and manage all your cocktail creations
                 </p>
@@ -687,11 +687,11 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                           className="bg-slate-800 rounded-lg border border-slate-700 p-4 hover:border-emerald-500 transition-colors"
                         >
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-white font-semibold flex-1">{cocktail.name}</h3>
+                            <h3 className="text-white font-calivorne flex-1">{cocktail.name}</h3>
                             <span className="text-2xl ml-2">🍹</span>
                           </div>
                           {cocktail.description && (
-                            <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                            <p className="text-sm font-light text-slate-400 mb-3 line-clamp-2">
                               {cocktail.description}
                             </p>
                           )}
@@ -720,11 +720,11 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                           className="bg-slate-800 rounded-lg border border-yellow-700/50 p-4 hover:border-yellow-500 transition-colors"
                         >
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-white font-semibold flex-1">{cocktail.name}</h3>
+                            <h3 className="text-white font-calivorne flex-1">{cocktail.name}</h3>
                             <span className="text-2xl ml-2">🍹</span>
                           </div>
                           {cocktail.description && (
-                            <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                            <p className="text-sm font-light text-slate-400 mb-3 line-clamp-2">
                               {cocktail.description}
                             </p>
                           )}
@@ -758,11 +758,11 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                           className="bg-slate-800 rounded-lg border border-emerald-700/50 p-4 hover:border-emerald-500 transition-colors"
                         >
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-white font-semibold flex-1">{cocktail.name}</h3>
+                            <h3 className="text-white font-calivorne flex-1">{cocktail.name}</h3>
                             <span className="text-2xl ml-2">🍹</span>
                           </div>
                           {cocktail.description && (
-                            <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                            <p className="text-sm font-light text-slate-400 mb-3 line-clamp-2">
                               {cocktail.description}
                             </p>
                           )}
@@ -791,11 +791,11 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                           className="bg-slate-800 rounded-lg border border-red-700/50 p-4 hover:border-red-500 transition-colors"
                         >
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-white font-semibold flex-1">{cocktail.name}</h3>
+                            <h3 className="text-white font-calivorne flex-1">{cocktail.name}</h3>
                             <span className="text-2xl ml-2">🍹</span>
                           </div>
                           {cocktail.description && (
-                            <p className="text-sm text-slate-400 mb-3 line-clamp-2">
+                            <p className="text-sm font-light text-slate-400 mb-3 line-clamp-2">
                               {cocktail.description}
                             </p>
                           )}
@@ -843,7 +843,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
           <>
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-4xl md:text-5xl font-calivorne  text-white">Favourite Cocktails</h1>
+                <h1 className="text-4xl md:text-5xl font-calivorne  text-white animate-shimmer">Favourite Cocktails</h1>
                 <p className="text-slate-400 font-thin mt-1">
                   Cocktails you've saved to your favourites
                 </p>
@@ -886,7 +886,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                     </div>
                     <div className="p-5">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-xl font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                        <h3 className="text-xl font-calivorne text-white group-hover:text-emerald-400 transition-colors">
                           {cocktail.name}
                         </h3>
                         <div className="flex items-center gap-2">
@@ -896,7 +896,7 @@ export default function Inventory({ isAuthenticated }: InventoryProps) {
                           </span>
                         </div>
                       </div>
-                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+                      <p className="text-slate-400 font-light text-sm mb-4 line-clamp-2">
                         {cocktail.description || 'No description available'}
                       </p>
                       <div className="flex items-center text-emerald-400 text-sm">

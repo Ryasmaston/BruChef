@@ -636,8 +636,6 @@ export default function EditCocktail({ isAuthenticated }: EditCocktailProps) {
                             Remove
                           </button>
                         </div>
-
-                        {/* Mode toggle */}
                         <div className="mb-3">
                           <label className="block text-xs font-medium text-slate-400 mb-2">
                             Quantity Type

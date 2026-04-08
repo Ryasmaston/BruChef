@@ -46,8 +46,8 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
+  0%, 100% { transform: translateY(1.5px); }
+  50% { transform: translateY(-1.5px); }
 }
 
 .animate-fade-in-blur {
@@ -69,17 +69,21 @@
 .animate-shimmer {
   background: linear-gradient(
     90deg,
-    #34d399 0%,
-    #6ee7b7 40%,
-    #ffffff 50%,
-    #6ee7b7 60%,
-    #34d399 100%
+    #ffffff 0%,
+    #ffffff 40%,
+    #34d399 50%,
+    #ffffff 60%,
+    #ffffff 100%
   );
   background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: shimmer 3s linear infinite;
+  text-shadow:
+    0 0 10px rgba(52, 211, 153, 0.2),
+    0 0 20px rgba(52, 211, 153, 0.2),
+    0 0 40px rgba(52, 211, 153, 0.2);
 }
 
 .animate-float {

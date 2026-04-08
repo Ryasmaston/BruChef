@@ -26,15 +26,6 @@ interface Cocktail {
   favourited_by: number[]
 }
 
-interface CocktailCategoryProps {
-  isAuthenticated?: boolean
-}
-
-const INGREDIENT_CATEGORIES = [
-  'Spirit', 'Liqueur', 'Mixer', 'Wine and Champagne', 'Beers and Cider',
-  'Kitchen cupboard'
-]
-
 const CATEGORY_CONFIG = {
   classic: {
     label: 'Classic Cocktails',
@@ -72,7 +63,7 @@ function getCocktailMaxAbv(cocktail: Cocktail): number {
   return Math.max(...cocktail.ingredients.map(ing => ing.abv ?? 0))
 }
 
-export default function CocktailCategory({ isAuthenticated = false }: CocktailCategoryProps) {
+export default function CocktailCategory() {
   const { category } = useParams<{ category: string }>()
   const navigate = useNavigate()
   const slug = (category as CategorySlug) in CATEGORY_CONFIG ? (category as CategorySlug) : null
@@ -80,8 +71,6 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [difficultyFilter, setDifficultyFilter] = useState<string>('all')
-  const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [glassFilter, setGlassFilter] = useState<string>('all')
   const [alcoholFilter, setAlcoholFilter] = useState<'all' | 'alcoholic' | 'non-alcoholic'>('all')
   const [abvMax, setAbvMax] = useState<number>(0)
@@ -92,6 +81,7 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
   const [alertType, setAlertType] = useState<'success' | 'error'>('success')
   const [alertTitle, setAlertTitle] = useState('')
   const [alertMessage, setAlertMessage] = useState('')
+  const isAuthenticated = currentUserId !== null
 
   useEffect(() => {
     if (!slug) {
@@ -161,9 +151,6 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
       (cocktail.ingredients && cocktail.ingredients.some(ing =>
         ing.name.toLowerCase().includes(searchQuery.toLowerCase())
       ))
-    const matchesDifficulty = difficultyFilter === 'all' || cocktail.difficulty === difficultyFilter
-    const matchesCategory = categoryFilter === 'all' ||
-      (cocktail.ingredients && cocktail.ingredients.some(ing => ing.category === categoryFilter))
     const matchesGlass = glassFilter === 'all' || cocktail.glass_type === glassFilter
     const cocktailMaxAbv = getCocktailMaxAbv(cocktail)
     const isAlcoholic = cocktailMaxAbv > 0
@@ -172,12 +159,12 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
       (alcoholFilter === 'alcoholic' && isAlcoholic) ||
       (alcoholFilter === 'non-alcoholic' && !isAlcoholic)
     const matchesAbv = !isAbvFilterActive || cocktailMaxAbv <= abvFilter
-    return matchesSearch && matchesDifficulty && matchesCategory && matchesGlass && matchesAlcohol && matchesAbv
-  }), [scopedCocktails, searchQuery, difficultyFilter, categoryFilter, glassFilter, alcoholFilter, abvFilter, isAbvFilterActive])
+    return matchesSearch && matchesGlass && matchesAlcohol && matchesAbv
+  }), [scopedCocktails, searchQuery, glassFilter, alcoholFilter, abvFilter, isAbvFilterActive])
 
   const { currentPage, totalPages, paginatedItems, goToPage, reset } = usePagination(filteredCocktails, 12)
 
-  useEffect(() => { reset() }, [searchQuery, difficultyFilter, categoryFilter, glassFilter, alcoholFilter, abvFilter])
+  useEffect(() => { reset() }, [searchQuery, glassFilter, alcoholFilter, abvFilter])
 
   if (!slug) return null
 
@@ -253,22 +240,8 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
     }
   }
 
-  const getCategoryIcon = (cat: string) => {
-    switch (cat) {
-      case 'Spirit': return '🥃'
-      case 'Liqueur': return '🍾'
-      case 'Wine and Champagne': return '🍷'
-      case 'Mixer': return '🥤'
-      case 'Kitchen cupboard': return '🍯'
-      case 'Beers and Cider': return '🍺'
-      default: return '🍎'
-    }
-  }
-
   const clearFilters = () => {
     setSearchQuery('')
-    setDifficultyFilter('all')
-    setCategoryFilter('all')
     setGlassFilter('all')
     setAlcoholFilter('all')
     setAbvFilter(abvMax)
@@ -276,8 +249,6 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
 
   const hasActiveFilters =
     searchQuery !== '' ||
-    difficultyFilter !== 'all' ||
-    categoryFilter !== 'all' ||
     glassFilter !== 'all' ||
     alcoholFilter !== 'all' ||
     isAbvFilterActive
@@ -324,7 +295,7 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
           </Link>
         </div>
         <div className="text-center">
-          <h1 className="text-3xl font-calivorne text-white">
+          <h1 className="text-3xl font-calivorne text-white animate-shimmer">
             {config.icon} {config.label}
           </h1>
           <p className="text-slate-400 mt-1">
@@ -354,102 +325,78 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
           )}
         </div>
       </div>
-
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 space-y-4">
-        <div>
-          <label className="block text-xs font-medium text-slate-400 mb-2">
-            Search by name or ingredient
-          </label>
-          <input
-            type="text"
-            placeholder="e.g., Margarita or Vodka"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-          />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">
-              Ingredient Category
-            </label>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-            >
-              <option value="all">All Categories</option>
-              {INGREDIENT_CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>
-                  {getCategoryIcon(cat)} {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">
-              Glass Type
-            </label>
-            <select
-              value={glassFilter}
-              onChange={(e) => setGlassFilter(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-            >
-              <option value="all">All Glasses</option>
-              {availableGlassTypes.map(glass => (
-                <option key={glass} value={glass}>{glass}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">
-              Difficulty
-            </label>
-            <select
-              value={difficultyFilter}
-              onChange={(e) => setDifficultyFilter(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-            >
-              <option value="all">All Levels</option>
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Advanced">Advanced</option>
-            </select>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">
-              Alcohol Content
-            </label>
-            <div className="flex rounded-lg overflow-hidden border border-slate-700 h-[42px]">
-              {(['all', 'alcoholic', 'non-alcoholic'] as const).map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => setAlcoholFilter(opt)}
-                  className={`flex-1 text-xs font-medium transition-colors ${
-                    alcoholFilter === opt
-                      ? 'bg-slate-600 text-white'
-                      : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-700'
-                  }`}
-                >
-                  {opt === 'all' ? 'All' : opt === 'alcoholic' ? 'Alcoholic' : 'Virgin'}
-                </button>
-              ))}
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+        <div className="flex gap-4">
+          <div className="flex-1 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-2">
+                Search by name or ingredient
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Margarita or Vodka"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              />
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-2">
+                  Glass Type
+                </label>
+                <select
+                  value={glassFilter}
+                  onChange={(e) => setGlassFilter(e.target.value)}
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="all">All Glasses</option>
+                  {availableGlassTypes.map(glass => (
+                    <option key={glass} value={glass}>{glass}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-2">
+                  Alcohol Content
+                </label>
+                <div className="flex rounded-lg overflow-hidden border border-slate-700 h-[42px]">
+                  {(['all', 'alcoholic', 'non-alcoholic'] as const).map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setAlcoholFilter(opt)}
+                      className={`flex-1 text-xs font-medium transition-colors ${
+                        alcoholFilter === opt
+                          ? 'bg-slate-600 text-white'
+                          : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-700'
+                      }`}
+                    >
+                      {opt === 'all' ? 'All' : opt === 'alcoholic' ? 'Alcoholic' : 'Virgin'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {hasActiveFilters && (
+              <div className="pt-3 border-t border-slate-700">
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors"
+                >
+                  <span>✕</span>
+                  <span>Clear all filters</span>
+                </button>
+              </div>
+            )}
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">
-              Max ABV{' '}
-              <span className={`font-semibold ${isAbvFilterActive ? config.accentText : 'text-slate-300'}`}>
-                {abvFilter}%
-              </span>
-              {isAbvFilterActive && (
-                <span className="text-slate-500 ml-1">(cap: {abvMax}%)</span>
-              )}
+          <div className="flex flex-col items-center gap-2 pl-4 border-l border-slate-700">
+            <label className="text-xs font-medium text-slate-400 text-center">
+              Max<br />ABV
             </label>
-            <div className="flex items-center gap-3 h-[42px]">
-              <span className="text-xs text-slate-500 shrink-0">0%</span>
+            <span className="text-xs text-slate-500">
+              {abvMax}%
+            </span>
+            <div className="flex-1 flex items-center justify-center" style={{ minHeight: '100px' }}>
               <input
                 type="range"
                 min={0}
@@ -458,26 +405,22 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
                 value={abvFilter}
                 onChange={(e) => setAbvFilter(Number(e.target.value))}
                 disabled={abvMax === 0}
-                className="flex-1 h-2 rounded-full appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-2 rounded-full appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
-                  background: `linear-gradient(to right, ${config.sliderAccent} 0%, ${config.sliderAccent} ${sliderFillPct}%, #1e293b ${sliderFillPct}%, #1e293b 100%)`,
+                  writingMode: 'vertical-lr' as const,
+                  direction: 'rtl',
+                  width: '18px',
+                  height: '120px',
+                  background: `linear-gradient(to top, ${config.sliderAccent} 0%, ${config.sliderAccent} ${sliderFillPct}%, #1e293b ${sliderFillPct}%, #1e293b 100%)`,
                 }}
               />
-              <span className="text-xs text-slate-500 shrink-0 w-8">{abvMax}%</span>
             </div>
+            <span className={`text-xs font-semibold ${isAbvFilterActive ? config.accentText : 'text-slate-300'}`}>
+              {abvFilter}%
+            </span>
+            <span className="text-xs text-slate-500">0%</span>
           </div>
         </div>
-        {hasActiveFilters && (
-          <div className="pt-3 border-t border-slate-700">
-            <button
-              onClick={clearFilters}
-              className="text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors"
-            >
-              <span>✕</span>
-              <span>Clear all filters</span>
-            </button>
-          </div>
-        )}
       </div>
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2">
@@ -487,22 +430,10 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
               <button onClick={() => setSearchQuery('')} className={config.accentHover}>✕</button>
             </div>
           )}
-          {categoryFilter !== 'all' && (
-            <div className={`px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full ${config.accentText} text-sm flex items-center gap-2`}>
-              <span>{getCategoryIcon(categoryFilter)} {categoryFilter}</span>
-              <button onClick={() => setCategoryFilter('all')} className={config.accentHover}>✕</button>
-            </div>
-          )}
           {glassFilter !== 'all' && (
             <div className={`px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full ${config.accentText} text-sm flex items-center gap-2`}>
               <span>🥃 {glassFilter}</span>
               <button onClick={() => setGlassFilter('all')} className={config.accentHover}>✕</button>
-            </div>
-          )}
-          {difficultyFilter !== 'all' && (
-            <div className={`px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full ${config.accentText} text-sm flex items-center gap-2`}>
-              <span>{difficultyFilter}</span>
-              <button onClick={() => setDifficultyFilter('all')} className={config.accentHover}>✕</button>
             </div>
           )}
           {alcoholFilter !== 'all' && (
@@ -573,14 +504,14 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
                 </div>
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className={`text-xl font-semibold text-white group-hover:${config.accentText} transition-colors`}>
+                    <h3 className={`text-xl font-calivorne text-white group-hover:${config.accentText} transition-colors`}>
                       {cocktail.name}
                     </h3>
                     <span className={`px-2 py-1 text-xs rounded border ${getDifficultyColor(cocktail.difficulty)}`}>
                       {cocktail.difficulty}
                     </span>
                   </div>
-                  <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+                  <p className="text-slate-400 text-sm mb-4 line-clamp-2 font-light">
                     {cocktail.description || 'No description available'}
                   </p>
                   {searchQuery && cocktail.ingredients && (
@@ -593,20 +524,6 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
                           .map(ing => (
                             <span key={ing.id} className={`px-2 py-0.5 bg-emerald-500/10 ${config.accentText} text-xs rounded`}>
                               {ing.name}
-                            </span>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-                  {categoryFilter !== 'all' && cocktail.ingredients && (
-                    <div className="mb-3">
-                      <div className="flex flex-wrap gap-1">
-                        {cocktail.ingredients
-                          .filter(ing => ing.category === categoryFilter)
-                          .slice(0, 3)
-                          .map(ing => (
-                            <span key={ing.id} className="px-2 py-0.5 bg-slate-700 text-slate-300 text-xs rounded border border-slate-600">
-                              {getCategoryIcon(ing.category)} {ing.name}
                             </span>
                           ))}
                       </div>
@@ -667,6 +584,9 @@ export default function CocktailCategory({ isAuthenticated = false }: CocktailCa
           background: ${config.sliderAccent};
           cursor: pointer;
           border: 2px solid #0f172a;
+        }
+        input[type='range'][style*='writing-mode'] {
+          -webkit-appearance: slider-vertical;
         }
       `}</style>
     </div>

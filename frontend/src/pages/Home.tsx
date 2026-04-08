@@ -69,26 +69,27 @@ export default function Home({ isAuthenticated }: HomeProps) {
             <p className="text-lg text-slate-400 font-thin max-w-xl mx-auto leading-relaxed animate-typewriter">
               Discover recipes, manage your bar inventory, and find out exactly what you can make tonight.
             </p>
-            <div className="flex gap-3 justify-center pt-2">
+            <div className="flex gap-3 justify-center pt-2 max-w-md mx-auto">
               <Link
                 to="/cocktails"
-                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 text-center px-6 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg font-medium transition-colors"
               >
                 Browse Cocktails
               </Link>
+
               {!isAuthenticated ? (
                 <Link
                   to="/register"
-                  className="px-6 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg font-medium transition-colors"
+                  className="flex-1 text-center px-6 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg font-medium transition-colors"
                 >
                   Create Account
                 </Link>
               ) : (
                 <Link
                   to="/inventory"
-                  className="px-6 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg font-medium transition-colors"
+                  className="flex-1 text-center px-6 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg font-medium transition-colors"
                 >
-                  My Inventory
+                  View Inventory
                 </Link>
               )}
             </div>
@@ -130,7 +131,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
                   {featuredCocktail.name}
                 </h2>
                 {featuredCocktail.description && (
-                  <p className="text-slate-400 mb-6 leading-relaxed line-clamp-3">
+                  <p className="text-slate-400 mb-6 leading-relaxed line-clamp-3 font-light">
                     {featuredCocktail.description}
                   </p>
                 )}
@@ -141,7 +142,7 @@ export default function Home({ isAuthenticated }: HomeProps) {
                         key={i}
                         to={`/ingredients/${ing.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="px-2 py-1 text-xs rounded border bg-slate-900/50 text-slate-400 border-slate-700 hover:text-white hover:border-emerald-500 transition-colors"
+                        className="px-2 py-1 text-xs font-light rounded border bg-slate-900/50 text-slate-400 border-slate-700 hover:text-white hover:border-emerald-500 transition-colors"
                       >
                         {ing.name}
                       </Link>
